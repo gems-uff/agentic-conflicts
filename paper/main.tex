@@ -1,0 +1,338 @@
+\documentclass[sigconf,anonymous]{acmart}
+
+%% CBSoft uses an ACM-like format without the ACM Reference block.
+%% The following warning from acmart can be safely ignored:
+%% "ACM reference format is mandatory for papers over one page."
+\settopmatter{printacmref=false}
+\renewcommand\footnotetextcopyrightpermission[1]{} % removes footnote with conference information in first column
+
+%% CBSoft uses an ACM-like format without a copyright note.
+\setcopyright{none}
+
+%% SBES 2026 conference metadata
+\acmConference[SBES 2026]{40th Brazilian Symposium on Software Engineering}{September 8--12, 2026}{São Paulo, SP, Brazil}
+
+%% BibTeX command
+\AtBeginDocument{
+    \providecommand\BibTeX{{Bib\TeX}}
+}
+
+%% Paper written in ENGLISH — keep default Abstract/Keywords/References labels
+%% If switching to Portuguese, uncomment the following three lines:
+%\renewcommand\abstractname{Resumo}
+%\renewcommand\keywordsname{Palavras-chave}
+%\renewcommand\refname{Referências}
+
+%% Additional packages
+\usepackage{booktabs}   % For high-quality tables
+\usepackage{multirow}   % For multi-row table cells
+\usepackage{xcolor}     % For colored text (e.g., TODO markers)
+\usepackage{listings}   % For code listings if needed
+
+%% TODO command for draft annotations (remove before submission)
+\newcommand{\TODO}[1]{\textcolor{red}{\textbf{[TODO: #1]}}}
+
+% ============================================================
+\begin{document}
+
+%% Title
+\title{How Do AI Agents Resolve Merge Conflicts? An Empirical Study of Conflict Resolution Strategies in AI-Authored Pull Requests}
+
+%% Authors (hidden during double-anonymous review)
+\author{FirstName Surname}
+\affiliation{
+  \institution{Department, University}
+  \city{City}
+  \country{Country}
+}
+\email{email@email.com}
+
+\author{FirstName Surname}
+\affiliation{
+  \institution{Department, University}
+  \city{City}
+  \country{Country}
+}
+\email{email@email.com}
+
+%% Short author list for page headers
+\renewcommand{\shortauthors}{Surname et al.}
+\renewcommand{\shorttitle}{How Do AI Agents Resolve Merge Conflicts?}
+
+% ============================================================
+% Abstract
+% ============================================================
+\begin{abstract}
+AI-powered coding agents such as Claude Code, OpenAI Codex, GitHub Copilot, Cursor, and Devin are increasingly contributing to open-source software development through pull requests (PRs). When these AI-authored branches incorporate upstream changes via merge commits, textual merge conflicts can arise and must be resolved---either by the AI agent itself or by a human collaborator. Despite the growing adoption of agentic AI in software development, little is known about how merge conflicts are resolved in this context: which strategies are employed, who performs the resolution, and what factors influence the choice of strategy. In this paper, we present a large-scale empirical study of merge conflict resolution in AI-authored PRs, building upon the AgenticFlict dataset of 142,652 PRs opened by five AI agents across 59,412 repositories. By reproducing real merge commits found within PR branches using three-way \texttt{diff3} merging and comparing the conflicting regions against the actual resolved files, we classify each conflict chunk into one of eight resolution strategies (V1, V2, ConcatV1V2, ConcatV2V1, Combination, New~Code, None, Imprecise) and identify whether the resolver was an AI agent or a human developer. Our results show \TODO{summarize key findings}. We discuss the implications of these findings for the design of AI-assisted merge tools and for understanding the collaborative dynamics between AI agents and human developers.
+\end{abstract}
+
+%% Keywords
+\keywords{Merge Conflicts, AI Agents, Conflict Resolution, Software Merging, Empirical Software Engineering}
+
+\frenchspacing
+\maketitle
+
+% ============================================================
+% 1. Introduction
+% ============================================================
+\section{Introduction}
+\label{sec:introduction}
+
+\TODO{Motivate the problem: AI agents are becoming first-class contributors to OSS, opening PRs at scale. Merge conflicts are inevitable when branches diverge.}
+
+The increasing adoption of AI-powered coding agents---such as Claude Code, OpenAI Codex, GitHub Copilot, Cursor, and Devin---represents a paradigm shift in software development workflows. These agents autonomously create branches, implement features, and open pull requests (PRs) in open-source repositories, contributing code alongside human developers.
+
+When an AI-authored branch needs to incorporate upstream changes (e.g., via \texttt{git merge main}), textual merge conflicts may arise. These conflicts must be resolved before the merged code can be committed, and the resolution may be performed by the AI agent itself, by a human developer, or collaboratively.
+
+Despite the growing scale of AI contributions---the AgenticFlict dataset~\cite{agenticflict2025} alone catalogues over 142,000 AI-authored PRs---the merge conflict resolution behavior of AI agents remains largely unexplored. Prior work on merge conflict resolution has focused exclusively on human developers~\cite{TODO-related-work}, leaving fundamental questions unanswered in the agentic AI context.
+
+\TODO{State contributions and RQs briefly. Outline paper structure.}
+
+In this paper, we conduct a large-scale empirical study to investigate how merge conflicts are resolved in AI-authored pull requests. Specifically, we address the following research questions:
+
+\begin{itemize}
+    \item \textbf{RQ1.} What resolution strategies are adopted for merge conflicts in AI-authored PRs?
+    \item \textbf{RQ2.} Who resolves the conflicts: the AI agent or a human developer?
+    \item \textbf{RQ3.} What is the textual similarity between the resolution and each side of the conflict?
+    \item \textbf{RQ4.} Is there an association between the resolution strategy and factors such as programming language, resolver type, conflict size, and number of conflicts?
+\end{itemize}
+
+\TODO{Outline paper structure: Section~\ref{sec:background} presents background..., Section~\ref{sec:methodology} describes our methodology..., etc.}
+
+% ============================================================
+% 2. Background and Related Work
+% ============================================================
+\section{Background and Related Work}
+\label{sec:background}
+
+\subsection{Software Merging and Merge Conflicts}
+\label{sec:bg-merging}
+
+\TODO{Explain three-way merge, diff3 format, conflict markers. Cite foundational work on merge conflicts (e.g., Mens 2002, Brun et al. 2011, Accioly et al. 2018).}
+
+\subsection{Merge Conflict Resolution Strategies}
+\label{sec:bg-strategies}
+
+\TODO{Discuss prior taxonomies of resolution strategies. Explain the eight categories we adopt: V1, V2, ConcatV1V2, ConcatV2V1, Combination, New Code, None, Imprecise. Cite DeepMerge (Dinella et al. 2022) and related work.}
+
+\subsection{AI Agents in Software Development}
+\label{sec:bg-agents}
+
+\TODO{Overview of the five agents under study (Claude Code, Codex, Copilot, Cursor, Devin). Discuss the growing role of AI in OSS contributions.}
+
+\subsection{The AgenticFlict Dataset}
+\label{sec:bg-agenticflict}
+
+\TODO{Summarize the AgenticFlict dataset: 142,652 PRs, 59,412 repositories, five agents. Explain its limitations regarding conflict resolution (only simulated conflicts, no resolution data). Position our study as an extension.}
+
+% ============================================================
+% 3. Methodology
+% ============================================================
+\section{Methodology}
+\label{sec:methodology}
+
+Figure~\ref{fig:pipeline} provides an overview of our data collection and analysis pipeline.
+
+\TODO{Create and include a pipeline figure.}
+
+%\begin{figure}[ht]
+%  \centering
+%  \includegraphics[width=\linewidth]{figures/pipeline}
+%  \caption{Overview of the data collection and analysis pipeline.}
+%  \Description{A flowchart showing the five stages of the pipeline: PR selection, merge listing, conflict extraction, authorship collection, and strategy classification.}
+%  \label{fig:pipeline}
+%\end{figure}
+
+\subsection{PR Selection and Scope}
+\label{sec:meth-selection}
+
+Our study leverages the AgenticFlict dataset as its starting point. We consider all 142,652 PRs authored by AI agents for which both \texttt{base\_oid} and \texttt{head\_oid} are available. For each PR, we classify its outcome (\textit{merged}, \textit{closed\_unmerged}, or \textit{open}) based on the \texttt{merged\_at} and \texttt{gh\_state} fields.
+
+\TODO{Report the actual number of PRs after filtering.}
+
+\subsection{Identifying Merge Commits Within PR Branches}
+\label{sec:meth-merges}
+
+For each PR, we identify merge commits (commits with exactly two parents) that exist within the PR branch but not in the base branch:
+
+\begin{verbatim}
+git rev-list --merges base_oid..head_oid
+\end{verbatim}
+
+These are merges that the PR author (or collaborators) created to bring upstream changes into the feature branch---typically via \texttt{git merge main}. We exclude octopus merges (more than two parents) and do not consider the integration merge created by GitHub when the PR is accepted.
+
+\TODO{Report the number of merge commits found and the fraction of PRs that contain at least one merge commit.}
+
+\subsection{Reproducing Merges and Extracting Conflict Chunks}
+\label{sec:meth-conflicts}
+
+For each merge commit with parents $p_1$ and $p_2$, we compute the merge base ($b = \text{merge-base}(p_1, p_2)$) and identify files modified on both sides using \texttt{git merge-tree}. For each such file, we reproduce the three-way merge using:
+
+\begin{verbatim}
+git merge-file -p --diff3 p1_file base_file p2_file
+\end{verbatim}
+
+We parse the resulting diff3 output to extract individual conflict chunks, each delimited by \texttt{<<<<<<<}, \texttt{|||||||}, \texttt{=======}, and \texttt{>>>>>>>} markers. Each chunk produces three text regions: \textit{v1} (from $p_1$), \textit{base} (from $b$), and \textit{v2} (from $p_2$).
+
+\subsection{Localizing the Resolution}
+\label{sec:meth-resolution}
+
+For each conflict chunk, we retrieve the resolved file from the merge commit itself via \texttt{git show \{merge\_sha\}:\{file\_path\}}. Since this file contains the entire contents (including non-conflicting regions and other resolutions), we isolate the specific resolution text for each chunk using contextual anchoring: we identify the unique prefix and suffix surrounding the conflict region in the merged output and use them to extract the corresponding slice from the resolved file.
+
+\TODO{Report the proportion of chunks with successfully localized resolutions vs.\ not\_localizable, file\_removed, etc.}
+
+\subsection{Classifying Resolution Strategies}
+\label{sec:meth-strategies}
+
+We classify each resolved chunk into one of eight resolution strategies using the \texttt{identify\_resolution} function, which compares the normalized resolution text against \textit{v1} and \textit{v2}:
+
+\begin{itemize}
+    \item \textbf{V1} / \textbf{V2}: The resolution is identical to one side of the conflict.
+    \item \textbf{ConcatV1V2} / \textbf{ConcatV2V1}: The resolution is the concatenation of both sides, in the given order.
+    \item \textbf{Combination}: The resolution contains elements from both sides but is not a simple concatenation.
+    \item \textbf{New Code}: The resolution introduces content not present in either side.
+    \item \textbf{None}: Both sides and the resolution are empty.
+    \item \textbf{Imprecise}: The resolution could not be reliably classified.
+\end{itemize}
+
+For the statistical analysis in RQ4, we also define an aggregated four-level taxonomy: \textit{take-one-side} (V1, V2), \textit{combine} (ConcatV1V2, ConcatV2V1, Combination), \textit{introduce-new} (New Code), and \textit{trivial-or-other} (None, Imprecise).
+
+\subsection{Identifying the Resolver}
+\label{sec:meth-resolver}
+
+We determine who resolved each conflict by analyzing the author and committer metadata of the merge commit. We classify the resolver as \textit{AI}, \textit{Human}, or \textit{Unknown} based on a curated list of known AI agent signatures (e.g., \texttt{claude[bot]}, \texttt{openai-codex[bot]}, \texttt{copilot[bot]}, \texttt{cursor-agent[bot]}, \texttt{devin-ai-integration[bot]}).
+
+\subsection{Textual Similarity Metrics}
+\label{sec:meth-similarity}
+
+For each resolved chunk, we compute the Gestalt pattern matching (longest common subsequence) similarity between the resolution and each side of the conflict (\textit{sim\_res\_v1}, \textit{sim\_res\_v2}), as well as between \textit{v1} and \textit{v2} themselves (\textit{sim\_v1\_v2}).
+
+\subsection{Statistical Analysis}
+\label{sec:meth-statistics}
+
+\TODO{Detail the statistical tests used in RQ4: Pearson's chi-squared test (or Fisher's exact test for small cells), Cramér's V for categorical associations, Kruskal--Wallis and Mann--Whitney for categorical vs.\ continuous variables, with Bonferroni correction. Mention exploratory multinomial logistic regression.}
+
+% ============================================================
+% 4. Results
+% ============================================================
+\section{Results}
+\label{sec:results}
+
+\subsection{Dataset Overview}
+\label{sec:res-overview}
+
+\TODO{Report descriptive statistics: number of PRs with merge commits, number of merge commits, number of conflicting merges, number of conflict chunks. Break down by agent and PR outcome. Include a summary table.}
+
+%\begin{table}
+%  \caption{Dataset overview}
+%  \label{tab:dataset-overview}
+%  \begin{tabular}{lrrr}
+%    \toprule
+%    Metric & Total & Conflicting & \% \\
+%    \midrule
+%    PRs with merge commits & \TODO{} & --- & --- \\
+%    Merge commits & \TODO{} & \TODO{} & \TODO{} \\
+%    Conflict chunks & --- & \TODO{} & --- \\
+%    \bottomrule
+%  \end{tabular}
+%\end{table}
+
+\subsection{RQ1: Resolution Strategies}
+\label{sec:rq1}
+
+\TODO{Report the distribution of the eight resolution strategies. Show barplot (stacked or grouped) by agent and by resolver type. Discuss dominant strategies.}
+
+\textbf{Summary.} \TODO{One-paragraph summary of RQ1 findings.}
+
+\subsection{RQ2: Who Resolves the Conflicts?}
+\label{sec:rq2}
+
+\TODO{Report the distribution of resolver types (AI, Human, Unknown) at the chunk, merge, and PR levels. Show contingency table of agent (PR author) vs.\ resolver type. Discuss whether PRs opened by a given AI agent tend to have conflicts resolved by the same agent.}
+
+\textbf{Summary.} \TODO{One-paragraph summary of RQ2 findings.}
+
+\subsection{RQ3: Textual Similarity}
+\label{sec:rq3}
+
+\TODO{Report distributions of sim\_res\_v1, sim\_res\_v2, stratified by resolution strategy. Include boxplots. Validate sanity checks (e.g., V1 strategy should yield sim\_res\_v1 $\approx$ 1).}
+
+\textbf{Summary.} \TODO{One-paragraph summary of RQ3 findings.}
+
+\subsection{RQ4: Factors Associated with Resolution Strategy}
+\label{sec:rq4}
+
+\TODO{Report associations between resolution\_strategy\_coarse and: primary\_language, resolver\_type, agent, pr\_outcome, conflict\_size, chunks\_per\_merge, chunks\_per\_file. Include heatmaps, violin plots, and table of p-values.}
+
+\textbf{Summary.} \TODO{One-paragraph summary of RQ4 findings.}
+
+% ============================================================
+% 5. Discussion
+% ============================================================
+\section{Discussion}
+\label{sec:discussion}
+
+\subsection{Key Findings and Implications}
+\label{sec:disc-findings}
+
+\TODO{Discuss the main takeaways from RQ1--RQ4. What do the resolution patterns reveal about AI agents' merge behavior? How do they compare to known human patterns?}
+
+\subsection{Implications for Tool Design}
+\label{sec:disc-tools}
+
+\TODO{Discuss implications for the design of AI-assisted merge tools and for CI/CD pipelines involving AI agents.}
+
+\subsection{Collaborative Dynamics Between AI and Humans}
+\label{sec:disc-collaboration}
+
+\TODO{Discuss the interplay between AI agents and human developers in conflict resolution. When do humans step in? Does it correlate with conflict complexity?}
+
+% ============================================================
+% 6. Threats to Validity
+% ============================================================
+\section{Threats to Validity}
+\label{sec:threats}
+
+\subsection{Internal Validity}
+\label{sec:threats-internal}
+
+\TODO{Discuss: (1) Accuracy of resolution localization (LOCALIZERESREGION may fail for heavily modified files); (2) Strategy classification depends on whitespace normalization; (3) AI signature list may be incomplete.}
+
+\subsection{External Validity}
+\label{sec:threats-external}
+
+\TODO{Discuss: (1) Only PRs with merge commits in the branch are included---PRs without merges (likely the majority) are excluded; (2) Integration merges are not considered; (3) Only five AI agents are covered; (4) Some repositories may be unavailable for cloning.}
+
+\subsection{Construct Validity}
+\label{sec:threats-construct}
+
+\TODO{Discuss: (1) The eight-class taxonomy may not capture all nuances; (2) Gestalt similarity as a proxy for resolution quality; (3) Resolver = merge commit author may miss collaborative contributions.}
+
+% ============================================================
+% 7. Conclusion
+% ============================================================
+\section{Conclusion and Future Work}
+\label{sec:conclusion}
+
+\TODO{Summarize contributions. Highlight key findings. Outline future work directions: longitudinal analysis, integration merges, cross-agent comparison, automated resolution quality assessment.}
+
+% ============================================================
+% Artifact Availability (mandatory, unnumbered)
+% ============================================================
+\section*{Artifact Availability}
+
+The dataset and scripts used in this study are publicly available at \TODO{anonymized repository URL}. The repository includes all data collection scripts, classification algorithms, and analysis notebooks. The conflict resolution content (v1, v2, base, resolution) is shared as SHA-256 hashes; full text content is available upon request due to licensing considerations.
+
+% ============================================================
+% Acknowledgements (unnumbered)
+% ============================================================
+\section*{Acknowledgements}
+
+\TODO{Acknowledge funding, contributors, and AI tool usage per SBES policy (e.g., ``Tool X was used to assist with Y'').}
+
+% ============================================================
+% Bibliography
+% ============================================================
+\bibliographystyle{ACM-Reference-Format}
+\bibliography{references}
+
+\end{document}

@@ -1,0 +1,26 @@
+# Ignore Python virtual environments
+venv/
+.venv/
+env/
+
+# Python compiled files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# IDE files
+.vscode/
+.idea/
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Project-specific ignored files
+*.pdf
+bare_repos/
+data/nature_of_agent_conflicts/scratch/

@@ -1,0 +1,8 @@
+pandas
+pyarrow
+fastparquet
+multiset
+jupyter
+notebook
+matplotlib
+seaborn
