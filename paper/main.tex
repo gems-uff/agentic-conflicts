@@ -273,33 +273,59 @@ For each resolved chunk, we compute the Gestalt pattern matching (longest common
 %  \end{tabular}
 %\end{table}
 
-\subsection{RQ1: Resolution Strategies}
+\subsection{RQ1: Structural Nature}
 \label{sec:rq1}
 
-\TODO{Report the distribution of the eight resolution strategies. Show barplot (stacked or grouped) by agent and by resolver type. Discuss dominant strategies.}
+Our structural analysis over merge commits in agent-authored PRs reveals that the median number of conflicting chunks per failed merge is $1.0$, while the global mean is $3.85$ ($\sigma = 9.97$). These distributions are heavily right-skewed, reflecting the fact that while most merges generate a small number of chunks, there are long-tail occurrences with up to $106$ chunks in a single merge commit.
+Regarding the size of the conflicting regions, both version 1 ($v1$) and version 2 ($v2$) have a median size of $2.0$ lines of code (LOC), while the mean sizes stand significantly higher at $15.93$ and $15.59$ LOC, respectively. The size of the adopted resolution similarly yields a median of $2.0$ LOC.
 
-\textbf{Summary.} \TODO{One-paragraph summary of RQ1 findings.}
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=\linewidth]{../results/rq1/num_chunks_global_no_outliers.png}
+  \caption{Distribution of the number of conflicting chunks per merge commit (outliers excluded).}
+  \label{fig:rq1_chunks}
+\end{figure}
 
-\subsection{RQ2: Who Resolves the Conflicts?}
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=\linewidth]{../results/rq1/v1_loc_global_no_outliers.png}
+  \caption{Distribution of $v1$ (lines of code) per conflicting chunk (outliers excluded).}
+  \label{fig:rq1_v1_loc}
+\end{figure}
+
+\textbf{Contrast with Ghiotto et al.} Ghiotto et al.~\cite{ghiotto2020nature} reported an average of 1.2 chunks per file in human-authored conflicting merges, and chunk size medians around 3 to 4 LOC. Our findings suggest that AI-authored PRs tend to produce conflicting chunks that are slightly smaller in median magnitude (2 LOC) but can escalate to high mean values due to outliers, generating an average of roughly $3.8$ chunks per merge.
+
+\subsection{RQ2: Resolution Strategies}
 \label{sec:rq2}
 
-\TODO{Report the distribution of resolver types (AI, Human, Unknown) at the chunk, merge, and PR levels. Show contingency table of agent (PR author) vs.\ resolver type. Discuss whether PRs opened by a given AI agent tend to have conflicts resolved by the same agent.}
+We dynamically extracted the frequency of each strategy at the chunk level. When analyzing the raw extraction, we observe that a comparatively large fraction of chunks fell into the \texttt{Imprecise} category ($21.1\%$), indicating that context lines were frequently modified during integration, making unambiguous pattern matching difficult. 
 
-\textbf{Summary.} \TODO{One-paragraph summary of RQ2 findings.}
+To provide a faithful comparison with existing literature and a clearer view of the concrete strategies employed, we also report the distribution exclusively over precisely matched chunks (i.e., filtering out \texttt{Imprecise} cases). Within this precise subset, \texttt{V1} and \texttt{V2} are the most frequently adopted strategies, accounting for $28.7\%$ and $27.7\%$ of the resolutions, respectively. When the resolution synthesizes both sides organically, \texttt{Combination} accounts for $12.6\%$, while simple concatenations (\texttt{ConcatV1V2} and \texttt{ConcatV2V1}) sum up to $16.5\%$. The introduction of \texttt{New Code} during resolution accounts for $12.6\%$ of the occurrences.
 
-\subsection{RQ3: Textual Similarity}
+Stratifying these precise outcomes by \textit{author type} (the entity executing the merge commit) reveals striking behavioral differences. When human developers step in to resolve the conflicts within these agent-authored PRs, they dominantly favor \texttt{V1}/\texttt{V2} ($57.3\%$ combined) and concatenations ($19.9\%$), resorting to \texttt{New Code} in only $9.3\%$ of chunks. Conversely, when the AI agents themselves execute the resolution natively, their reliance on \texttt{New Code} skyrockets to $25.5\%$, and \texttt{Combination} instances rise to $19.3\%$, while concatenations plummet to $2.8\%$. This suggests agents heavily favor synthesizing novel, holistic resolutions over structural patching.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=\linewidth]{../results/rq2/strategies_stacked_resolver_type_precise.png}
+  \caption{Distribution of precise resolution strategies stratified by the entity that resolved the conflict.}
+  \label{fig:rq2_strategies_resolver}
+\end{figure}
+
+\textbf{Contrast with Ghiotto et al.} Ghiotto et al.~\cite{ghiotto2020nature} purposefully discarded conflict chunks where the resolution could not be precisely located, meaning their metrics describe an "Imprecise-free" subset. In their human-authored landscape, \texttt{V1} and \texttt{V2} heavily dominated, comprising jointly over $64\%$ of all valid chunk resolutions, with \texttt{New Code} representing $8.7\%$, and concatenations and combinations totaling under $10\%$. By contrast, our precise AI-cohort subset shows \texttt{V1} and \texttt{V2} covering only $56.4\%$ combined. Furthermore, complex integrations (combinations and concatenations) appear globally more frequent ($\approx 29.1\%$). The stratifications indicate that both humans reacting to agent code, and agents natively resolving conflicts, induce significantly more code interleaving and unique generation than traditional human-to-human workflows.
+
+\subsection{RQ3: Who Resolves the Conflicts?}
 \label{sec:rq3}
 
-\TODO{Report distributions of sim\_res\_v1, sim\_res\_v2, stratified by resolution strategy. Include boxplots. Validate sanity checks (e.g., V1 strategy should yield sim\_res\_v1 $\approx$ 1).}
+A critical aspect of agentic workflows is defining the boundary of autonomy upon integration. Our analysis at the merge-commit level reveals that $92.6\%$ of the merge conflicts occurring within branches initiated by AI agents are resolved by \textbf{human} developers. Natively, the AI agents themselves (e.g., matching the original bot signature) resolved the conflicts independently in only $6.7\%$ of the merges, with an additional $0.6\%$ falling under an agent-assisted heuristic.
 
-\textbf{Summary.} \TODO{One-paragraph summary of RQ3 findings.}
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=\linewidth]{../results/rq3/resolver_stacked_agent.png}
+  \caption{Proportion of conflicts resolved natively by the AI agent versus a human developer, stratified by the original PR authoring agent.}
+  \label{fig:rq3_resolver}
+\end{figure}
 
-\subsection{RQ4: Factors Associated with Resolution Strategy}
-\label{sec:rq4}
-
-\TODO{Report associations between resolution\_strategy\_coarse and: primary\_language, resolver\_type, agent, pr\_outcome, conflict\_size, chunks\_per\_merge, chunks\_per\_file. Include heatmaps, violin plots, and table of p-values.}
-
-\textbf{Summary.} \TODO{One-paragraph summary of RQ4 findings.}
+\textbf{Summary.} This profound skew indicates that despite the high capacity of AI coding agents to author original features, conflict resolution remains overwhelmingly a human burden. Consequently, the resolution decisions observed in RQ2 predominantly reflect human remediations of AI-generated code conflicts.
 
 % ============================================================
 % 5. Discussion

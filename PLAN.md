@@ -127,7 +127,7 @@ A PR is labeled `abandoned-with-conflict` when (i) the PR state is `closed` with
 
 **Stage 5 — Strategy classification.** Apply `identify_resolution(v1, v2, resolution)` and emit `classified_chunks.parquet` adding `(strategy)`.
 
-**Stage 6 — Resolver attribution.** Build the agent-account signature map from `pull_request.parquet` grouped by `agent`, cross-reference `internal_merges.parquet.author` against it, and emit `resolver_labels.parquet` with `(pr_id, merge_sha, resolver_type)` where `resolver_type` is one of `agent` / `human`. For PR-level labels (`abandoned-with-conflict`, `open-with-conflict`), emit `pr_labels.parquet` with `(pr_id, pr_outcome)`.
+**Stage 6 — Resolver attribution.** Build the agent-account signature map from `pull_request.parquet` grouped by `agent`, cross-reference `internal_merges.parquet.author` against it, and emit `resolver_labels.parquet` with `(pr_id, merge_sha, resolver_type)` where `resolver_type` is one of `agent` / `human`.
 
 **Stage 7 — Analysis.** Notebooks joining the parquet outputs, producing the per-RQ tables and plots.
 

@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.25 (MiKTeX 24.1) (preloaded format=pdflatex 2026.1.29)  19 APR 2026 15:40
+This is pdfTeX, Version 3.141592653-2.6-1.40.25 (MiKTeX 24.1) (preloaded format=pdflatex 2026.1.29)  20 APR 2026 17:49
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -1041,31 +1041,49 @@ Package microtype Info: Loading generic protrusion settings for font family
 (microtype)             `zi4' (encoding: T1).
 (microtype)             For optimal results, create family-specific settings.
 (microtype)             See the microtype manual for details.
+LaTeX Font Info:    Font shape `T1/LinuxLibertineT-TLF/m/it' will be
+(Font)              scaled to size 9.0pt on input line 84.
 
+Overfull \hbox (3.08525pt too wide) in paragraph at lines 91--99
+[]\T1/LinuxLibertineT-TLF/m/n/9 (-20) Software en-gi-neer-ing is en-ter-ing a n
+ew era shaped by au-tonomous
+ []
 
-Package natbib Warning: Citation `TODO-related-work' on page 1 undefined on inp
-ut line 87.
+LaTeX Font Info:    Font shape `T1/LinuxLibertineT-TLF/m/sc' will be
+(Font)              scaled to size 9.0pt on input line 108.
 
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+ [1.1{C:/Users/Heleno/AppData/Local/MiKTeX/fonts/map/pdftex/pdftex.map}{C:/User
+s/Heleno/AppData/Local/Programs/MiKTeX/fonts/enc/dvips/libertine/lbtn_25tcsq.en
+c}{C:/Users/Heleno/AppData/Local/Programs/MiKTeX/fonts/enc/dvips/libertine/lbtn
+_76gpa5.enc}
+
+{C:/Users/Heleno/AppData/Local/Programs/MiKTeX/fonts/enc/dvips/libertine/lbtn_n
+h77jq.enc}{C:/Users/Heleno/AppData/Local/Programs/MiKTeX/fonts/enc/dvips/incons
+olata/i4-t1-4.enc}{C:/Users/Heleno/AppData/Local/Programs/MiKTeX/fonts/enc/dvip
+s/libertine/lbtn_7grukw.enc}]
 LaTeX Font Info:    Font shape `OT1/LinuxLibertineT-TLF/m/n' will be
-(Font)              scaled to size 9.0pt on input line 94.
+(Font)              scaled to size 9.0pt on input line 120.
 Package microtype Info: Loading generic protrusion settings for font family
 (microtype)             `LinuxLibertineT-TLF' (encoding: OT1).
 (microtype)             For optimal results, create family-specific settings.
 (microtype)             See the microtype manual for details.
 LaTeX Font Info:    Font shape `OT1/LinuxLibertineT-TLF/m/n' will be
-(Font)              scaled to size 6.6pt on input line 94.
+(Font)              scaled to size 6.6pt on input line 120.
 LaTeX Font Info:    Font shape `OML/nxlmi/m/it' will be
-(Font)              scaled to size 9.0pt on input line 94.
+(Font)              scaled to size 9.0pt on input line 120.
 LaTeX Font Info:    Font shape `OML/nxlmi/m/it' will be
-(Font)              scaled to size 6.6pt on input line 94.
+(Font)              scaled to size 6.6pt on input line 120.
 LaTeX Font Info:    Font shape `LMS/ntxsy/m/n' will be
-(Font)              scaled to size 9.0pt on input line 94.
+(Font)              scaled to size 9.0pt on input line 120.
 LaTeX Font Info:    Font shape `LMS/ntxsy/m/n' will be
-(Font)              scaled to size 6.6pt on input line 94.
+(Font)              scaled to size 6.6pt on input line 120.
 LaTeX Font Info:    Font shape `LMX/ntxexx/m/n' will be
-(Font)              scaled to size 9.0pt on input line 94.
+(Font)              scaled to size 9.0pt on input line 120.
 LaTeX Font Info:    Font shape `LMX/ntxexx/m/n' will be
-(Font)              scaled to size 6.6pt on input line 94.
+(Font)              scaled to size 6.6pt on input line 120.
+
 (C:\Users\Heleno\AppData\Local\Programs\MiKTeX\tex/latex/microtype\mt-msa.cfg
 File: mt-msa.cfg 2006/02/04 v1.1 microtype config. file: AMS symbols (a) (RS)
 )
@@ -1073,62 +1091,111 @@ File: mt-msa.cfg 2006/02/04 v1.1 microtype config. file: AMS symbols (a) (RS)
 File: mt-msb.cfg 2005/06/01 v1.0 microtype config. file: AMS symbols (b) (RS)
 )
 LaTeX Font Info:    Font shape `U/ntxmia/m/it' will be
-(Font)              scaled to size 9.0pt on input line 94.
+(Font)              scaled to size 9.0pt on input line 120.
 LaTeX Font Info:    Font shape `U/ntxmia/m/it' will be
-(Font)              scaled to size 6.6pt on input line 94.
+(Font)              scaled to size 6.6pt on input line 120.
 LaTeX Font Info:    Font shape `U/ntxsym/m/n' will be
-(Font)              scaled to size 9.0pt on input line 94.
+(Font)              scaled to size 9.0pt on input line 120.
 LaTeX Font Info:    Font shape `U/ntxsym/m/n' will be
-(Font)              scaled to size 6.6pt on input line 94.
+(Font)              scaled to size 6.6pt on input line 120.
 LaTeX Font Info:    Font shape `U/ntxsyc/m/n' will be
-(Font)              scaled to size 9.0pt on input line 94.
+(Font)              scaled to size 9.0pt on input line 120.
 LaTeX Font Info:    Font shape `U/ntxsyc/m/n' will be
-(Font)              scaled to size 6.6pt on input line 94.
+(Font)              scaled to size 6.6pt on input line 120.
 LaTeX Font Info:    Font shape `U/ntxexa/m/n' will be
-(Font)              scaled to size 9.0pt on input line 94.
+(Font)              scaled to size 9.0pt on input line 120.
 LaTeX Font Info:    Font shape `U/ntxexa/m/n' will be
-(Font)              scaled to size 6.6pt on input line 94.
+(Font)              scaled to size 6.6pt on input line 120.
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
 
 
-LaTeX Warning: Reference `fig:pipeline' on page 1 undefined on input line 134.
 
-LaTeX Font Info:    Font shape `T1/LinuxLibertineT-TLF/m/it' will be
-(Font)              scaled to size 9.0pt on input line 149.
-[1.1{C:/Users/Heleno/AppData/Local/MiKTeX/fonts/map/pdftex/pdftex.map}{C:/Users
-/Heleno/AppData/Local/Programs/MiKTeX/fonts/enc/dvips/libertine/lbtn_25tcsq.enc
-}{C:/Users/Heleno/AppData/Local/Programs/MiKTeX/fonts/enc/dvips/libertine/lbtn_
-76gpa5.enc}
+LaTeX Warning: Reference `fig:pipeline' on page 2 undefined on input line 170.
 
-{C:/Users/Heleno/AppData/Local/Programs/MiKTeX/fonts/enc/dvips/libertine/lbtn_n
-h77jq.enc}{C:/Users/Heleno/AppData/Local/Programs/MiKTeX/fonts/enc/dvips/incons
-olata/i4-t1-4.enc}]
 LaTeX Font Info:    Font shape `T1/LinuxLibertineT-TLF/m/n' will be
-(Font)              scaled to size 6.6pt on input line 169.
+(Font)              scaled to size 6.6pt on input line 205.
 LaTeX Font Info:    Font shape `T1/LinuxLibertineT-TLF/m/n' will be
-(Font)              scaled to size 5.5pt on input line 169.
+(Font)              scaled to size 5.5pt on input line 205.
 
-Overfull \hbox (24.81042pt too wide) in paragraph at lines 203--204
+Underfull \vbox (badness 1242) has occurred while \output is active []
+
+LaTeX Font Info:    Font shape `T1/LinuxBiolinumT-TLF/m/n' will be
+(Font)              scaled to size 9.0pt on input line 206.
+LaTeX Font Info:    Font shape `T1/LinuxBiolinumT-TLF/m/n' will be
+(Font)              scaled to size 7.0pt on input line 206.
+ [2.2{C:/Users/Heleno/AppData/Local/Programs/MiKTeX/fonts/enc/dvips/libertine/l
+btn_ncsllp.enc}]
+Overfull \hbox (24.81042pt too wide) in paragraph at lines 239--240
 \T1/LinuxLibertineT-TLF/m/n/9 (-20) agent sig-na-tures (e.g., \T1/zi4/m/n/9 cla
 ude[bot]\T1/LinuxLibertineT-TLF/m/n/9 (-20) , \T1/zi4/m/n/9 openai-codex[bot]\T
 1/LinuxLibertineT-TLF/m/n/9 (-20) , \T1/zi4/m/n/9 copilot[bot]\T1/LinuxLibertin
 eT-TLF/m/n/9 (-20) ,
  []
 
+<../results/rq1/num_chunks_global_no_outliers.png, id=206, 577.9191pt x 172.243
+5pt>
+File: ../results/rq1/num_chunks_global_no_outliers.png Graphic file (type png)
+<use ../results/rq1/num_chunks_global_no_outliers.png>
+Package pdftex.def Info: ../results/rq1/num_chunks_global_no_outliers.png  used
+ on input line 284.
+(pdftex.def)             Requested size: 241.14749pt x 71.87132pt.
 
-Overfull \hbox (11.81499pt too wide) in paragraph at lines 264--265
-[]\T1/LinuxLibertineT-TLF/b/n/9 (-20) [TODO: Re-port as-so-ci-a-tions be-tween 
-res-o-lu-tion_strategy_coarse
- []
+Class acmart Warning: A possible image without description on input line 287.
 
-LaTeX Font Info:    Font shape `T1/LinuxBiolinumT-TLF/m/n' will be
-(Font)              scaled to size 9.0pt on input line 265.
-LaTeX Font Info:    Font shape `T1/LinuxBiolinumT-TLF/m/n' will be
-(Font)              scaled to size 7.0pt on input line 265.
-[2.2{C:/Users/Heleno/AppData/Local/Programs/MiKTeX/fonts/enc/dvips/libertine/lb
-tn_7grukw.enc}{C:/Users/Heleno/AppData/Local/Programs/MiKTeX/fonts/enc/dvips/li
-bertine/lbtn_oexx6f.enc}] (main.bbl)
+<../results/rq1/v1_loc_global_no_outliers.png, id=208, 577.9191pt x 172.2435pt>
 
-Package natbib Warning: There were undefined citations.
+File: ../results/rq1/v1_loc_global_no_outliers.png Graphic file (type png)
+<use ../results/rq1/v1_loc_global_no_outliers.png>
+Package pdftex.def Info: ../results/rq1/v1_loc_global_no_outliers.png  used on 
+input line 291.
+(pdftex.def)             Requested size: 241.14749pt x 71.87132pt.
+
+Class acmart Warning: A possible image without description on input line 294.
+
+[3.3{C:/Users/Heleno/AppData/Local/Programs/MiKTeX/fonts/enc/dvips/libertine/lb
+tn_oexx6f.enc} <../results/rq1/num_chunks_global_no_outliers.png> <../results/r
+q1/v1_loc_global_no_outliers.png>]
+<../results/rq2/strategies_stacked_resolver_type_precise.png, id=221, 710.8959p
+t x 425.1885pt>
+File: ../results/rq2/strategies_stacked_resolver_type_precise.png Graphic file 
+(type png)
+<use ../results/rq2/strategies_stacked_resolver_type_precise.png>
+Package pdftex.def Info: ../results/rq2/strategies_stacked_resolver_type_precis
+e.png  used on input line 309.
+(pdftex.def)             Requested size: 241.14749pt x 144.2313pt.
+
+
+Class acmart Warning: A possible image without description on input line 312.
+
+<../results/rq3/resolver_stacked_agent.png, id=223, 710.655pt x 425.1885pt>
+File: ../results/rq3/resolver_stacked_agent.png Graphic file (type png)
+<use ../results/rq3/resolver_stacked_agent.png>
+Package pdftex.def Info: ../results/rq3/resolver_stacked_agent.png  used on inp
+ut line 323.
+(pdftex.def)             Requested size: 241.14749pt x 144.2767pt.
+
+Class acmart Warning: A possible image without description on input line 326.
+
+[4.4 <../results/rq2/strategies_stacked_resolver_type_precise.png> <../results/
+rq3/resolver_stacked_agent.png>] (main.bbl
+LaTeX Font Info:    Font shape `T1/LinuxLibertineT-TLF/m/it' will be
+(Font)              scaled to size 7.0pt on input line 45.
+)
+
+Class acmart Warning: Some images may lack descriptions.
+(acmart)              ACM is committed to complying with the upcoming US ADA ht
+tps://accessiblyapp.com/accessibility-compliance/ada/ and European Accessibilit
+y Act (EAA) https://accessiblyapp.com/accessibility-compliance/eaa/ regulations
+ by actively working to ensure our publications and application services are ac
+cessible to individuals with disabilities, adhering to the WCAG guidelines to p
+rovide a seamless experience for all users, and regularly reviewing our accessi
+bility practices to maintain compliance with evolving standards. 
+(acmart)              To this end, we strongly encourage our authors to provide
+ alternative text and captions for images and multimedia content. It is also im
+portant to optimize color contrast for the visually impaired. Taking these impo
+rtant steps when creating your papers will ensure that the widest possible audi
+ence can ingest your work..
 
 
 Class acmart Warning: ACM reference format is mandatory 
@@ -1151,7 +1218,7 @@ File: se-pdfdoc.def 2019/11/29 v1.12 stringenc: PDFDocEncoding
 (C:\Users\Heleno\AppData\Local\Programs\MiKTeX\tex/generic/stringenc\se-utf8.de
 f
 File: se-utf8.def 2019/11/29 v1.12 stringenc: UTF-8
-) [3.3] (main.aux)
+) [5.5] (main.aux)
  ***********
 LaTeX2e <2023-11-01> patch level 1
 L3 programming layer <2024-01-04>
@@ -1161,14 +1228,14 @@ L3 programming layer <2024-01-04>
 LaTeX Warning: There were undefined references.
 
 Package rerunfilecheck Info: File `main.out' has not changed.
-(rerunfilecheck)             Checksum: BA303805D899DDCAB39A813F89B23330;6556.
+(rerunfilecheck)             Checksum: 86851AA8E0B8608D80F82100D898E9B2;6216.
  ) 
 Here is how much of TeX's memory you used:
- 22535 strings out of 474486
- 364699 string characters out of 5743283
- 1954542 words of memory out of 5000000
- 43973 multiletter control sequences out of 15000+600000
- 674893 words of font info for 265 fonts, out of 8000000 for 9000
+ 22837 strings out of 474486
+ 372972 string characters out of 5743283
+ 1959542 words of memory out of 5000000
+ 44082 multiletter control sequences out of 15000+600000
+ 700922 words of font info for 377 fonts, out of 8000000 for 9000
  1302 hyphenation exceptions out of 8191
  90i,12n,131p,1472b,604s stack positions out of 10000i,1000n,20000p,200000b,200000s
 <C:/Users/Heleno/AppData/Local/Programs/MiKTeX/fonts/type1/public/inconsolata
@@ -1182,9 +1249,9 @@ LibertineTB.pfb><C:/Users/Heleno/AppData/Local/Programs/MiKTeX/fonts/type1/publ
 ic/libertine/LinLibertineTI.pfb><C:/Users/Heleno/AppData/Local/Programs/MiKTeX/
 fonts/type1/public/newtx/txmiaX.pfb><C:/Users/Heleno/AppData/Local/Programs/MiK
 TeX/fonts/type1/public/newtx/txsys.pfb>
-Output written on main.pdf (3 pages, 435978 bytes).
+Output written on main.pdf (5 pages, 772611 bytes).
 PDF statistics:
- 223 PDF objects out of 1000 (max. 8388607)
- 42 named destinations out of 1000 (max. 500000)
- 54033 words of extra memory for PDF output out of 61914 (max. 10000000)
+ 322 PDF objects out of 1000 (max. 8388607)
+ 65 named destinations out of 1000 (max. 500000)
+ 66333 words of extra memory for PDF output out of 74296 (max. 10000000)
 
