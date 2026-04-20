@@ -8,6 +8,7 @@ import json
 import logging
 import multiprocessing
 import os
+import re
 import shutil
 import tempfile
 from pathlib import Path
@@ -65,20 +66,24 @@ def classify_resolver(author: str, message: str) -> str:
     
     return "human"
 
-def build_universe(is_pilot: bool, pilot_count: int) -> pd.DataFrame:
+def build_universe(is_pilot: bool, pilot_count: int, use_full_aidev: bool = False) -> pd.DataFrame:
     logger.info("Stage 0: Building universe...")
 
-    pr_df = pd.read_parquet(AIDEV_DIR / "pull_request.parquet")
-    commits_df = pd.read_parquet(AIDEV_DIR / "pr_commits.parquet")
-    repo_df = pd.read_parquet(AIDEV_DIR / "repository.parquet")
-    
+    if use_full_aidev:
+        logger.info("Full-AIDev mode: using all_pull_request.parquet + all_repository.parquet")
+        pr_df   = pd.read_parquet(AIDEV_DIR / "all_pull_request.parquet")
+        repo_df = pd.read_parquet(AIDEV_DIR / "all_repository.parquet")
+    else:
+        pr_df   = pd.read_parquet(AIDEV_DIR / "pull_request.parquet")
+        repo_df = pd.read_parquet(AIDEV_DIR / "repository.parquet")
+
     try:
         task_df = pd.read_parquet(AIDEV_DIR / "pr_task_type.parquet")
     except Exception:
         task_df = pd.DataFrame(columns=['id', 'type'])
-    
+
     pr_repo_df = pr_df.merge(repo_df[['id', 'full_name', 'language']], left_on='repo_id', right_on='id', suffixes=('', '_repo'))
-    
+
     if not task_df.empty:
         pr_repo_task_df = pr_repo_df.merge(task_df[['id', 'type']], on='id', how='left')
         pr_repo_task_df.rename(columns={'type': 'pr_task_type'}, inplace=True)
@@ -86,15 +91,35 @@ def build_universe(is_pilot: bool, pilot_count: int) -> pd.DataFrame:
         pr_repo_task_df = pr_repo_df.copy()
         pr_repo_task_df['pr_task_type'] = None
 
-    cols_to_keep = ['id', 'repo_url', 'full_name', 'language', 'agent', 'pr_task_type', 'state']
+    # 'number' (PR number within repo) is needed for git-log matching in full-AIDev mode
+    cols_to_keep = ['id', 'number', 'repo_url', 'full_name', 'language', 'agent', 'pr_task_type', 'state']
     if 'merged_at' in pr_repo_task_df.columns:
         cols_to_keep.append('merged_at')
+    cols_to_keep = [c for c in cols_to_keep if c in pr_repo_task_df.columns]
 
-    universe_df = commits_df.merge(
-        pr_repo_task_df[cols_to_keep], 
-        left_on='pr_id', right_on='id'
-    )
-    
+    if use_full_aidev:
+        # PR-level universe: left-join with pr_commits so AIDev-pop repos keep their
+        # pre-collected SHAs while new repos get sha=NaN (handled in process_repository).
+        pr_level = pr_repo_task_df[cols_to_keep].copy()
+        pr_level = pr_level.rename(columns={'id': 'pr_id'})
+
+        # Only merged PRs are relevant
+        if 'merged_at' in pr_level.columns:
+            pr_level = pr_level[pr_level['merged_at'].notna()]
+
+        try:
+            commits_df = pd.read_parquet(AIDEV_DIR / "pr_commits.parquet")
+            universe_df = pr_level.merge(commits_df[['pr_id', 'sha']], on='pr_id', how='left')
+        except Exception:
+            universe_df = pr_level.copy()
+            universe_df['sha'] = None
+    else:
+        commits_df = pd.read_parquet(AIDEV_DIR / "pr_commits.parquet")
+        universe_df = commits_df.merge(
+            pr_repo_task_df[cols_to_keep],
+            left_on='pr_id', right_on='id'
+        )
+
     if is_pilot:
         unique_repos = universe_df['full_name'].dropna().unique()[:pilot_count]
         universe_df = universe_df[universe_df['full_name'].isin(unique_repos)]
@@ -102,12 +127,58 @@ def build_universe(is_pilot: bool, pilot_count: int) -> pd.DataFrame:
 
     out_path = DATA_DIR / "aidev_pop_universe.parquet"
     universe_df.to_parquet(out_path)
-    logger.info(f"Stage 0 complete. Universe has {len(universe_df)} commit records.")
+    logger.info(f"Stage 0 complete. Universe has {len(universe_df)} records.")
     return universe_df
+
+# Regex para identificar o merge final de um PR no GitHub ("Merge pull request #N …").
+# Esses commits são EXTERNOS (PR branch → base) e devem ser ignorados na busca
+# por merges internos (base/outra branch → feature branch).
+_PR_MERGE_MSG_RE = re.compile(r'merge pull request\s+#\d+', re.IGNORECASE)
+
+def _get_sha_list_for_pr(repo_path, pr_id, pr_number, pr_commits_series):
+    """Retorna lista de SHAs a inspecionar para um PR.
+
+    - Modo pr_commits (AIDev-pop): usa os SHAs pré-coletados.
+    - Modo git-log (AIDev completo): varre o histórico git buscando merges
+      cujo commit pai é identificável como pertencente ao PR pelo número.
+    """
+    known_shas = pr_commits_series.dropna().tolist() if pr_commits_series is not None else []
+    if known_shas:
+        return known_shas
+
+    if not pr_number:
+        return []
+
+    # Busca no git log por merges associados a este PR pelo número.
+    # "--ancestry-path" limita a ancestrais diretos; "--format=%H %P %s" dá sha, pais e assunto.
+    log_bytes = run_git_command(
+        repo_path, "log", "--all", "--merges",
+        f"--grep=pull request #{int(pr_number)}",
+        "--format=%H %s",
+        check=False,
+    )
+    if not log_bytes:
+        return []
+
+    candidate_shas = []
+    for line in log_bytes.decode("utf-8", "ignore").splitlines():
+        parts = line.split(" ", 1)
+        if not parts:
+            continue
+        sha = parts[0].strip()
+        subject = parts[1] if len(parts) > 1 else ""
+        # O merge final do PR (externo) tem mensagem "Merge pull request #N from …"
+        # Queremos *excluir* esse e incluir merges *internos* dentro do PR.
+        if _PR_MERGE_MSG_RE.search(subject):
+            continue  # é o merge de integração, não interno
+        candidate_shas.append(sha)
+
+    return candidate_shas
+
 
 def process_repository(repo_info: tuple):
     repo_full_name, repo_df = repo_info
-    
+
     repo_url = repo_df.iloc[0]['repo_url']
     if repo_url.startswith("https://api.github.com/repos/"):
         repo_url = repo_url.replace("https://api.github.com/repos/", "https://github.com/")
@@ -123,10 +194,14 @@ def process_repository(repo_info: tuple):
     conflict_chunks = []
     resolved_chunks = []
     classified_chunks = []
-    
+
+    has_sha_col = 'sha' in repo_df.columns
+
     prs = repo_df.groupby('pr_id')
-    for pr_id, pr_commits in prs:
-        commits = pr_commits['sha'].tolist()
+    for pr_id, pr_data in prs:
+        pr_number = pr_data.iloc[0].get('number') if 'number' in pr_data.columns else None
+        sha_series = pr_data['sha'] if has_sha_col else None
+        commits = _get_sha_list_for_pr(repo_path, pr_id, pr_number, sha_series)
         for sha in commits:
             try:
                 log_output_bytes = run_git_command(repo_path, "cat-file", "-p", sha, check=False)
@@ -246,7 +321,7 @@ def aggregate_jsonl_to_parquet():
         "resolved_chunks.jsonl": "resolved_chunks.parquet",
         "classified_chunks.jsonl": "classified_chunks.parquet"
     }
-    
+
     for jsonl_name, parquet_name in files_map.items():
         jsonl_path = DATA_DIR / jsonl_name
         if jsonl_path.exists():
@@ -261,22 +336,25 @@ def aggregate_jsonl_to_parquet():
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--pilot", type=int, default=0, help="Run in pilot mode for N repositories")
+    parser.add_argument("--full-aidev", action="store_true",
+                        help="Expand scope to the full AIDev dataset (all_pull_request + all_repository). "
+                             "Repos already in processed_repos.txt are skipped automatically.")
     args = parser.parse_args()
-    
+
     is_pilot = args.pilot > 0
-    universe_df = build_universe(is_pilot, args.pilot)
-    
+    universe_df = build_universe(is_pilot, args.pilot, use_full_aidev=args.full_aidev)
+
     processed_repos = check_processed()
     logger.info(f"Found {len(processed_repos)} already processed repositories.")
-    
+
     repo_groups = []
     for name, group in universe_df.groupby('full_name'):
         if name not in processed_repos:
             repo_groups.append((name, group))
-            
+
     pool_size = max(1, multiprocessing.cpu_count() - 1)
     logger.info(f"Processing {len(repo_groups)} repositories with {pool_size} workers...")
-    
+
     total_repo = len(repo_groups)
     if pool_size == 1:
         for i, rg in enumerate(repo_groups):
@@ -296,16 +374,16 @@ def main():
                 append_jsonl("resolved_chunks.jsonl", rc)
                 append_jsonl("classified_chunks.jsonl", ca)
                 mark_processed(name)
-                
+
     aggregate_jsonl_to_parquet()
-    
+
     # Generate standalone resolver_labels.parquet for backwards compatibility with tests
     im_path = DATA_DIR / "internal_merges.parquet"
     if im_path.exists():
         df_im = pd.read_parquet(im_path)
         if not df_im.empty and "resolver_type" in df_im.columns:
             df_im[['pr_id', 'merge_sha', 'parent1_sha', 'parent2_sha', 'author', 'committer', 'repo_full_name', 'resolver_type']].to_parquet(DATA_DIR / "resolver_labels.parquet")
-            
+
     logger.info("Pipeline completed successfully.")
 
 if __name__ == "__main__":
