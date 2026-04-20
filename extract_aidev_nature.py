@@ -192,12 +192,13 @@ def process_repository(repo_info: tuple):
     repo_path = clone_repo_bare(repo_url, SCRATCH_DIR)
     if not repo_path:
         logger.error(f"Não foi possível clonar ou atualizar o repositório {repo_full_name} (Possível timeout na rede).")
-        return repo_full_name, [], [], [], []
+        return repo_full_name, [], [], [], [], [{"repo_full_name": repo_full_name, "pr_id": None, "merge_sha": None, "error_type": "clone_failed", "error_message": "Não foi possível clonar ou atualizar o repositório"}]
 
     internal_merges = []
     conflict_chunks = []
     resolved_chunks = []
     classified_chunks = []
+    extraction_errors = []
 
     has_sha_col = 'sha' in repo_df.columns
 
@@ -290,14 +291,20 @@ def process_repository(repo_info: tuple):
                             classified_chunks.append(chunk_data.copy())
                             
             except Exception as e:
-                pass
+                extraction_errors.append({
+                    "repo_full_name": repo_full_name,
+                    "pr_id": pr_id,
+                    "merge_sha": sha,
+                    "error_type": "processing_exception",
+                    "error_message": str(e)
+                })
                 
     def remove_readonly(func, path, excinfo):
         import stat
         os.chmod(path, stat.S_IWRITE)
         func(path)
     shutil.rmtree(repo_path, onerror=remove_readonly)
-    return repo_full_name, internal_merges, conflict_chunks, resolved_chunks, classified_chunks
+    return repo_full_name, internal_merges, conflict_chunks, resolved_chunks, classified_chunks, extraction_errors
 
 
 def append_jsonl(filename: str, records: list):
@@ -323,7 +330,8 @@ def aggregate_jsonl_to_parquet():
         "internal_merges.jsonl": "internal_merges.parquet",
         "conflict_chunks.jsonl": "conflict_chunks.parquet",
         "resolved_chunks.jsonl": "resolved_chunks.parquet",
-        "classified_chunks.jsonl": "classified_chunks.parquet"
+        "classified_chunks.jsonl": "classified_chunks.parquet",
+        "extraction_errors.jsonl": "extraction_errors.parquet"
     }
 
     for jsonl_name, parquet_name in files_map.items():
@@ -362,21 +370,23 @@ def main():
     total_repo = len(repo_groups)
     if pool_size == 1:
         for i, rg in enumerate(repo_groups):
-            name, im, cc, rc, ca = process_repository(rg)
+            name, im, cc, rc, ca, errs = process_repository(rg)
             logger.info(f"[Progresso: {i+1}/{total_repo} ({(i+1)/total_repo:.1%})] Processado {name}")
             append_jsonl("internal_merges.jsonl", im)
             append_jsonl("conflict_chunks.jsonl", cc)
             append_jsonl("resolved_chunks.jsonl", rc)
             append_jsonl("classified_chunks.jsonl", ca)
+            append_jsonl("extraction_errors.jsonl", errs)
             mark_processed(name)
     else:
         with multiprocessing.Pool(pool_size) as pool:
-            for i, (name, im, cc, rc, ca) in enumerate(pool.imap_unordered(process_repository, repo_groups)):
+            for i, (name, im, cc, rc, ca, errs) in enumerate(pool.imap_unordered(process_repository, repo_groups)):
                 logger.info(f"[Progresso: {i+1}/{total_repo} ({(i+1)/total_repo:.1%})] Processado {name}")
                 append_jsonl("internal_merges.jsonl", im)
                 append_jsonl("conflict_chunks.jsonl", cc)
                 append_jsonl("resolved_chunks.jsonl", rc)
                 append_jsonl("classified_chunks.jsonl", ca)
+                append_jsonl("extraction_errors.jsonl", errs)
                 mark_processed(name)
 
     aggregate_jsonl_to_parquet()
