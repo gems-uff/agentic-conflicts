@@ -23,6 +23,13 @@ To reproduce the data on your own:
     cd agentic-conflicts
     ```
     *(If you already cloned without `--recursive`, run `git submodule update --init` to fetch the dataset).*
+    
+    > **⚠️ Important:** The `AIDev` submodule uses **Git LFS** (Large File Storage) for its parquet files. Make sure `git-lfs` is installed on your system. If your parquet files are failing to load, navigate to the `AIDev/` directory and run:
+    > ```bash
+    > git lfs install
+    > git lfs pull
+    > ```
+
 2. Enable the virtual environment:
     ```bash
     python -m venv venv

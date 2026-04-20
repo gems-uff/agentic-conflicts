@@ -1,16 +1,232 @@
 %% References for the paper
-%% Add entries in BibTeX format below.
 
-@misc{agenticflict2025,
-  title        = {{AgenticFlict}: A Dataset of Merge Conflicts in {AI}-Authored Pull Requests},
-  author       = {{Anon.}},
-  year         = {2025},
-  note         = {Dataset and paper available at anonymized URL},
+%% ── Merge conflicts: foundational & characterization ──────────────────────
+
+@article{ghiotto2020nature,
+  author    = {Gleiph Ghiotto and Leonardo Murta and M\'{a}rcio Barros and Andr\'{e} van der Hoek},
+  title     = {On the Nature of Merge Conflicts: A Study of 2,731 Open Source {Java} Projects Hosted by {GitHub}},
+  journal   = {IEEE Transactions on Software Engineering},
+  volume    = {46},
+  number    = {8},
+  pages     = {892--913},
+  year      = {2020},
+  doi       = {10.1109/TSE.2018.2871083},
 }
 
-%% TODO: Add more references as the paper develops.
-%% Categories to cover:
-%%   - Software merging and merge conflicts (Mens 2002, Brun et al. 2011, Accioly et al. 2018)
-%%   - Merge conflict resolution tools (DeepMerge, IntelliMerge, etc.)
-%%   - AI agents in SE (Claude, Codex, Copilot, Cursor, Devin)
-%%   - Empirical SE methodology
+@article{mens2002,
+  author    = {Tom Mens},
+  title     = {A State-of-the-Art Survey on Software Merging},
+  journal   = {IEEE Transactions on Software Engineering},
+  volume    = {28},
+  number    = {5},
+  pages     = {449--462},
+  year      = {2002},
+  doi       = {10.1109/TSE.2002.1000449},
+}
+
+@article{vale2022challenges,
+  author    = {Gustavo Vale and Claus Hunsen and Eduardo Figueiredo and Sven Apel},
+  title     = {Challenges of Resolving Merge Conflicts: A Mining and Survey Study},
+  journal   = {IEEE Transactions on Software Engineering},
+  volume    = {48},
+  number    = {12},
+  pages     = {4714--4730},
+  year      = {2022},
+  doi       = {10.1109/TSE.2021.3128209},
+}
+
+@inproceedings{nelson2019,
+  author    = {Nicholas Nelson and Caius Brindescu and Shane McKee and Anita Sarma and Danny Dig},
+  title     = {The Life-Cycle of Merge Conflicts: Processes, Barriers, and Strategies},
+  journal   = {Empirical Software Engineering},
+  volume    = {24},
+  pages     = {2863--2906},
+  year      = {2019},
+  doi       = {10.1007/s10664-018-9674-x},
+}
+
+@inproceedings{costa2014,
+  author    = {Catarina Costa and Jair Figueiredo and Guilherme Cavalcanti and Leonardo Murta and Walc\'{e}lio Albuquerque and Paulo Borba},
+  title     = {Developers' Perception on Merge Conflicts},
+  booktitle = {Proceedings of the IEEE International Workshop on Cooperative and Human Aspects of Software Engineering (CHASE)},
+  year      = {2014},
+  doi       = {10.1145/2593702.2593764},
+}
+
+@inproceedings{kasi2013,
+  author    = {Bakhtiar Khan Kasi and Anita Sarma},
+  title     = {{CollabVS}: A Visual Analytics Tool for Understanding Merge Conflicts},
+  booktitle = {Proceedings of the 5th International Workshop on Cooperative and Human Aspects of Software Engineering (CHASE)},
+  year      = {2013},
+}
+
+%% ── Merge conflict resolution techniques ──────────────────────────────────
+
+@article{dinella2022deepmerge,
+  author    = {Elizabeth Dinella and Todd Mytkowicz and Alexey Svyatkovskiy and Christian Bird and Mayur Naik and Shuvendu K. Lahiri},
+  title     = {{DeepMerge}: Learning to Merge Programs},
+  journal   = {IEEE Transactions on Software Engineering},
+  volume    = {49},
+  number    = {4},
+  pages     = {1599--1614},
+  year      = {2023},
+  doi       = {10.1109/TSE.2022.3189769},
+}
+
+@inproceedings{svyatkovskiy2022mergebert,
+  author    = {Alexey Svyatkovskiy and Sarah Fakhoury and Negar Ghorbani and Todd Mytkowicz and Elizabeth Dinella and Christian Bird and Jinu Jang and Neel Sundaresan and Shuvendu K. Lahiri},
+  title     = {Program Merge Conflict Resolution via Neural Transformers},
+  booktitle = {Proceedings of the 30th ACM Joint European Software Engineering Conference and Symposium on the Foundations of Software Engineering (ESEC/FSE)},
+  year      = {2022},
+  pages     = {822--833},
+  doi       = {10.1145/3540250.3549163},
+}
+
+@inproceedings{dong2023mergegen,
+  author    = {Jinhao Dong and Qihao Zhu and Zeyu Sun and Yiling Lou and Dan Hao},
+  title     = {Merge Conflict Resolution: Classification or Generation?},
+  booktitle = {Proceedings of the 38th IEEE/ACM International Conference on Automated Software Engineering (ASE)},
+  year      = {2023},
+  pages     = {1652--1664},
+  doi       = {10.1109/ASE56229.2023.00155},
+}
+
+@inproceedings{shen2023chatmerge,
+  author    = {Chaochao Shen and Wenhua Yang and Minxue Pan and Yu Zhou},
+  title     = {Git Merge Conflict Resolution Leveraging Strategy Classification and {LLM}},
+  booktitle = {Proceedings of the 23rd International Conference on Software Quality, Reliability, and Security (QRS)},
+  year      = {2023},
+  pages     = {228--237},
+  doi       = {10.1109/QRS60937.2023.00031},
+}
+
+@article{campos2025evaluation,
+  author    = {Heleno de S. Campos Junior and Gleiph Ghiotto L. de Menezes and M\'{a}rcio de Oliveira Barros and Andr\'{e} van der Hoek and Leonardo Gresta Paulino Murta},
+  title     = {Towards a Feasible Evaluation Function for Search-Based Merge Conflict Resolution},
+  journal   = {ACM Transactions on Software Engineering and Methodology},
+  year      = {2025},
+  doi       = {10.1145/XXXXXXX.XXXXXXX},
+  note      = {To appear},
+}
+
+@article{campos2025llm_vs_sbse,
+  author    = {Heleno de Souza Campos Junior and Leonardo Gresta Paulino Murta},
+  title     = {{LLM}-based vs.\ Search-based Merge Conflict Resolution: An Empirical Study of Competing Paradigms},
+  journal   = {Empirical Software Engineering},
+  year      = {2025},
+  note      = {Under review},
+}
+
+@inproceedings{campos2022combining,
+  author    = {Heleno de S. Campos Junior and Gleiph Ghiotto L. de Menezes and M\'{a}rcio de Oliveira Barros and Andr\'{e} van der Hoek and Leonardo Gresta Paulino Murta},
+  title     = {Towards Merge Conflict Resolution by Combining Existing Lines of Code},
+  booktitle = {Proceedings of the 36th Brazilian Symposium on Software Engineering (SBES)},
+  year      = {2022},
+  pages     = {425--434},
+  doi       = {10.1145/3555228.3555229},
+}
+
+%% ── Merge conflict prediction and strategy recommendation ─────────────────
+
+@article{aldndni2023rpredictor,
+  author    = {Waad Aldndni and Na Meng and Francisco Servant},
+  title     = {Automatic Prediction of Developers' Resolutions for Software Merge Conflicts},
+  journal   = {The Journal of Systems and Software},
+  volume    = {206},
+  pages     = {111836},
+  year      = {2023},
+  doi       = {10.1016/j.jss.2023.111836},
+}
+
+@article{elias2023mestre,
+  author    = {Paulo Elias and Heleno de S. Campos Junior and Eduardo Ogasawara and Leonardo Gresta Paulino Murta},
+  title     = {Towards Accurate Recommendations of Merge Conflicts Resolution Strategies},
+  journal   = {Information and Software Technology},
+  volume    = {164},
+  pages     = {107332},
+  year      = {2023},
+  doi       = {10.1016/j.infsof.2023.107332},
+}
+
+@article{shen2024conflictbench,
+  author    = {Bowen Shen and Na Meng},
+  title     = {{ConflictBench}: A Benchmark to Evaluate Software Merge Tools},
+  journal   = {The Journal of Systems and Software},
+  volume    = {214},
+  pages     = {112084},
+  year      = {2024},
+  doi       = {10.1016/j.jss.2024.112084},
+}
+
+@inproceedings{owhadi2019predicting,
+  author    = {Moein Owhadi-Kareshk and Sarah Nadi and Julia Rubin},
+  title     = {Predicting Merge Conflicts in Collaborative Software Development},
+  booktitle = {Proceedings of the IEEE International Symposium on Empirical Software Engineering and Measurement (ESEM)},
+  year      = {2019},
+  doi       = {10.1109/ESEM.2019.8870186},
+}
+
+%% ── Derivability and resolution patterns ──────────────────────────────────
+
+@inproceedings{boll2024derivability,
+  author    = {Alexander Boll and Yael van Dok and Manuel Ohrndorf and Alexander Schulthei{\ss} and Timo Kehrer},
+  title     = {Towards Semi-Automated Merge Conflict Resolution: Is It Easier Than We Expected?},
+  booktitle = {Proceedings of the 28th International Conference on Evaluation and Assessment in Software Engineering (EASE)},
+  year      = {2024},
+  pages     = {282--292},
+  doi       = {10.1145/3661167.3661197},
+}
+
+@inproceedings{pan2021synthesis,
+  author    = {Rangeet Pan and Vu Le and Nachiappan Nagappan and Sumit Gulwani and Shuvendu Lahiri and Mike Kaufman},
+  title     = {Can Program Synthesis be Used to Learn Merge Conflict Resolutions? An Empirical Analysis},
+  booktitle = {arXiv preprint arXiv:2103.02004},
+  year      = {2021},
+}
+
+%% ── Merge strategies: structured and semi-structured ──────────────────────
+
+@inproceedings{cavalcanti2019impact,
+  author    = {Guilherme Cavalcanti and Paulo Borba and Georg Seibt and Sven Apel},
+  title     = {The Impact of Structure on Software Merging: Semistructured versus Structured Merge},
+  booktitle = {Proceedings of the 34th IEEE/ACM International Conference on Automated Software Engineering (ASE)},
+  year      = {2019},
+  pages     = {1002--1013},
+  doi       = {10.1109/ASE.2019.00097},
+}
+
+%% ── AI agents and datasets ────────────────────────────────────────────────
+
+@article{li2025aidev,
+  author    = {Hao Li and Haoxiang Zhang and Ahmed E. Hassan},
+  title     = {The Rise of {AI} Teammates in Software Engineering ({SE}) 3.0: How Autonomous Coding Agents Are Reshaping Software Engineering},
+  journal   = {arXiv preprint arXiv:2507.15003},
+  year      = {2025},
+}
+
+@inproceedings{li2026aidev_msr,
+  author    = {Hao Li and Haoxiang Zhang and Ahmed E. Hassan},
+  title     = {{AIDev}: Studying {AI} Coding Agents on {GitHub}},
+  booktitle = {Proceedings of the 23rd International Conference on Mining Software Repositories (MSR), Mining Challenge},
+  year      = {2026},
+  address   = {Rio de Janeiro, Brazil},
+}
+
+@inproceedings{ogenrwot2026agenticflict,
+  author    = {Daniel Ogenrwot and John Businge},
+  title     = {{AgenticFlict}: A Large-Scale Dataset of Merge Conflicts in {AI} Coding Agent Pull Requests on {GitHub}},
+  booktitle = {Proceedings of the 23rd International Conference on Mining Software Repositories (MSR), Mining Challenge},
+  year      = {2026},
+  doi       = {10.5281/zenodo.19396917},
+}
+
+%% ── Collaboration conflicts ──────────────────────────────────────────────
+
+@inproceedings{brun2011,
+  author    = {Yuriy Brun and Reid Holmes and Michael D. Ernst and David Notkin},
+  title     = {Proactive Detection of Collaboration Conflicts},
+  booktitle = {Proceedings of the 19th ACM SIGSOFT Symposium and the 13th European Software Engineering Conference (ESEC/FSE)},
+  year      = {2011},
+  pages     = {168--178},
+  doi       = {10.1145/2025113.2025139},
+}
