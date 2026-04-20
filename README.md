@@ -46,11 +46,6 @@ To reproduce the data on your own:
 | Flag | Source files | Scope |
 |---|---|---|
 | *(none)* | `pull_request.parquet`, `repository.parquet` | AIDev-pop (> 100 ⭐) |
-| `--full-aidev` | `all_pull_request.parquet`, `all_repository.parquet` | Full AIDev |
+| `--full-aidev` | `all_pull_request.parquet`, `all_repository.parquet` | AIDev with ≥ 10 ⭐ |
 
-The pipeline is **incremental**: every successfully processed repository is recorded in `data/nature_of_agent_conflicts/processed_repos.txt`. Re-running the script (with or without `--full-aidev`) will skip any repository already listed there, so partial runs and scope expansions are safe — previously collected data is never lost or duplicated.
-
-When running with `--full-aidev`, repositories that were already in AIDev-pop retain their pre-collected commit SHAs from `pr_commits.parquet`. For repositories that only exist in the full AIDev dataset (≤ 100 stars), the pipeline falls back to scanning the git log directly, matching merge commits to PRs by PR number.
-
-The generated consolidated spreadsheets will be output to `data/nature_of_agent_conflicts/*.parquet`.
-Use `analysis.ipynb` to explore statistical insights.
+The pipeline is **incremental**

@@ -70,9 +70,13 @@ def build_universe(is_pilot: bool, pilot_count: int, use_full_aidev: bool = Fals
     logger.info("Stage 0: Building universe...")
 
     if use_full_aidev:
-        logger.info("Full-AIDev mode: using all_pull_request.parquet + all_repository.parquet")
+        logger.info("Full-AIDev mode: using all_pull_request.parquet + all_repository.parquet (stars >= 10)")
         pr_df   = pd.read_parquet(AIDEV_DIR / "all_pull_request.parquet")
         repo_df = pd.read_parquet(AIDEV_DIR / "all_repository.parquet")
+        if 'stars' in repo_df.columns:
+            before = len(repo_df)
+            repo_df = repo_df[repo_df['stars'] >= 10]
+            logger.info(f"Filtered repos by stars >= 10: {before:,} -> {len(repo_df):,} repos")
     else:
         pr_df   = pd.read_parquet(AIDEV_DIR / "pull_request.parquet")
         repo_df = pd.read_parquet(AIDEV_DIR / "repository.parquet")
