@@ -6,7 +6,7 @@ An empirical study focused on characterizing merge conflicts resulting from inte
 
 To build the exploratory analyses to test our thesis described in the baseline file `PLAN.md`, this project provides the `extract_aidev_nature.py` script, which orchestrates the entire data extraction following 6 fundamental stages:
 
-- **Stage 0:** Builds a DataFrame with all PRs from repositories belonging to the `AIDev-pop` sampling (> 100 stars) extracted from the original parquet files in the directory (`/AIDev/*`).
+- **Stage 0:** Builds a DataFrame with all PRs from the target dataset (AIDev-pop by default, or the full AIDev when `--full-aidev` is passed) extracted from the original parquet files in the directory (`/AIDev/*`).
 - **Stage 1 (Bare Clone):** Bare clones a temporary repository solely to run GIT binaries to check the tree with disk optimizations.
 - **Stage 2 (Merge Commit check):** Analyzes commits in enumerated mode and lists sub-commits.
 - **Stage 3 & 4 (Diff3 & Resolution):** Runs a `git merge-tree` simulating how conflict block chunks would be grouped during a regular merge process, and tracks how this conflict was resolved by analyzing the entire post-context.
@@ -33,10 +33,19 @@ To reproduce the data on your own:
     ```bash
     # For sample testing, use the --pilot flag specifying the number of repositories
     python extract_aidev_nature.py --pilot 5
-    
-    # To completely run the original pre-extraction
+
+    # AIDev-pop only (repositories with > 100 stars — 2,807 repos, 33,596 PRs)
     python extract_aidev_nature.py
+
+    # Full AIDev (all ~116,000 repositories, ~932,000 PRs)
+    python extract_aidev_nature.py --full-aidev
     ```
 
-The generated consolidated spreadsheets will be output to the restricted workspace directory `data/nature_of_agent_conflicts/*.parquet`.
-Use `analysis.ipynb` to explore statistical insights.
+### Dataset scope and incremental runs
+
+| Flag | Source files | Scope |
+|---|---|---|
+| *(none)* | `pull_request.parquet`, `repository.parquet` | AIDev-pop (> 100 ⭐) |
+| `--full-aidev` | `all_pull_request.parquet`, `all_repository.parquet` | Full AIDev |
+
+The pipeline is **incremental**: every suc
