@@ -4,14 +4,14 @@ An empirical study focused on characterizing merge conflicts resulting from inte
 
 ## About the Pipeline
 
-To build the exploratory analyses to test our thesis described in the baseline file `PLAN.md`, this project provides the `extract_aidev_nature.py` script, which orchestrates the entire data extraction following 6 fundamental stages:
+To build the exploratory analyses that answer the research questions described in the baseline file `PLAN.md`, this project provides the `extract_aidev_nature.py` script, which orchestrates the entire data extraction in 6 sequential stages:
 
-- **Stage 0:** Builds a DataFrame with all PRs from the target dataset (AIDev-pop by default, or the full AIDev when `--full-aidev` is passed) extracted from the original parquet files in the directory (`/AIDev/*`).
-- **Stage 1 (Bare Clone):** Bare clones a temporary repository solely to run GIT binaries to check the tree with disk optimizations.
-- **Stage 2 (Merge Commit check):** Analyzes commits in enumerated mode and lists sub-commits.
-- **Stage 3 & 4 (Diff3 & Resolution):** Runs a `git merge-tree` simulating how conflict block chunks would be grouped during a regular merge process, and tracks how this conflict was resolved by analyzing the entire post-context.
-- **Stage 5 (Classification):** Processes the conflicting chunk to analyze which formal technique (V1, V2, Combination, ConcatV1V2, New Code) was preferred.
-- **Stage 6 (Auto-attribution of resolution):** Detects whether this local solution authored by bots (e.g. *claude[bot]*) or by human intervention.
+- **Stage 0 (Universe):** Builds a DataFrame with all PRs from AIDev-pop by joining `pull_request.parquet`, `repository.parquet`, `pr_task_type.parquet`, and inner-joining with `pr_commits.parquet` so every row carries one candidate commit SHA.
+- **Stage 1 (Bare clone):** Clones each repository as a bare mirror into a temporary scratch directory; the clone is removed at the end of the repository's processing to bound disk usage.
+- **Stage 2 (Internal-merge enumeration):** For each candidate SHA in a PR, `git cat-file -p <sha>` is used to retrieve the parent list. Commits with exactly two parents are kept as internal merges; GitHub's `"Merge pull request #N"` integration merges are filtered out on the message; octopus merges (≥3 parents) and unreachable SHAs (force-pushed branches) are recorded to the audit table.
+- **Stage 3 & 4 (Conflict replay & resolution):** `git merge-tree` + `git merge-file --diff3` are used to replay each internal merge and extract conflicting chunks; LOCALIZERESREGION isolates the corresponding resolution region on the merge tree.
+- **Stage 5 (Strategy classification):** Each chunk is labeled V1 / V2 / CC / CB / NC / NN / Imprecise via `identify_resolution`.
+- **Stage 6 (Resolver attribution):** Author / co-author signatures are matched against known agent accounts (`agent`, `agent-assisted`, `human`).
 
 ## Getting Started
 
@@ -29,28 +29,33 @@ To reproduce the data on your own:
     venv\Scripts\activate
     pip install -r requirements.txt
     ```
-3. Run the main extraction pipeline (depending on server resources, this will allocate multiple CPU threads and perform clones until complete):
+3. Run the main extraction pipeline:
     ```bash
-    # For sample testing, use the --pilot flag specifying the number of repositories
+    # Pilot: restrict to the first N AIDev-pop repositories for a smoke test.
     python extract_aidev_nature.py --pilot 5
 
-    # AIDev-pop only (repositories with > 100 stars — 2,807 repos, 33,596 PRs)
+    # Full run over AIDev-pop (~2,807 repos, ~33,600 PRs).
     python extract_aidev_nature.py
-
-    # Full AIDev (all ~116,000 repositories, ~932,000 PRs)
-    python extract_aidev_nature.py --full-aidev
     ```
 
-### Dataset scope and incremental runs
+### Scope and incremental runs
 
-| Flag | Source files | Scope |
-|---|---|---|
-| *(none)* | `pull_request.parquet`, `repository.parquet` | AIDev-pop (> 100 ⭐) |
-| `--full-aidev` | `all_pull_request.parquet`, `all_repository.parquet` | AIDev with ≥ 10 ⭐ |
+The study scope is **AIDev-pop only**, as fixed in `PLAN.md` §4.1. The `--full-aidev` flag that existed in earlier revisions has been **removed**: it relied on a `git log --grep="pull request #N"` heuristic to discover per-PR merges for repositories outside AIDev-pop, and the heuristic is unsound — internal merges created inside a PR (e.g. `Merge branch 'main' into feature-x`) do not mention the PR number, so they were never matched, while the only message that does match (`Merge pull request #N from …`) is the GitHub integration merge, which must be excluded from the analysis anyway. The net effect was a fallback that returned empty for every PR it touched. See `PLAN.md` §9 and §10 for the rationale and for the deferred proper extension (fetching `refs/pull/*/head`).
 
-The pipeline is **incremental**: every successfully processed repository is recorded in `data/nature_of_agent_conflicts/processed_repos.txt`. Re-running the script (with or without `--full-aidev`) will skip any repository already listed there, so partial runs and scope expansions are safe — previously collected data is never lost or duplicated.
+The pipeline is **incremental**: every successfully processed repository is recorded in `data/nature_of_agent_conflicts/processed_repos.txt`. Re-running the script skips any repository already listed there, so partial runs are safe. To re-run from scratch, delete both `processed_repos.txt` and the `*.jsonl` files in the same directory.
 
-When running with `--full-aidev`, the scope is restricted to repositories with **≥ 10 stars** (filtered from `all_repository.parquet`), balancing coverage with data quality. Repositories that were already in AIDev-pop retain their pre-collected commit SHAs from `pr_commits.parquet`. For repositories new to this scope (10–100 stars), the pipeline falls back to scanning the git log directly, matching merge commits to PRs by PR number.
+### Outputs
 
-The generated consolidated spreadsheets will be output to `data/nature_of_agent_conflicts/*.parquet`.
-Use `analysis.ipynb` to explore statistical insights.
+All artifacts land in `data/nature_of_agent_conflicts/`:
+
+| File | Contents |
+|---|---|
+| `aidev_pop_universe.parquet` | `(pr_id, sha)` rows joined with PR and repo metadata — the Stage 0 frame. |
+| `internal_merges.parquet` | One row per two-parent merge commit found inside a PR. |
+| `conflict_chunks.parquet` | One row per conflicting chunk produced by replay. |
+| `resolved_chunks.parquet` | Same, plus the LOCALIZERESREGION output (`resolution`, `localized_ok`). |
+| `classified_chunks.parquet` | Same, plus the resolution `strategy` label. |
+| `resolver_labels.parquet` | Per-merge `resolver_type` (`agent` / `agent-assisted` / `human`). |
+| `extraction_errors.parquet` | Audit table — clone failures, missing SHAs, octopus merges, filtered integration merges, LOCALIZERESREGION timeouts. |
+
+Chunk-level tables are de-duplicated on `(repo_full_name, merge_sha, file_path, chunk_index)` at aggregation time to avoid inflation when the same merge SHA is referenced by multiple PRs (force-pushed / re-opened). Use `analysis.ipynb` to explore statistical insights.

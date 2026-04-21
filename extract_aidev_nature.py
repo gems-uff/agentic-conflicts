@@ -1,6 +1,13 @@
 #!/usr/bin/env python3
 """
-Pipeline for Phase 1: Nature of Agent Conflicts
+Pipeline for Phase 1: Nature of Agent Conflicts.
+
+Scope is AIDev-pop (PLAN.md §4.1). Internal merge commits of every PR are
+identified by walking the SHAs in ``pr_commits.parquet`` and keeping the ones
+with exactly two parents (PLAN.md §5.1). PRs that are not present in
+``pr_commits.parquet`` cannot be processed because the candidate SHA list is
+unknown -- extending the scope to the full AIDev tier would require fetching
+``refs/pull/*/head`` from each remote and is deferred (see PLAN.md §10).
 """
 
 import argparse
@@ -10,12 +17,21 @@ import multiprocessing
 import os
 import re
 import shutil
-import tempfile
+from datetime import datetime
 from pathlib import Path
 
 import pandas as pd
 
-from collect import clone_repo_bare, run_git_command, run_merge_file, parse_diff3_chunks, find_resolution, MERGE_TREE_CONFLICT_REGEX
+from collect import (
+    clone_repo_bare,
+    run_git_command,
+    run_merge_file,
+    parse_diff3_chunks,
+    find_resolution,
+    MERGE_TREE_CONFLICT_REGEX,
+    time_limit,
+    FunctionTimeoutError,
+)
 from extract_resolution_strategies import identify_resolution, remove_empty_lines
 
 # --- Configuration ---
@@ -23,6 +39,17 @@ AIDEV_DIR = Path("AIDev")
 DATA_DIR = Path("data/nature_of_agent_conflicts")
 SCRATCH_DIR = DATA_DIR / "scratch"
 LOGS_DIR = DATA_DIR / "logs"
+
+# Hard cap, in seconds, for LOCALIZERESREGION on a single chunk. The algorithm
+# is O(n^2) on the resolved-file size in the worst case; without this guard a
+# pathologically large file can stall a worker indefinitely.
+LOCALIZE_TIMEOUT_S = 60
+
+# Mensagem do merge de integracao que o GitHub cria quando o botao "Merge
+# pull request" e usado. Esses commits tem 2 parents mas NAO sao merges
+# internos -- devem ser filtrados (PLAN.md §4.3).
+_PR_INTEGRATION_MERGE_RE = re.compile(r"merge pull request\s+#\d+", re.IGNORECASE)
+
 
 for d in [DATA_DIR, SCRATCH_DIR, LOGS_DIR]:
     d.mkdir(parents=True, exist_ok=True)
@@ -33,8 +60,6 @@ logger.setLevel(logging.INFO)
 if logger.hasHandlers():
     logger.handlers.clear()
 ch = logging.StreamHandler()
-from datetime import datetime
-
 timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 log_filename = f"pipeline_{timestamp}.log"
 fh = logging.FileHandler(LOGS_DIR / log_filename, mode='w', encoding='utf-8')
@@ -45,48 +70,65 @@ logger.addHandler(ch)
 logger.addHandler(fh)
 logger.propagate = False
 
+
 def is_bot_signature(text: str) -> bool:
     """Classify if a string matches typical agent/bot signatures."""
     t = text.lower()
     bot_markers = ["[bot]", "-bot", "copilot", "devin", "claude", "cursor", "openai"]
-    if t.endswith("bot"): return True
+    if t.endswith("bot"):
+        return True
     return any(marker in t for marker in bot_markers)
+
 
 def classify_resolver(author: str, message: str) -> str:
     """Classify resolver into agent, agent-assisted, human based on author and commit message."""
     if is_bot_signature(author):
         return "agent"
-    
-    # Analyze commit message for Co-authored-by
+
     lines = message.splitlines()
     for line in lines:
         if line.lower().startswith("co-authored-by:"):
             if is_bot_signature(line):
                 return "agent-assisted"
-    
+
     return "human"
 
-def build_universe(is_pilot: bool, pilot_count: int, use_full_aidev: bool = False) -> pd.DataFrame:
-    logger.info("Stage 0: Building universe...")
 
-    if use_full_aidev:
-        logger.info("Full-AIDev mode: using all_pull_request.parquet + all_repository.parquet (stars >= 10)")
-        pr_df   = pd.read_parquet(AIDEV_DIR / "all_pull_request.parquet")
-        repo_df = pd.read_parquet(AIDEV_DIR / "all_repository.parquet")
-        if 'stars' in repo_df.columns:
-            before = len(repo_df)
-            repo_df = repo_df[repo_df['stars'] >= 10]
-            logger.info(f"Filtered repos by stars >= 10: {before:,} -> {len(repo_df):,} repos")
-    else:
-        pr_df   = pd.read_parquet(AIDEV_DIR / "pull_request.parquet")
-        repo_df = pd.read_parquet(AIDEV_DIR / "repository.parquet")
+def _normalize_repo_url(repo_url: str) -> str:
+    """Coerce any AIDev-style repo URL to ``https://github.com/<owner>/<repo>.git``."""
+    if not isinstance(repo_url, str):
+        return repo_url
+    url = repo_url.strip()
+    if url.startswith("https://api.github.com/repos/"):
+        url = url.replace("https://api.github.com/repos/", "https://github.com/")
+    if not url.endswith(".git"):
+        url += ".git"
+    return url
+
+
+def build_universe(is_pilot: bool, pilot_count: int) -> pd.DataFrame:
+    """Stage 0 -- build the AIDev-pop universe (PLAN.md §4.1, §6.1).
+
+    Joins ``pull_request.parquet`` x ``repository.parquet`` x ``pr_task_type.parquet``,
+    then INNER-joins with ``pr_commits.parquet`` so that every row carries the
+    SHA of one PR commit (one row per (pr_id, sha)). PRs without an entry in
+    ``pr_commits.parquet`` are dropped -- they cannot be processed (PLAN.md §10).
+    All PR states are kept, per PLAN.md §4.2.
+    """
+    logger.info("Stage 0: Building AIDev-pop universe...")
+
+    pr_df = pd.read_parquet(AIDEV_DIR / "pull_request.parquet")
+    repo_df = pd.read_parquet(AIDEV_DIR / "repository.parquet")
 
     try:
         task_df = pd.read_parquet(AIDEV_DIR / "pr_task_type.parquet")
     except Exception:
         task_df = pd.DataFrame(columns=['id', 'type'])
 
-    pr_repo_df = pr_df.merge(repo_df[['id', 'full_name', 'language']], left_on='repo_id', right_on='id', suffixes=('', '_repo'))
+    pr_repo_df = pr_df.merge(
+        repo_df[['id', 'full_name', 'language']],
+        left_on='repo_id', right_on='id', suffixes=('', '_repo'),
+    )
 
     if not task_df.empty:
         pr_repo_task_df = pr_repo_df.merge(task_df[['id', 'type']], on='id', how='left')
@@ -95,34 +137,17 @@ def build_universe(is_pilot: bool, pilot_count: int, use_full_aidev: bool = Fals
         pr_repo_task_df = pr_repo_df.copy()
         pr_repo_task_df['pr_task_type'] = None
 
-    # 'number' (PR number within repo) is needed for git-log matching in full-AIDev mode
-    cols_to_keep = ['id', 'number', 'repo_url', 'full_name', 'language', 'agent', 'pr_task_type', 'state']
+    cols_to_keep = ['id', 'number', 'repo_url', 'full_name', 'language',
+                    'agent', 'pr_task_type', 'state']
     if 'merged_at' in pr_repo_task_df.columns:
         cols_to_keep.append('merged_at')
     cols_to_keep = [c for c in cols_to_keep if c in pr_repo_task_df.columns]
 
-    if use_full_aidev:
-        # PR-level universe: left-join with pr_commits so AIDev-pop repos keep their
-        # pre-collected SHAs while new repos get sha=NaN (handled in process_repository).
-        pr_level = pr_repo_task_df[cols_to_keep].copy()
-        pr_level = pr_level.rename(columns={'id': 'pr_id'})
-
-        # Only merged PRs are relevant
-        if 'merged_at' in pr_level.columns:
-            pr_level = pr_level[pr_level['merged_at'].notna()]
-
-        try:
-            commits_df = pd.read_parquet(AIDEV_DIR / "pr_commits.parquet")
-            universe_df = pr_level.merge(commits_df[['pr_id', 'sha']], on='pr_id', how='left')
-        except Exception:
-            universe_df = pr_level.copy()
-            universe_df['sha'] = None
-    else:
-        commits_df = pd.read_parquet(AIDEV_DIR / "pr_commits.parquet")
-        universe_df = commits_df.merge(
-            pr_repo_task_df[cols_to_keep],
-            left_on='pr_id', right_on='id'
-        )
+    commits_df = pd.read_parquet(AIDEV_DIR / "pr_commits.parquet")
+    universe_df = commits_df.merge(
+        pr_repo_task_df[cols_to_keep],
+        left_on='pr_id', right_on='id',
+    )
 
     if is_pilot:
         unique_repos = universe_df['full_name'].dropna().unique()[:pilot_count]
@@ -131,68 +156,166 @@ def build_universe(is_pilot: bool, pilot_count: int, use_full_aidev: bool = Fals
 
     out_path = DATA_DIR / "aidev_pop_universe.parquet"
     universe_df.to_parquet(out_path)
-    logger.info(f"Stage 0 complete. Universe has {len(universe_df)} records.")
+    logger.info(
+        f"Stage 0 complete. Universe has {len(universe_df)} (pr_id, sha) rows "
+        f"across {universe_df['full_name'].nunique()} repositories and "
+        f"{universe_df['pr_id'].nunique()} PRs."
+    )
     return universe_df
 
-# Regex para identificar o merge final de um PR no GitHub ("Merge pull request #N …").
-# Esses commits são EXTERNOS (PR branch → base) e devem ser ignorados na busca
-# por merges internos (base/outra branch → feature branch).
-_PR_MERGE_MSG_RE = re.compile(r'merge pull request\s+#\d+', re.IGNORECASE)
 
-def _get_sha_list_for_pr(repo_path, pr_id, pr_number, pr_commits_series):
-    """Retorna lista de SHAs a inspecionar para um PR.
+def _parse_commit_object(blob: bytes):
+    """Parse the output of ``git cat-file -p <sha>`` for a commit object."""
+    text = blob.decode("utf-8", "ignore")
+    parts = text.split("\n\n", 1)
+    metadata = parts[0]
+    message = parts[1] if len(parts) > 1 else ""
 
-    - Modo pr_commits (AIDev-pop): usa os SHAs pré-coletados.
-    - Modo git-log (AIDev completo): varre o histórico git buscando merges
-      cujo commit pai é identificável como pertencente ao PR pelo número.
-    """
-    known_shas = pr_commits_series.dropna().tolist() if pr_commits_series is not None else []
-    if known_shas:
-        return known_shas
+    parents = []
+    author = "Unknown"
+    committer = "Unknown"
+    for line in metadata.split("\n"):
+        if line.startswith("parent "):
+            parents.append(line.split(" ", 1)[1].strip())
+        elif line.startswith("author "):
+            author = line.split("author ", 1)[1].split("<")[0].strip()
+        elif line.startswith("committer "):
+            committer = line.split("committer ", 1)[1].split("<")[0].strip()
 
-    if not pr_number:
-        return []
+    return {
+        "parents": parents,
+        "author": author,
+        "committer": committer,
+        "message": message,
+    }
 
-    # Busca no git log por merges associados a este PR pelo número.
-    # "--ancestry-path" limita a ancestrais diretos; "--format=%H %P %s" dá sha, pais e assunto.
-    log_bytes = run_git_command(
-        repo_path, "log", "--all", "--merges",
-        f"--grep=pull request #{int(pr_number)}",
-        "--format=%H %s",
-        check=False,
-    )
-    if not log_bytes:
-        return []
 
-    candidate_shas = []
-    for line in log_bytes.decode("utf-8", "ignore").splitlines():
-        parts = line.split(" ", 1)
-        if not parts:
+def _process_one_merge(repo_path, repo_full_name, pr_id, sha, parsed):
+    """Replay the three-way merge for a single internal merge commit."""
+    p1, p2 = parsed["parents"]
+    resolver_type = classify_resolver(parsed["author"], parsed["message"])
+
+    internal_merge = {
+        "pr_id": pr_id,
+        "merge_sha": sha,
+        "parent1_sha": p1,
+        "parent2_sha": p2,
+        "author": parsed["author"],
+        "committer": parsed["committer"],
+        "repo_full_name": repo_full_name,
+        "resolver_type": resolver_type,
+    }
+
+    conflict_chunks = []
+    resolved_chunks = []
+    classified_chunks = []
+    errors = []
+
+    base_bytes = run_git_command(repo_path, "merge-base", p1, p2, check=False)
+    if not base_bytes:
+        return internal_merge, [], [], [], []
+    base = base_bytes.decode("utf-8", "ignore").strip()
+    if not base:
+        return internal_merge, [], [], [], []
+
+    tree_bytes = run_git_command(repo_path, "merge-tree", base, p1, p2, check=False)
+    if not tree_bytes:
+        return internal_merge, [], [], [], []
+    tree_output = tree_bytes.decode("utf-8", "ignore")
+
+    for match in MERGE_TREE_CONFLICT_REGEX.finditer(tree_output):
+        base_blob, path, p1_blob, p2_blob = match.groups()
+
+        try:
+            base_content = run_git_command(repo_path, "show", base_blob, check=False)
+            p1_content = run_git_command(repo_path, "show", p1_blob, check=False)
+            p2_content = run_git_command(repo_path, "show", p2_blob, check=False)
+            resolved_bytes = run_git_command(
+                repo_path, "show", f"{sha}:{path}", check=False
+            )
+            resolved_content = resolved_bytes.decode("utf-8", "ignore") if resolved_bytes else ""
+
+            conflict_content, has_conflict = run_merge_file(p1_content, base_content, p2_content)
+            if not has_conflict:
+                continue
+
+            try:
+                with time_limit(LOCALIZE_TIMEOUT_S):
+                    chunks = parse_diff3_chunks(conflict_content)
+                    if not chunks:
+                        continue
+
+                    for chunk_idx, chunk in enumerate(chunks):
+                        chunk_data = {
+                            "repo_full_name": repo_full_name,
+                            "pr_id": pr_id,
+                            "merge_sha": sha,
+                            "file_path": path,
+                            "chunk_index": chunk_idx,
+                            "v1": chunk['v1'],
+                            "base": chunk['base'],
+                            "v2": chunk['v2'],
+                            "v1_loc": len(remove_empty_lines(chunk['v1'].splitlines())),
+                            "v2_loc": len(remove_empty_lines(chunk['v2'].splitlines())),
+                            "base_loc": len(remove_empty_lines(chunk['base'].splitlines())),
+                        }
+                        conflict_chunks.append(chunk_data.copy())
+
+                        resolution, status = find_resolution(
+                            chunk["pre_context"], chunk["post_context"], resolved_content
+                        )
+                        chunk_data["resolution"] = resolution
+                        chunk_data["localized_ok"] = (status == "found")
+                        chunk_data["resolution_loc"] = (
+                            len(remove_empty_lines(resolution.splitlines())) if resolution else 0
+                        )
+                        resolved_chunks.append(chunk_data.copy())
+
+                        strategy = (
+                            identify_resolution(chunk['v1'], chunk['v2'], resolution)
+                            if resolution is not None else "Imprecise"
+                        )
+                        chunk_data["strategy"] = strategy
+                        classified_chunks.append(chunk_data.copy())
+            except FunctionTimeoutError:
+                errors.append({
+                    "repo_full_name": repo_full_name,
+                    "pr_id": pr_id,
+                    "merge_sha": sha,
+                    "file_path": path,
+                    "error_type": "localize_timeout",
+                    "error_message": f"LOCALIZERESREGION exceeded {LOCALIZE_TIMEOUT_S}s",
+                })
+                continue
+        except Exception as e:
+            errors.append({
+                "repo_full_name": repo_full_name,
+                "pr_id": pr_id,
+                "merge_sha": sha,
+                "file_path": path,
+                "error_type": "file_processing_exception",
+                "error_message": str(e),
+            })
             continue
-        sha = parts[0].strip()
-        subject = parts[1] if len(parts) > 1 else ""
-        # O merge final do PR (externo) tem mensagem "Merge pull request #N from …"
-        # Queremos *excluir* esse e incluir merges *internos* dentro do PR.
-        if _PR_MERGE_MSG_RE.search(subject):
-            continue  # é o merge de integração, não interno
-        candidate_shas.append(sha)
 
-    return candidate_shas
+    return internal_merge, conflict_chunks, resolved_chunks, classified_chunks, errors
 
 
 def process_repository(repo_info: tuple):
     repo_full_name, repo_df = repo_info
 
-    repo_url = repo_df.iloc[0]['repo_url']
-    if repo_url.startswith("https://api.github.com/repos/"):
-        repo_url = repo_url.replace("https://api.github.com/repos/", "https://github.com/")
-        if not repo_url.endswith(".git"):
-            repo_url += ".git"
+    repo_url = _normalize_repo_url(repo_df.iloc[0]['repo_url'])
 
     repo_path = clone_repo_bare(repo_url, SCRATCH_DIR)
     if not repo_path:
-        logger.error(f"Não foi possível clonar ou atualizar o repositório {repo_full_name} (Possível timeout na rede).")
-        return repo_full_name, [], [], [], [], [{"repo_full_name": repo_full_name, "pr_id": None, "merge_sha": None, "error_type": "clone_failed", "error_message": "Não foi possível clonar ou atualizar o repositório"}]
+        logger.error(f"Nao foi possivel clonar/atualizar o repositorio {repo_full_name}.")
+        return repo_full_name, [], [], [], [], [{
+            "repo_full_name": repo_full_name,
+            "pr_id": None,
+            "merge_sha": None,
+            "error_type": "clone_failed",
+            "error_message": "Nao foi possivel clonar ou atualizar o repositorio",
+        }]
 
     internal_merges = []
     conflict_chunks = []
@@ -200,161 +323,191 @@ def process_repository(repo_info: tuple):
     classified_chunks = []
     extraction_errors = []
 
-    has_sha_col = 'sha' in repo_df.columns
-
-    prs = repo_df.groupby('pr_id')
-    for pr_id, pr_data in prs:
-        pr_number = pr_data.iloc[0].get('number') if 'number' in pr_data.columns else None
-        sha_series = pr_data['sha'] if has_sha_col else None
-        commits = _get_sha_list_for_pr(repo_path, pr_id, pr_number, sha_series)
-        for sha in commits:
+    try:
+        prs = repo_df.groupby('pr_id')
+        for pr_id, pr_data in prs:
             try:
-                log_output_bytes = run_git_command(repo_path, "cat-file", "-p", sha, check=False)
-                if not log_output_bytes: continue
-                log_output = log_output_bytes.decode("utf-8", "ignore")
-                
-                parts = log_output.split("\n\n", 1)
-                metadata = parts[0]
-                message = parts[1] if len(parts) > 1 else ""
-                
-                parents = [line.split(" ")[1] for line in metadata.split("\n") if line.startswith("parent ")]
-                
-                if len(parents) == 2:
-                    p1, p2 = parents
-                    author_line = next((line for line in metadata.split("\n") if line.startswith("author ")), "author Unknown <unk>")
-                    committer_line = next((line for line in metadata.split("\n") if line.startswith("committer ")), "committer Unknown <unk>")
-                    
-                    author = author_line.split("author ")[1].split("<")[0].strip()
-                    committer = committer_line.split("committer ")[1].split("<")[0].strip()
-                    
-                    # Stage 6: Inline resolver classification
-                    resolver_type = classify_resolver(author, message)
-                    
-                    internal_merges.append({
-                        "pr_id": pr_id,
-                        "merge_sha": sha,
-                        "parent1_sha": p1,
-                        "parent2_sha": p2,
-                        "author": author,
-                        "committer": committer,
+                shas = (
+                    pr_data['sha'].dropna().drop_duplicates().tolist()
+                    if 'sha' in pr_data.columns else []
+                )
+                if not shas:
+                    extraction_errors.append({
                         "repo_full_name": repo_full_name,
-                        "resolver_type": resolver_type
+                        "pr_id": pr_id,
+                        "merge_sha": None,
+                        "error_type": "no_sha_for_pr",
+                        "error_message": "PR has no entries in pr_commits.parquet (out of AIDev-pop scope).",
                     })
-                    
-                    base_bytes = run_git_command(repo_path, "merge-base", p1, p2, check=False)
-                    if not base_bytes: continue
-                    base = base_bytes.decode("utf-8", "ignore").strip()
-                    if not base: continue
-                    
-                    tree_output_bytes = run_git_command(repo_path, "merge-tree", base, p1, p2, check=False)
-                    if not tree_output_bytes: continue
-                    tree_output = tree_output_bytes.decode("utf-8", "ignore")
-                    
-                    conflicting_files = MERGE_TREE_CONFLICT_REGEX.finditer(tree_output)
-                    
-                    for match in conflicting_files:
-                        base_blob, path, p1_blob, p2_blob = match.groups()
-                        
-                        base_content = run_git_command(repo_path, "show", base_blob, check=False)
-                        p1_content = run_git_command(repo_path, "show", p1_blob, check=False)
-                        p2_content = run_git_command(repo_path, "show", p2_blob, check=False)
-                        resolved_content_bytes = run_git_command(repo_path, "show", f"{sha}:{path}", check=False)
-                        resolved_content = resolved_content_bytes.decode('utf-8', 'ignore') if resolved_content_bytes else ""
-                        
-                        conflict_content, has_conflict = run_merge_file(p1_content, base_content, p2_content)
-                        if not has_conflict: continue
-                        
-                        chunks = parse_diff3_chunks(conflict_content)
-                        for chunk_idx, chunk in enumerate(chunks):
-                            chunk_data = {
+                    continue
+
+                for sha in shas:
+                    try:
+                        blob = run_git_command(repo_path, "cat-file", "-p", sha, check=False)
+                        if not blob:
+                            extraction_errors.append({
+                                "repo_full_name": repo_full_name,
                                 "pr_id": pr_id,
                                 "merge_sha": sha,
-                                "file_path": path,
-                                "chunk_index": chunk_idx,
-                                "v1": chunk['v1'],
-                                "base": chunk['base'],
-                                "v2": chunk['v2'],
-                                "v1_loc": len(remove_empty_lines(chunk['v1'].splitlines())),
-                                "v2_loc": len(remove_empty_lines(chunk['v2'].splitlines())),
-                                "base_loc": len(remove_empty_lines(chunk['base'].splitlines()))
-                            }
-                            conflict_chunks.append(chunk_data.copy())
-                            
-                            resolution, status = find_resolution(chunk["pre_context"], chunk["post_context"], resolved_content)
-                            chunk_data["resolution"] = resolution
-                            chunk_data["localized_ok"] = (status == "found")
-                            chunk_data["resolution_loc"] = len(remove_empty_lines(resolution.splitlines())) if resolution else 0
-                            resolved_chunks.append(chunk_data.copy())
-                            
-                            strategy = identify_resolution(chunk['v1'], chunk['v2'], resolution) if resolution is not None else "Imprecise"
-                            chunk_data["strategy"] = strategy
-                            classified_chunks.append(chunk_data.copy())
-                            
+                                "error_type": "sha_not_in_repo",
+                                "error_message": "git cat-file returned empty (force-push or rebased away?).",
+                            })
+                            continue
+
+                        parsed = _parse_commit_object(blob)
+                        n_parents = len(parsed["parents"])
+
+                        if n_parents < 2:
+                            continue
+
+                        if n_parents >= 3:
+                            extraction_errors.append({
+                                "repo_full_name": repo_full_name,
+                                "pr_id": pr_id,
+                                "merge_sha": sha,
+                                "error_type": "octopus_merge",
+                                "error_message": f"Commit has {n_parents} parents; excluded from the analysis.",
+                            })
+                            continue
+
+                        if _PR_INTEGRATION_MERGE_RE.search(parsed["message"]):
+                            extraction_errors.append({
+                                "repo_full_name": repo_full_name,
+                                "pr_id": pr_id,
+                                "merge_sha": sha,
+                                "error_type": "pr_integration_merge",
+                                "error_message": "Excluded GitHub 'Merge pull request #N' integration merge.",
+                            })
+                            continue
+
+                        im, cc, rc, ca, errs = _process_one_merge(
+                            repo_path, repo_full_name, pr_id, sha, parsed
+                        )
+                        internal_merges.append(im)
+                        conflict_chunks.extend(cc)
+                        resolved_chunks.extend(rc)
+                        classified_chunks.extend(ca)
+                        extraction_errors.extend(errs)
+
+                    except Exception as e:
+                        extraction_errors.append({
+                            "repo_full_name": repo_full_name,
+                            "pr_id": pr_id,
+                            "merge_sha": sha,
+                            "error_type": "sha_processing_exception",
+                            "error_message": str(e),
+                        })
             except Exception as e:
                 extraction_errors.append({
                     "repo_full_name": repo_full_name,
                     "pr_id": pr_id,
-                    "merge_sha": sha,
-                    "error_type": "processing_exception",
-                    "error_message": str(e)
+                    "merge_sha": None,
+                    "error_type": "pr_processing_exception",
+                    "error_message": str(e),
                 })
-                
-    def remove_readonly(func, path, excinfo):
-        import stat
-        os.chmod(path, stat.S_IWRITE)
-        func(path)
-    shutil.rmtree(repo_path, onerror=remove_readonly)
-    return repo_full_name, internal_merges, conflict_chunks, resolved_chunks, classified_chunks, extraction_errors
+    finally:
+        def _remove_readonly(func, path, excinfo):
+            import stat
+            os.chmod(path, stat.S_IWRITE)
+            func(path)
+
+        try:
+            shutil.rmtree(repo_path, onerror=_remove_readonly)
+        except Exception as e:
+            logger.warning(f"Falha ao remover {repo_path}: {e}")
+
+    return (
+        repo_full_name,
+        internal_merges,
+        conflict_chunks,
+        resolved_chunks,
+        classified_chunks,
+        extraction_errors,
+    )
 
 
 def append_jsonl(filename: str, records: list):
-    if not records: return
+    if not records:
+        return
     with open(DATA_DIR / filename, "a", encoding="utf-8") as f:
         for rec in records:
-            f.write(json.dumps(rec, ensure_ascii=False) + "\n")
+            f.write(json.dumps(rec, ensure_ascii=False, default=str) + "\n")
+
 
 def check_processed() -> set:
     tracker = DATA_DIR / "processed_repos.txt"
-    if not tracker.exists(): return set()
+    if not tracker.exists():
+        return set()
     with open(tracker, "r", encoding="utf-8") as f:
         return set(line.strip() for line in f if line.strip())
+
 
 def mark_processed(repo_name: str):
     with open(DATA_DIR / "processed_repos.txt", "a", encoding="utf-8") as f:
         f.write(f"{repo_name}\n")
 
+
+_DEDUP_KEYS = {
+    "internal_merges.jsonl": ["repo_full_name", "pr_id", "merge_sha"],
+    "conflict_chunks.jsonl": ["repo_full_name", "merge_sha", "file_path", "chunk_index"],
+    "resolved_chunks.jsonl": ["repo_full_name", "merge_sha", "file_path", "chunk_index"],
+    "classified_chunks.jsonl": ["repo_full_name", "merge_sha", "file_path", "chunk_index"],
+    "extraction_errors.jsonl": None,
+}
+
+
 def aggregate_jsonl_to_parquet():
-    """Converts the incremental jsonl files into the final parquet format."""
+    """Convert the incremental jsonl files into the final parquet format.
+
+    De-duplicates each table on its natural key before persisting (PLAN.md §6.3).
+    Errors are kept verbatim.
+    """
     logger.info("Aggregating incremental JSONL files to Parquet...")
     files_map = {
         "internal_merges.jsonl": "internal_merges.parquet",
         "conflict_chunks.jsonl": "conflict_chunks.parquet",
         "resolved_chunks.jsonl": "resolved_chunks.parquet",
         "classified_chunks.jsonl": "classified_chunks.parquet",
-        "extraction_errors.jsonl": "extraction_errors.parquet"
+        "extraction_errors.jsonl": "extraction_errors.parquet",
     }
 
     for jsonl_name, parquet_name in files_map.items():
         jsonl_path = DATA_DIR / jsonl_name
-        if jsonl_path.exists():
-            records = []
-            with open(jsonl_path, "r", encoding="utf-8") as f:
-                for line in f:
+        if not jsonl_path.exists():
+            continue
+        records = []
+        with open(jsonl_path, "r", encoding="utf-8") as f:
+            for line in f:
+                try:
                     records.append(json.loads(line))
-            df = pd.DataFrame(records)
-            df.to_parquet(DATA_DIR / parquet_name)
-            logger.info(f"Converted {jsonl_name} -> {parquet_name} ({len(df)} rows)")
+                except json.JSONDecodeError:
+                    logger.warning(f"Pulando linha malformada em {jsonl_name}")
+        df = pd.DataFrame(records)
+        keys = _DEDUP_KEYS.get(jsonl_name)
+        if keys and not df.empty and all(k in df.columns for k in keys):
+            before = len(df)
+            df = df.drop_duplicates(subset=keys, keep="first")
+            after = len(df)
+            if before != after:
+                logger.info(f"  Dedup {jsonl_name}: {before:,} -> {after:,} rows")
+        df.to_parquet(DATA_DIR / parquet_name)
+        logger.info(f"Converted {jsonl_name} -> {parquet_name} ({len(df)} rows)")
+
 
 def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--pilot", type=int, default=0, help="Run in pilot mode for N repositories")
-    parser.add_argument("--full-aidev", action="store_true",
-                        help="Expand scope to the full AIDev dataset (all_pull_request + all_repository). "
-                             "Repos already in processed_repos.txt are skipped automatically.")
+    parser = argparse.ArgumentParser(
+        description=(
+            "Stage 1 extraction over AIDev-pop. Scope is fixed by PLAN.md §4.1; "
+            "PRs outside AIDev-pop are not processed because their commit SHAs "
+            "are unknown -- see PLAN.md §10 for the deferred extension."
+        )
+    )
+    parser.add_argument("--pilot", type=int, default=0,
+                        help="Run in pilot mode for N repositories.")
     args = parser.parse_args()
 
     is_pilot = args.pilot > 0
-    universe_df = build_universe(is_pilot, args.pilot, use_full_aidev=args.full_aidev)
+    universe_df = build_universe(is_pilot, args.pilot)
 
     processed_repos = check_processed()
     logger.info(f"Found {len(processed_repos)} already processed repositories.")
@@ -380,7 +533,9 @@ def main():
             mark_processed(name)
     else:
         with multiprocessing.Pool(pool_size) as pool:
-            for i, (name, im, cc, rc, ca, errs) in enumerate(pool.imap_unordered(process_repository, repo_groups)):
+            for i, (name, im, cc, rc, ca, errs) in enumerate(
+                pool.imap_unordered(process_repository, repo_groups)
+            ):
                 logger.info(f"[Progresso: {i+1}/{total_repo} ({(i+1)/total_repo:.1%})] Processado {name}")
                 append_jsonl("internal_merges.jsonl", im)
                 append_jsonl("conflict_chunks.jsonl", cc)
@@ -391,14 +546,16 @@ def main():
 
     aggregate_jsonl_to_parquet()
 
-    # Generate standalone resolver_labels.parquet for backwards compatibility with tests
     im_path = DATA_DIR / "internal_merges.parquet"
     if im_path.exists():
         df_im = pd.read_parquet(im_path)
         if not df_im.empty and "resolver_type" in df_im.columns:
-            df_im[['pr_id', 'merge_sha', 'parent1_sha', 'parent2_sha', 'author', 'committer', 'repo_full_name', 'resolver_type']].to_parquet(DATA_DIR / "resolver_labels.parquet")
+            df_im[['pr_id', 'merge_sha', 'parent1_sha', 'parent2_sha',
+                   'author', 'committer', 'repo_full_name', 'resolver_type']
+                  ].to_parquet(DATA_DIR / "resolver_labels.parquet")
 
     logger.info("Pipeline completed successfully.")
+
 
 if __name__ == "__main__":
     main()
