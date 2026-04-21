@@ -4,12 +4,20 @@ An empirical study focused on characterizing merge conflicts resulting from inte
 
 ## About the Pipeline
 
-To build the exploratory analyses that answer the research questions described in the baseline file `PLAN.md`, this project provides the `extract_aidev_nature.py` script, which orchestrates the entire data extraction in 6 sequential stages:
+The pipeline that answers the research questions described in `PLAN.md` runs in two passes, implemented by two scripts.
 
-- **Stage 0 (Universe):** Builds a DataFrame with all PRs from AIDev-pop by joining `pull_request.parquet`, `repository.parquet`, `pr_task_type.parquet`, and inner-joining with `pr_commits.parquet` so every row carries one candidate commit SHA.
+### Pass A — `extract_pr_chronology.py` (one-off, per repository)
+
+Fetches `refs/pull/*/head` from each remote and, for every PR, walks the commits between the fork-point with the base branch (`git merge-base refs/pull/<N>/head HEAD`) and the PR tip, in chronological order. Writes `data/pr_chronology/pr_commits.parquet` with schema `(pr_id, repo_full_name, pr_number, sha, author_date, commit_index, commit_count)`. This supersedes AIDev's `pr_commits.parquet`, which is published only at the AIDev-pop tier and would otherwise bound the study at ~2,807 repositories.
+
+### Pass B — `extract_aidev_nature.py` (analysis, resumable)
+
+Consumes the chronology from Pass A and drives six sequential stages:
+
+- **Stage 0 (Universe):** Joins `all_pull_request.parquet` x `all_repository.parquet` (or `pull_request.parquet` x `repository.parquet` under `--pop-only`) with the chronology so every row is one `(pr_id, sha)` pair enriched with `agent`, `language`, `pr_task_type` (when available at the pop tier), `state`, and `merged_at`. Persisted as `data/nature_of_agent_conflicts/universe.parquet`.
 - **Stage 1 (Bare clone):** Clones each repository as a bare mirror into a temporary scratch directory; the clone is removed at the end of the repository's processing to bound disk usage.
-- **Stage 2 (Internal-merge enumeration):** For each candidate SHA in a PR, `git cat-file -p <sha>` is used to retrieve the parent list. Commits with exactly two parents are kept as internal merges; GitHub's `"Merge pull request #N"` integration merges are filtered out on the message; octopus merges (≥3 parents) and unreachable SHAs (force-pushed branches) are recorded to the audit table.
-- **Stage 3 & 4 (Conflict replay & resolution):** `git merge-tree` + `git merge-file --diff3` are used to replay each internal merge and extract conflicting chunks; LOCALIZERESREGION isolates the corresponding resolution region on the merge tree.
+- **Stage 2 (Internal-merge enumeration):** For each candidate SHA in a PR, `git cat-file -p <sha>` retrieves the parent list. Commits with exactly two parents are kept as internal merges; GitHub's `"Merge pull request #N"` integration merges are filtered out on the message; octopus merges (≥3 parents) and unreachable SHAs (force-pushed branches) are recorded in the audit table.
+- **Stage 3 & 4 (Conflict replay & resolution):** `git merge-tree` + `git merge-file --diff3` replay each internal merge and extract conflicting chunks; LOCALIZERESREGION isolates the corresponding resolution region on the merge tree.
 - **Stage 5 (Strategy classification):** Each chunk is labeled V1 / V2 / CC / CB / NC / NN / Imprecise via `identify_resolution`.
 - **Stage 6 (Resolver attribution):** Author / co-author signatures are matched against known agent accounts (`agent`, `agent-assisted`, `human`).
 
@@ -26,31 +34,73 @@ To reproduce the data on your own:
 2. Enable the virtual environment:
     ```bash
     python -m venv venv
-    venv\Scripts\activate
+    source venv/bin/activate    # Windows: venv\Scripts\activate
     pip install -r requirements.txt
     ```
-3. Run the main extraction pipeline:
+3. Run Pass A (chronology) once per scope:
     ```bash
-    # Pilot: restrict to the first N AIDev-pop repositories for a smoke test.
+    # Chronology for the full AIDev catalog (~116k repos, network-bound).
+    python extract_pr_chronology.py --full-aidev
+
+    # Or chronology restricted to AIDev-pop (~2,807 repos) for faster iteration.
+    python extract_pr_chronology.py
+    ```
+4. Run Pass B (merge extraction and classification):
+    ```bash
+    # Smoke test on the first 5 repositories of the chronology.
     python extract_aidev_nature.py --pilot 5
 
-    # Full run over AIDev-pop (~2,807 repos, ~33,600 PRs).
+    # Full run over the AIDev tier that was covered by Pass A.
     python extract_aidev_nature.py
+
+    # Restrict to AIDev-pop even if the chronology also covers full AIDev.
+    python extract_aidev_nature.py --pop-only
+
+    # Point at a chronology output that lives somewhere else.
+    python extract_aidev_nature.py --pr-commits /path/to/pr_commits.parquet
     ```
 
 ### Scope and incremental runs
 
-The study scope is **AIDev-pop only**, as fixed in `PLAN.md` §4.1. The `--full-aidev` flag that existed in earlier revisions has been **removed**: it relied on a `git log --grep="pull request #N"` heuristic to discover per-PR merges for repositories outside AIDev-pop, and the heuristic is unsound — internal merges created inside a PR (e.g. `Merge branch 'main' into feature-x`) do not mention the PR number, so they were never matched, while the only message that does match (`Merge pull request #N from …`) is the GitHub integration merge, which must be excluded from the analysis anyway. The net effect was a fallback that returned empty for every PR it touched. See `PLAN.md` §9 and §10 for the rationale and for the deferred proper extension (fetching `refs/pull/*/head`).
+By default Pass B targets the **full AIDev** tier (`all_pull_request.parquet` x `all_repository.parquet`). Pass the `--pop-only` flag to narrow the universe to AIDev-pop (stars > 100), which is useful for quicker iteration and for joining with the enriched tables that AIDev only publishes at that tier (`pr_task_type`, `pr_timeline`, `pr_comments`, `pr_reviews`, `pr_commit_details`). The actual PR coverage of Pass B is bounded by whatever Pass A has already processed: PRs absent from `data/pr_chronology/pr_commits.parquet` are recorded in `extraction_errors.parquet` as `no_sha_for_pr` and skipped. Re-running Pass A extends the chronology; re-running Pass B then picks up the new PRs automatically.
 
-The pipeline is **incremental**: every successfully processed repository is recorded in `data/nature_of_agent_conflicts/processed_repos.txt`. Re-running the script skips any repository already listed there, so partial runs are safe. To re-run from scratch, delete both `processed_repos.txt` and the `*.jsonl` files in the same directory.
+The `--full-aidev` flag that existed in older revisions of `extract_aidev_nature.py` has been **removed**: it relied on a `git log --grep="pull request #N"` heuristic to discover per-PR merges for repositories outside AIDev-pop, and the heuristic was unsound — internal merges created inside a PR (e.g. `Merge branch 'main' into feature-x`) do not mention the PR number, so they were never matched, while the only message that does match (`Merge pull request #N from …`) is the GitHub integration merge, which must be excluded from the analysis anyway. Proper full-AIDev coverage is now delivered by Pass A via `refs/pull/*/head` (see `PLAN.md` §5.1).
+
+Both passes are **incremental**: every successfully processed repository is recorded in `processed_repos.txt` inside the respective output directory. Re-running a script skips repositories already listed there, so partial runs are safe and can be resumed or shared across machines. To re-run from scratch, delete the `processed_repos.txt` and the `*.jsonl` files in the same directory.
+
+### Retrying clone/fetch failures — `retry_clone_failures.py`
+
+Both main passes clone in parallel, so a transient GitHub hiccup (DNS blip, 5xx, rate-limit spike, connection reset) surfaces as a `clone_failed` / `fetch_failed` row in the audit and the repository is marked as processed, never to be revisited. This helper distinguishes transient from permanent failures with a **serial** second pass.
+
+It reads `data/pr_chronology/errors.jsonl` (Pass A) and `data/nature_of_agent_conflicts/extraction_errors.jsonl` (Pass B), isolates the repositories whose only listed error is clone/fetch-level, subtracts any that already have data in the corresponding JSONL outputs or that a previous retry recorded in `retry_success.txt`, and revisits each one serially with a retry budget. When the clone succeeds, the new rows are appended to the same JSONL files the main pass writes and the Parquet outputs are re-aggregated; when it fails every attempt, we can safely attribute the failure to something outside our pipeline (deleted, renamed, or privated between AIDev's snapshot and now).
+
+```bash
+# Retry both passes with defaults (3 attempts, 30s between attempts)
+python retry_clone_failures.py --pass both
+
+# Only the chronology, be patient
+python retry_clone_failures.py --pass chronology --max-retries 5 --retry-delay 120
+
+# AIDev-pop scope, custom chronology path
+python retry_clone_failures.py --pop-only --pr-commits data/pr_chronology/pr_commits.parquet
+```
+
+Pass B's retry depends on Pass A: if a repo failed during chronology, its PRs are absent from `pr_commits.parquet` and Pass B has nothing to process until chronology is rescued first. `--pass both` respects that ordering; when splitting the invocations, run chronology before extraction.
 
 ### Outputs
 
-All artifacts land in `data/nature_of_agent_conflicts/`:
+Pass A artifacts land in `data/pr_chronology/`:
 
 | File | Contents |
 |---|---|
-| `aidev_pop_universe.parquet` | `(pr_id, sha)` rows joined with PR and repo metadata — the Stage 0 frame. |
+| `pr_commits.parquet` | Full chronology of every PR: `(pr_id, repo_full_name, pr_number, sha, author_date, commit_index, commit_count)`. |
+| `errors.parquet` | Per-repo audit: fetch failures, PR refs that are no longer present on the remote. |
+
+Pass B artifacts land in `data/nature_of_agent_conflicts/`:
+
+| File | Contents |
+|---|---|
+| `universe.parquet` | `(pr_id, sha)` rows joined with PR and repo metadata — the Stage 0 frame. |
 | `internal_merges.parquet` | One row per two-parent merge commit found inside a PR. |
 | `conflict_chunks.parquet` | One row per conflicting chunk produced by replay. |
 | `resolved_chunks.parquet` | Same, plus the LOCALIZERESREGION output (`resolution`, `localized_ok`). |

@@ -2,12 +2,22 @@
 """
 Pipeline for Phase 1: Nature of Agent Conflicts.
 
-Scope is AIDev-pop (PLAN.md §4.1). Internal merge commits of every PR are
-identified by walking the SHAs in ``pr_commits.parquet`` and keeping the ones
-with exactly two parents (PLAN.md §5.1). PRs that are not present in
-``pr_commits.parquet`` cannot be processed because the candidate SHA list is
-unknown -- extending the scope to the full AIDev tier would require fetching
-``refs/pull/*/head`` from each remote and is deferred (see PLAN.md §10).
+The unit of analysis is the internal merge commit of a PR (PLAN.md §4.3). Per-PR
+commit SHAs are read from the chronology produced by
+``extract_pr_chronology.py`` (PLAN.md §5.1), which walks ``refs/pull/*/head``
+for every repository and enumerates commits from the fork-point with the base
+branch to the PR tip. That source works for the **full AIDev** catalog, not
+only AIDev-pop -- it removes the restriction that the AIDev-provided
+``pr_commits.parquet`` is published only for repositories with more than 100
+stars.
+
+Expected run order:
+
+    python extract_pr_chronology.py [--full-aidev]   # Step 1 (one-off per repo)
+    python extract_aidev_nature.py                    # Step 2 (this script)
+
+Scope defaults to the full AIDev tier (``all_pull_request.parquet`` x
+``all_repository.parquet``). Pass ``--pop-only`` to narrow to AIDev-pop.
 """
 
 import argparse
@@ -39,6 +49,12 @@ AIDEV_DIR = Path("AIDev")
 DATA_DIR = Path("data/nature_of_agent_conflicts")
 SCRATCH_DIR = DATA_DIR / "scratch"
 LOGS_DIR = DATA_DIR / "logs"
+
+# Default location of the per-PR commit inventory. This file is produced by
+# ``extract_pr_chronology.py`` -- see PLAN.md §5.1. Override with
+# ``--pr-commits PATH`` on the command line if the chronology output lives
+# somewhere else (e.g. a sibling clone or a shared drive).
+DEFAULT_PR_COMMITS = Path("data/pr_chronology/pr_commits.parquet")
 
 # Hard cap, in seconds, for LOCALIZERESREGION on a single chunk. The algorithm
 # is O(n^2) on the resolved-file size in the worst case; without this guard a
@@ -106,19 +122,39 @@ def _normalize_repo_url(repo_url: str) -> str:
     return url
 
 
-def build_universe(is_pilot: bool, pilot_count: int) -> pd.DataFrame:
-    """Stage 0 -- build the AIDev-pop universe (PLAN.md §4.1, §6.1).
+def build_universe(
+    is_pilot: bool,
+    pilot_count: int,
+    use_pop_only: bool,
+    pr_commits_path: Path,
+) -> pd.DataFrame:
+    """Stage 0 -- build the analysis universe (PLAN.md §4.1, §6.1).
 
-    Joins ``pull_request.parquet`` x ``repository.parquet`` x ``pr_task_type.parquet``,
-    then INNER-joins with ``pr_commits.parquet`` so that every row carries the
-    SHA of one PR commit (one row per (pr_id, sha)). PRs without an entry in
-    ``pr_commits.parquet`` are dropped -- they cannot be processed (PLAN.md §10).
-    All PR states are kept, per PLAN.md §4.2.
+    Joins AIDev's PR and repository metadata with the per-PR commit inventory
+    produced by ``extract_pr_chronology.py``. Every row carries exactly one
+    candidate SHA belonging to a PR (one row per ``(pr_id, sha)`` pair).
+
+    Scope is controlled by ``use_pop_only``:
+
+    * ``False`` (default)  -> full AIDev tier, using ``all_pull_request.parquet``
+      and ``all_repository.parquet``.
+    * ``True``             -> AIDev-pop, using ``pull_request.parquet`` and
+      ``repository.parquet`` (stars > 100).
+
+    PRs with no rows in the chronology output are dropped -- either the
+    chronology has not yet processed that repository, or the PR has zero
+    own commits past the fork-point. In the first case, re-running
+    ``extract_pr_chronology.py`` extends the universe on the next run.
+    All PR states are kept (PLAN.md §4.2).
     """
-    logger.info("Stage 0: Building AIDev-pop universe...")
-
-    pr_df = pd.read_parquet(AIDEV_DIR / "pull_request.parquet")
-    repo_df = pd.read_parquet(AIDEV_DIR / "repository.parquet")
+    if use_pop_only:
+        logger.info("Stage 0: Building AIDev-pop universe (stars > 100)...")
+        pr_df = pd.read_parquet(AIDEV_DIR / "pull_request.parquet")
+        repo_df = pd.read_parquet(AIDEV_DIR / "repository.parquet")
+    else:
+        logger.info("Stage 0: Building full AIDev universe...")
+        pr_df = pd.read_parquet(AIDEV_DIR / "all_pull_request.parquet")
+        repo_df = pd.read_parquet(AIDEV_DIR / "all_repository.parquet")
 
     try:
         task_df = pd.read_parquet(AIDEV_DIR / "pr_task_type.parquet")
@@ -143,7 +179,20 @@ def build_universe(is_pilot: bool, pilot_count: int) -> pd.DataFrame:
         cols_to_keep.append('merged_at')
     cols_to_keep = [c for c in cols_to_keep if c in pr_repo_task_df.columns]
 
-    commits_df = pd.read_parquet(AIDEV_DIR / "pr_commits.parquet")
+    if not pr_commits_path.exists():
+        raise FileNotFoundError(
+            f"PR commit inventory not found at {pr_commits_path}. "
+            f"Run extract_pr_chronology.py first (see PLAN.md §5.1 / README)."
+        )
+    commits_df = pd.read_parquet(pr_commits_path)
+    # The chronology adds context columns (commit_index, author_date, pr_number,
+    # commit_count, repo_full_name). Keep what's available; fall back cleanly if
+    # a user points this at AIDev's official pr_commits.parquet, whose schema is
+    # ``(pr_id, sha, author, committer, message)``.
+    extras = [c for c in ('commit_index', 'author_date', 'commit_count')
+              if c in commits_df.columns]
+    commits_df = commits_df[['pr_id', 'sha'] + extras]
+
     universe_df = commits_df.merge(
         pr_repo_task_df[cols_to_keep],
         left_on='pr_id', right_on='id',
@@ -154,7 +203,7 @@ def build_universe(is_pilot: bool, pilot_count: int) -> pd.DataFrame:
         universe_df = universe_df[universe_df['full_name'].isin(unique_repos)]
         logger.info(f"Pilot mode: restricted to {len(unique_repos)} repos.")
 
-    out_path = DATA_DIR / "aidev_pop_universe.parquet"
+    out_path = DATA_DIR / "universe.parquet"
     universe_df.to_parquet(out_path)
     logger.info(
         f"Stage 0 complete. Universe has {len(universe_df)} (pr_id, sha) rows "
@@ -337,7 +386,7 @@ def process_repository(repo_info: tuple):
                         "pr_id": pr_id,
                         "merge_sha": None,
                         "error_type": "no_sha_for_pr",
-                        "error_message": "PR has no entries in pr_commits.parquet (out of AIDev-pop scope).",
+                        "error_message": "PR has no entries in the chronology output (repo not yet processed by extract_pr_chronology.py, or PR has zero own commits past the fork-point).",
                     })
                     continue
 
@@ -497,17 +546,31 @@ def aggregate_jsonl_to_parquet():
 def main():
     parser = argparse.ArgumentParser(
         description=(
-            "Stage 1 extraction over AIDev-pop. Scope is fixed by PLAN.md §4.1; "
-            "PRs outside AIDev-pop are not processed because their commit SHAs "
-            "are unknown -- see PLAN.md §10 for the deferred extension."
+            "Stage 1 extraction over AIDev. The per-PR commit inventory is "
+            "produced by extract_pr_chronology.py (see PLAN.md §5.1). Default "
+            "scope is the full AIDev tier; pass --pop-only to restrict to "
+            "AIDev-pop (stars > 100)."
         )
     )
     parser.add_argument("--pilot", type=int, default=0,
-                        help="Run in pilot mode for N repositories.")
+                        help="Pilot mode: process only the first N repositories.")
+    parser.add_argument("--pop-only", action="store_true",
+                        help="Restrict the universe to AIDev-pop "
+                             "(pull_request.parquet + repository.parquet) "
+                             "instead of the full AIDev tier.")
+    parser.add_argument("--pr-commits", type=str, default=str(DEFAULT_PR_COMMITS),
+                        help=f"Path to the chronology parquet produced by "
+                             f"extract_pr_chronology.py "
+                             f"(default: {DEFAULT_PR_COMMITS}).")
     args = parser.parse_args()
 
     is_pilot = args.pilot > 0
-    universe_df = build_universe(is_pilot, args.pilot)
+    pr_commits_path = Path(args.pr_commits)
+    scope_label = "AIDev-pop" if args.pop_only else "full AIDev"
+    logger.info(f"Scope: {scope_label}; chronology source: {pr_commits_path}")
+    universe_df = build_universe(
+        is_pilot, args.pilot, args.pop_only, pr_commits_path,
+    )
 
     processed_repos = check_processed()
     logger.info(f"Found {len(processed_repos)} already processed repositories.")
