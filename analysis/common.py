@@ -1,0 +1,464 @@
+"""Shared helpers for the RQ1 / RQ2 / RQ3 analysis notebooks.
+
+The pipeline (``extract_aidev_nature.py``) writes a set of Parquet tables
+under ``data/nature_of_agent_conflicts/``. This module centralises:
+
+* loading those tables into a :class:`AnalysisTables` bundle,
+* joining chunk-level data with PR- and merge-level context (``agent``,
+  ``language``, ``pr_task_type``, ``state``, ``resolver_type``) so every
+  notebook starts from the same analysis frame,
+* canonical strategy labels and colour palette (PLAN.md §5.4),
+* the three cross-cutting stratifications (agent, language, pr_task_type)
+  with top-N collapsing for language,
+* consistent Matplotlib / Seaborn styling,
+* a :func:`save_fig` helper that writes every figure as both PDF (for the
+  paper) and PNG (for quick previews).
+
+Usage from a notebook::
+
+    from analysis.common import (
+        load_tables, build_chunk_frame, build_merge_frame, build_pr_frame,
+        setup_style, save_fig, stratify, STRATEGY_ORDER, STRATEGY_PALETTE,
+    )
+
+    setup_style()
+    tables = load_tables()
+    chunks = build_chunk_frame(tables)
+    # ... plot ...
+    save_fig(fig, "rq1_chunks_per_merge_global")
+"""
+
+from __future__ import annotations
+
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Iterator
+
+import matplotlib.pyplot as plt
+import pandas as pd
+import seaborn as sns
+
+# --------------------------------------------------------------------------- #
+# Paths
+# --------------------------------------------------------------------------- #
+
+# Resolve project root so notebooks work regardless of the active CWD
+# (Jupyter commonly launches the kernel in the notebook's own folder).
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+DATA_DIR = PROJECT_ROOT / "data" / "nature_of_agent_conflicts"
+FIGURES_DIR = PROJECT_ROOT / "analysis" / "figures"
+FIGURES_DIR.mkdir(parents=True, exist_ok=True)
+
+
+# --------------------------------------------------------------------------- #
+# Canonical labels (PLAN.md §5.4)
+# --------------------------------------------------------------------------- #
+
+# The seven buckets the study reports. ``identify_resolution`` emits finer
+# labels (ConcatV1V2 / ConcatV2V1, Combination, New code, None, Postponed)
+# which we fold here to stay comparable with Ghiotto et al. (TSE 2020).
+STRATEGY_ORDER = ["V1", "V2", "CC", "CB", "NC", "NN", "Imprecise"]
+
+_RAW_TO_CANONICAL = {
+    "V1": "V1",
+    "V2": "V2",
+    "ConcatV1V2": "CC",
+    "ConcatV2V1": "CC",
+    "Combination": "CB",
+    "New code": "NC",
+    "None": "NN",
+    "Imprecise": "Imprecise",
+    # ``Postponed`` (resolution still contains conflict markers) is rare in
+    # practice and has no Ghiotto counterpart; folded into Imprecise so it
+    # stays visible as "not a conventional resolution".
+    "Postponed": "Imprecise",
+}
+
+# Colour-blind-friendly palette stable across figures.
+STRATEGY_PALETTE = {
+    "V1": "#4C72B0",
+    "V2": "#DD8452",
+    "CC": "#55A467",
+    "CB": "#C44E52",
+    "NC": "#8172B2",
+    "NN": "#937860",
+    "Imprecise": "#BFBFBF",
+}
+
+RESOLVER_ORDER = ["agent", "human"]
+RESOLVER_PALETTE = {"agent": "#4C72B0", "human": "#DD8452"}
+
+PR_OUTCOME_ORDER = ["resolved", "abandoned-with-conflict", "open-with-conflict"]
+PR_OUTCOME_PALETTE = {
+    "resolved": "#55A467",
+    "abandoned-with-conflict": "#C44E52",
+    "open-with-conflict": "#BFBFBF",
+}
+
+# How many languages to show before folding the long tail into "Other".
+TOP_N_LANGUAGES = 8
+
+
+# --------------------------------------------------------------------------- #
+# Table loading
+# --------------------------------------------------------------------------- #
+
+
+@dataclass
+class AnalysisTables:
+    """Raw Parquet tables produced by ``extract_aidev_nature.py``."""
+
+    universe: pd.DataFrame
+    internal_merges: pd.DataFrame
+    classified_chunks: pd.DataFrame
+    resolved_chunks: pd.DataFrame
+    extraction_errors: pd.DataFrame
+
+
+def _read_parquet_optional(path: Path) -> pd.DataFrame:
+    """Return an empty DataFrame if the file hasn't been produced yet."""
+    if not path.exists():
+        return pd.DataFrame()
+    return pd.read_parquet(path)
+
+
+def load_tables(data_dir: Path | str = DATA_DIR) -> AnalysisTables:
+    """Read every Parquet output of Pass B into a bundle.
+
+    Missing files are returned as empty DataFrames so a notebook can still
+    render partial results when the pipeline is in progress.
+    """
+    data_dir = Path(data_dir)
+    return AnalysisTables(
+        universe=_read_parquet_optional(data_dir / "universe.parquet"),
+        internal_merges=_read_parquet_optional(data_dir / "internal_merges.parquet"),
+        classified_chunks=_read_parquet_optional(data_dir / "classified_chunks.parquet"),
+        resolved_chunks=_read_parquet_optional(data_dir / "resolved_chunks.parquet"),
+        extraction_errors=_read_parquet_optional(data_dir / "extraction_errors.parquet"),
+    )
+
+
+# --------------------------------------------------------------------------- #
+# Analysis frames
+# --------------------------------------------------------------------------- #
+
+
+def _pr_context(universe: pd.DataFrame) -> pd.DataFrame:
+    """One row per ``pr_id`` carrying the cross-cutting strata.
+
+    ``universe`` carries one row per ``(pr_id, sha)``; PR-level attributes
+    (``agent``, ``language``, ``state``, ``merged_at``, ``pr_task_type``)
+    are constant within a PR, so we just drop the SHA dimension.
+    """
+    if universe.empty:
+        return universe
+    cols = [c for c in (
+        "pr_id", "full_name", "agent", "language",
+        "pr_task_type", "state", "merged_at",
+    ) if c in universe.columns]
+    ctx = universe[cols].drop_duplicates(subset=["pr_id"])
+    return ctx
+
+
+def _merge_context(internal_merges: pd.DataFrame) -> pd.DataFrame:
+    """One row per ``(pr_id, merge_sha)`` carrying the resolver label."""
+    if internal_merges.empty:
+        return internal_merges
+    cols = [c for c in (
+        "pr_id", "merge_sha", "repo_full_name", "author",
+        "committer", "resolver_type",
+    ) if c in internal_merges.columns]
+    return internal_merges[cols].drop_duplicates(subset=["pr_id", "merge_sha"])
+
+
+def _canonicalize_strategy(df: pd.DataFrame) -> pd.DataFrame:
+    if "strategy" not in df.columns:
+        return df
+    df = df.copy()
+    df["strategy_raw"] = df["strategy"]
+    df["strategy"] = df["strategy"].map(_RAW_TO_CANONICAL).fillna("Imprecise")
+    df["strategy"] = pd.Categorical(df["strategy"], categories=STRATEGY_ORDER, ordered=True)
+    return df
+
+
+def build_chunk_frame(tables: AnalysisTables) -> pd.DataFrame:
+    """Chunk-level analysis frame.
+
+    Joins ``classified_chunks`` with:
+
+    * ``resolver_type`` from ``internal_merges``, and
+    * ``agent`` / ``language`` / ``pr_task_type`` / ``state`` / ``merged_at``
+      from ``universe``.
+
+    Canonicalizes the strategy label to the seven-bucket scheme
+    (PLAN.md §5.4) and applies language top-N folding.
+
+    Returned columns (present only when the underlying data is):
+
+        repo_full_name, pr_id, merge_sha, file_path, chunk_index,
+        v1, base, v2, v1_loc, v2_loc, base_loc,
+        resolution, resolution_loc, localized_ok,
+        strategy, strategy_raw,
+        resolver_type, agent, language, language_top, pr_task_type,
+        state, merged_at
+    """
+    chunks = tables.classified_chunks
+    if chunks.empty:
+        return chunks
+
+    chunks = _canonicalize_strategy(chunks)
+
+    mctx = _merge_context(tables.internal_merges)
+    if not mctx.empty:
+        chunks = chunks.merge(
+            mctx[["pr_id", "merge_sha", "resolver_type"]],
+            on=["pr_id", "merge_sha"], how="left",
+        )
+
+    pctx = _pr_context(tables.universe)
+    if not pctx.empty:
+        chunks = chunks.merge(pctx, on="pr_id", how="left")
+        chunks = _apply_language_topn(chunks)
+
+    return chunks
+
+
+def build_merge_frame(tables: AnalysisTables) -> pd.DataFrame:
+    """Merge-level analysis frame: one row per internal merge commit.
+
+    Adds per-merge aggregates (``n_chunks``, ``has_conflict``) plus the
+    PR-level strata. This is the frame used for RQ1's "#chunks per merge"
+    distribution and for RQ3's per-merge resolver breakdown.
+    """
+    merges = tables.internal_merges
+    if merges.empty:
+        return merges
+
+    merges = merges.copy()
+
+    # Chunks per merge -- zero when the merge produced no textual conflict
+    # (the merge row exists but there's no matching classified_chunks row).
+    if not tables.classified_chunks.empty:
+        per_merge = (
+            tables.classified_chunks
+            .groupby(["pr_id", "merge_sha"])
+            .size()
+            .rename("n_chunks")
+            .reset_index()
+        )
+        merges = merges.merge(per_merge, on=["pr_id", "merge_sha"], how="left")
+        merges["n_chunks"] = merges["n_chunks"].fillna(0).astype(int)
+    else:
+        merges["n_chunks"] = 0
+
+    merges["has_conflict"] = merges["n_chunks"] > 0
+
+    pctx = _pr_context(tables.universe)
+    if not pctx.empty:
+        merges = merges.merge(pctx, on="pr_id", how="left")
+        merges = _apply_language_topn(merges)
+
+    return merges
+
+
+def build_pr_frame(tables: AnalysisTables) -> pd.DataFrame:
+    """PR-level analysis frame: one row per PR in the universe.
+
+    Adds:
+
+    * ``has_internal_merge`` -- the PR has at least one two-parent commit
+      that reached Stage 2.
+    * ``has_conflict``       -- at least one of its internal merges
+      produced a conflict chunk.
+    * ``pr_outcome`` (PLAN.md §5.6) -- one of:
+
+        * ``resolved``                 (merged, or closed with no conflict)
+        * ``abandoned-with-conflict``  (closed, ``merged_at`` null, has conflict)
+        * ``open-with-conflict``       (open, has conflict)
+    """
+    pctx = _pr_context(tables.universe)
+    if pctx.empty:
+        return pctx
+
+    prs = pctx.copy()
+
+    if not tables.internal_merges.empty:
+        im_per_pr = (
+            tables.internal_merges
+            .groupby("pr_id")
+            .size()
+            .rename("n_internal_merges")
+            .reset_index()
+        )
+        prs = prs.merge(im_per_pr, on="pr_id", how="left")
+    else:
+        prs["n_internal_merges"] = 0
+    prs["n_internal_merges"] = prs["n_internal_merges"].fillna(0).astype(int)
+    prs["has_internal_merge"] = prs["n_internal_merges"] > 0
+
+    if not tables.classified_chunks.empty:
+        conflicting_prs = tables.classified_chunks["pr_id"].drop_duplicates()
+        prs["has_conflict"] = prs["pr_id"].isin(conflicting_prs)
+    else:
+        prs["has_conflict"] = False
+
+    def _outcome(row: pd.Series) -> str:
+        state = str(row.get("state", "")).lower()
+        has_conflict = bool(row.get("has_conflict", False))
+        merged_at = row.get("merged_at", None)
+        if not has_conflict:
+            return "resolved"
+        if state == "closed" and pd.isna(merged_at):
+            return "abandoned-with-conflict"
+        if state == "open":
+            return "open-with-conflict"
+        # Merged PRs with conflict chunks are still "resolved" -- the conflict
+        # was handled during the PR and the PR landed on base.
+        return "resolved"
+
+    prs["pr_outcome"] = prs.apply(_outcome, axis=1)
+    prs["pr_outcome"] = pd.Categorical(
+        prs["pr_outcome"], categories=PR_OUTCOME_ORDER, ordered=True,
+    )
+
+    prs = _apply_language_topn(prs)
+    return prs
+
+
+# --------------------------------------------------------------------------- #
+# Stratification
+# --------------------------------------------------------------------------- #
+
+
+def _apply_language_topn(df: pd.DataFrame, n: int = TOP_N_LANGUAGES) -> pd.DataFrame:
+    """Collapse the language long tail into ``"Other"``.
+
+    The untouched column is kept under ``language``; the folded column is
+    added as ``language_top``. Empty / null languages are rendered as
+    ``"Unknown"`` for consistency.
+    """
+    if "language" not in df.columns:
+        return df
+    df = df.copy()
+    lang = df["language"].fillna("Unknown").replace("", "Unknown")
+    top = lang.value_counts().head(n).index.tolist()
+    df["language_top"] = lang.where(lang.isin(top), other="Other")
+    return df
+
+
+STRATA = {
+    "agent": "agent",
+    "language": "language_top",
+    "pr_task_type": "pr_task_type",
+}
+
+
+def stratify(df: pd.DataFrame, axis: str) -> Iterator[tuple[str, pd.DataFrame]]:
+    """Iterate over ``(stratum_value, sub_df)`` pairs for an axis.
+
+    ``axis`` is one of ``agent`` / ``language`` / ``pr_task_type``. Strata are
+    ordered by descending row count so the most important slices appear
+    first in stratified figures. Null values become the string
+    ``"Unknown"`` so they render on the plot rather than being dropped.
+    """
+    col = STRATA.get(axis, axis)
+    if col not in df.columns:
+        return iter([])
+    values = df[col].fillna("Unknown").astype(str)
+    order = values.value_counts().index.tolist()
+    for value in order:
+        yield value, df[values == value]
+
+
+def stratum_order(df: pd.DataFrame, axis: str) -> list[str]:
+    col = STRATA.get(axis, axis)
+    if col not in df.columns:
+        return []
+    values = df[col].fillna("Unknown").astype(str)
+    return values.value_counts().index.tolist()
+
+
+# --------------------------------------------------------------------------- #
+# Styling & figure saving
+# --------------------------------------------------------------------------- #
+
+
+def setup_style() -> None:
+    """Apply the paper-figure defaults."""
+    sns.set_theme(context="paper", style="whitegrid", palette="colorblind")
+    plt.rcParams.update({
+        "figure.dpi": 110,
+        "savefig.dpi": 300,
+        "savefig.bbox": "tight",
+        "font.family": "serif",
+        "font.size": 10,
+        "axes.titlesize": 11,
+        "axes.labelsize": 10,
+        "xtick.labelsize": 9,
+        "ytick.labelsize": 9,
+        "legend.fontsize": 9,
+        "legend.frameon": False,
+        "axes.spines.top": False,
+        "axes.spines.right": False,
+        "pdf.fonttype": 42,   # embed TrueType (editable in LaTeX / Illustrator)
+        "ps.fonttype": 42,
+    })
+
+
+def save_fig(fig: plt.Figure, name: str, directory: Path | str = FIGURES_DIR) -> tuple[Path, Path]:
+    """Save ``fig`` as both ``{name}.pdf`` and ``{name}.png``.
+
+    Returns the two written paths. ``name`` should not include the
+    extension. A gentle ``tight_layout()`` is applied before saving.
+    """
+    directory = Path(directory)
+    directory.mkdir(parents=True, exist_ok=True)
+    pdf_path = directory / f"{name}.pdf"
+    png_path = directory / f"{name}.png"
+    fig.tight_layout()
+    fig.savefig(pdf_path)
+    fig.savefig(png_path)
+    return pdf_path, png_path
+
+
+# --------------------------------------------------------------------------- #
+# Summaries
+# --------------------------------------------------------------------------- #
+
+
+def descriptive_table(series: pd.Series) -> pd.Series:
+    """Ghiotto-style descriptive stats for a numeric series."""
+    return pd.Series({
+        "n": series.size,
+        "mean": series.mean(),
+        "std": series.std(),
+        "min": series.min(),
+        "p25": series.quantile(0.25),
+        "median": series.median(),
+        "p75": series.quantile(0.75),
+        "p90": series.quantile(0.90),
+        "p95": series.quantile(0.95),
+        "p99": series.quantile(0.99),
+        "max": series.max(),
+    })
+
+
+def strategy_distribution(chunks: pd.DataFrame, group_col: str | None = None) -> pd.DataFrame:
+    """Row-normalised strategy distribution, optionally per-group.
+
+    Returns a frame with columns = strategies, rows = groups (or a single
+    row called ``"all"`` when ``group_col`` is None).
+    """
+    if chunks.empty:
+        return pd.DataFrame(columns=STRATEGY_ORDER)
+    if group_col is None:
+        counts = chunks["strategy"].value_counts().reindex(STRATEGY_ORDER, fill_value=0)
+        return (counts / counts.sum()).to_frame("all").T
+    grouped = (
+        chunks.groupby(group_col)["strategy"]
+        .value_counts()
+        .unstack(fill_value=0)
+        .reindex(columns=STRATEGY_ORDER, fill_value=0)
+    )
+    row_sums = grouped.sum(axis=1).replace(0, pd.NA)
+    return grouped.div(row_sums, axis=0).fillna(0)
