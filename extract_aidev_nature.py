@@ -372,6 +372,31 @@ def process_repository(repo_info: tuple):
     classified_chunks = []
     extraction_errors = []
 
+    # Intra-repo SHA cache.
+    #
+    # The PR chronology emits one (pr_id, sha) row per commit between the
+    # fork-point and each PR's head. Stacked PRs, feature branches shared
+    # across PRs, and shared ancestry cause the same SHA to appear under
+    # multiple pr_ids. Reprocessing these duplicates re-runs the expensive
+    # steps (merge-tree, diff3, LOCALIZERESREGION) needlessly.
+    #
+    # Cache layout:
+    #   sha -> ("merge", im_template_without_pr_id)
+    #          -> emit a new internal_merges row with the current pr_id on
+    #             subsequent visits; chunks/errors are NOT re-emitted because
+    #             the aggregation de-duplicates on
+    #             (repo_full_name, merge_sha, file_path, chunk_index) and
+    #             keeps the first occurrence anyway.
+    #   sha -> ("error", err_template_without_pr_id)
+    #          -> re-emit the same error with the current pr_id; this keeps
+    #             the existing semantics of extraction_errors (one row per
+    #             (pr_id, sha) mention of an invalid SHA) without re-running
+    #             git cat-file.
+    #   sha -> ("skip", None)
+    #          -> non-merge SHA (n_parents < 2); the current code skips
+    #             silently, so we do too.
+    sha_cache: dict = {}
+
     try:
         prs = repo_df.groupby('pr_id')
         for pr_id, pr_data in prs:
@@ -392,41 +417,61 @@ def process_repository(repo_info: tuple):
 
                 for sha in shas:
                     try:
+                        # Cache hit: reuse the first-visit verdict.
+                        if sha in sha_cache:
+                            kind, payload = sha_cache[sha]
+                            if kind == "merge":
+                                internal_merges.append({
+                                    **payload,
+                                    "pr_id": pr_id,
+                                })
+                            elif kind == "error":
+                                extraction_errors.append({
+                                    **payload,
+                                    "pr_id": pr_id,
+                                })
+                            # kind == "skip" -> silent, matches current behavior
+                            continue
+
                         blob = run_git_command(repo_path, "cat-file", "-p", sha, check=False)
                         if not blob:
-                            extraction_errors.append({
+                            err_template = {
                                 "repo_full_name": repo_full_name,
-                                "pr_id": pr_id,
                                 "merge_sha": sha,
                                 "error_type": "sha_not_in_repo",
                                 "error_message": "git cat-file returned empty (force-push or rebased away?).",
-                            })
+                            }
+                            extraction_errors.append({**err_template, "pr_id": pr_id})
+                            sha_cache[sha] = ("error", err_template)
                             continue
 
                         parsed = _parse_commit_object(blob)
                         n_parents = len(parsed["parents"])
 
                         if n_parents < 2:
+                            sha_cache[sha] = ("skip", None)
                             continue
 
                         if n_parents >= 3:
-                            extraction_errors.append({
+                            err_template = {
                                 "repo_full_name": repo_full_name,
-                                "pr_id": pr_id,
                                 "merge_sha": sha,
                                 "error_type": "octopus_merge",
                                 "error_message": f"Commit has {n_parents} parents; excluded from the analysis.",
-                            })
+                            }
+                            extraction_errors.append({**err_template, "pr_id": pr_id})
+                            sha_cache[sha] = ("error", err_template)
                             continue
 
                         if _PR_INTEGRATION_MERGE_RE.search(parsed["message"]):
-                            extraction_errors.append({
+                            err_template = {
                                 "repo_full_name": repo_full_name,
-                                "pr_id": pr_id,
                                 "merge_sha": sha,
                                 "error_type": "pr_integration_merge",
                                 "error_message": "Excluded GitHub 'Merge pull request #N' integration merge.",
-                            })
+                            }
+                            extraction_errors.append({**err_template, "pr_id": pr_id})
+                            sha_cache[sha] = ("error", err_template)
                             continue
 
                         im, cc, rc, ca, errs = _process_one_merge(
@@ -437,6 +482,12 @@ def process_repository(repo_info: tuple):
                         resolved_chunks.extend(rc)
                         classified_chunks.extend(ca)
                         extraction_errors.extend(errs)
+
+                        # Cache an internal_merges template so we can re-emit
+                        # the (pr_id, merge_sha) pair cheaply if this SHA
+                        # appears under another pr_id in this repo.
+                        im_template = {k: v for k, v in im.items() if k != "pr_id"}
+                        sha_cache[sha] = ("merge", im_template)
 
                     except Exception as e:
                         extraction_errors.append({
