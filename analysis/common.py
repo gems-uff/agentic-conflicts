@@ -74,25 +74,48 @@ _RAW_TO_CANONICAL = {
     "Postponed": "Imprecise",
 }
 
-# Colour-blind-friendly palette stable across figures.
+# Qualitative palette (Okabe-Ito: colour-blind-safe) stable across
+# figures. The strategies are additionally distinguished by hatches
+# (``STRATEGY_HATCH``) so every figure remains readable when the paper
+# is printed in black & white; the luminance order of the colours
+# (V1 darkest → Imprecise lightest) reinforces the grayscale cue.
 STRATEGY_PALETTE = {
-    "V1": "#4C72B0",
-    "V2": "#DD8452",
-    "CC": "#55A467",
-    "CB": "#C44E52",
-    "NC": "#8172B2",
-    "NN": "#937860",
-    "Imprecise": "#BFBFBF",
+    "V1": "#0072B2",  # deep blue     (darkest)
+    "V2": "#D55E00",  # vermillion
+    "CC": "#009E73",  # bluish-green
+    "CB": "#CC79A7",  # reddish-purple
+    "NC": "#E69F00",  # orange
+    "NN": "#56B4E9",  # sky blue      (light)
+    "Imprecise": "#BFBFBF",  # neutral gray (lightest)
+}
+
+# Hatch pattern per strategy. Empty string = solid fill. These are
+# applied on top of the fill colour so the figures stay readable in
+# grayscale / photocopy reproduction.
+STRATEGY_HATCH = {
+    "V1": "",
+    "V2": "",
+    "CC": "//",
+    "CB": "\\\\",
+    "NC": "xx",
+    "NN": "++",
+    "Imprecise": "..",
 }
 
 RESOLVER_ORDER = ["agent", "human"]
-RESOLVER_PALETTE = {"agent": "#4C72B0", "human": "#DD8452"}
+RESOLVER_PALETTE = {"agent": "#0072B2", "human": "#D55E00"}
+RESOLVER_HATCH = {"agent": "", "human": "//"}
 
 PR_OUTCOME_ORDER = ["resolved", "abandoned-with-conflict", "open-with-conflict"]
 PR_OUTCOME_PALETTE = {
-    "resolved": "#55A467",
-    "abandoned-with-conflict": "#C44E52",
+    "resolved": "#009E73",
+    "abandoned-with-conflict": "#D55E00",
     "open-with-conflict": "#BFBFBF",
+}
+PR_OUTCOME_HATCH = {
+    "resolved": "",
+    "abandoned-with-conflict": "xx",
+    "open-with-conflict": "..",
 }
 
 # How many languages to show before folding the long tail into "Other".
@@ -482,7 +505,14 @@ def stratum_order(df: pd.DataFrame, axis: str) -> list[str]:
 
 
 def setup_style() -> None:
-    """Apply the paper-figure defaults."""
+    """Apply the paper-figure defaults.
+
+    The defaults are deliberately austere: serif font, no chart titles
+    (we never set them -- callers drop the title and let the LaTeX
+    caption do the labelling), thin hatches that still reproduce after
+    photocopying, and PDF/TTF embedding so the figures stay editable
+    in the final paper.
+    """
     sns.set_theme(context="paper", style="whitegrid", palette="colorblind")
     plt.rcParams.update({
         "figure.dpi": 110,
@@ -490,7 +520,10 @@ def setup_style() -> None:
         "savefig.bbox": "tight",
         "font.family": "serif",
         "font.size": 10,
-        "axes.titlesize": 11,
+        # We never set chart titles in the notebooks (see comment above);
+        # the LaTeX caption carries that text. The rc entries below keep
+        # the size consistent if any stray title does appear.
+        "axes.titlesize": 10,
         "axes.labelsize": 10,
         "xtick.labelsize": 9,
         "ytick.labelsize": 9,
@@ -498,9 +531,159 @@ def setup_style() -> None:
         "legend.frameon": False,
         "axes.spines.top": False,
         "axes.spines.right": False,
+        "axes.grid": True,
+        "grid.alpha": 0.35,
+        "grid.linewidth": 0.5,
+        # Keep hatches thin so stacked bars stay legible after photocopy
+        # reproduction and so the colour underneath is still visible.
+        "hatch.linewidth": 0.5,
         "pdf.fonttype": 42,   # embed TrueType (editable in LaTeX / Illustrator)
         "ps.fonttype": 42,
     })
+
+
+def _apply_hatches(ax: plt.Axes, order: list[str], hatches: dict[str, str]) -> None:
+    """Apply ``hatches`` to the segments of a stacked bar chart.
+
+    Matplotlib's ``DataFrame.plot(kind="bar", stacked=True)`` produces
+    one ``BarContainer`` per stacked segment (in the same order as the
+    columns). We walk them in ``order`` and assign the matching hatch
+    to every patch. Each patch also gets a thin black edge so the
+    segments remain separated in grayscale.
+    """
+    containers = [c for c in ax.containers if hasattr(c, "patches")]
+    for segment, container in zip(order, containers):
+        h = hatches.get(segment, "")
+        for patch in container.patches:
+            patch.set_hatch(h)
+            patch.set_edgecolor("black")
+            patch.set_linewidth(0.5)
+
+
+def plot_strategy_stacked(
+    df: pd.DataFrame,
+    order: list[str] | None = None,
+    orientation: str = "vertical",
+    ax: plt.Axes | None = None,
+    palette: dict[str, str] | None = None,
+    hatches: dict[str, str] | None = None,
+    annotate_n: bool = True,
+    legend: bool = True,
+) -> plt.Axes:
+    """Stacked-bar plot of a strategy distribution.
+
+    ``df`` is expected to be a row-normalised frame with one row per
+    stratum and columns = strategies (the output of
+    :func:`strategy_distribution` with a ``group_col``).
+
+    ``orientation='horizontal'`` produces Ghiotto-Figure-16-style
+    horizontal 100%-stacked bars (one per stratum, stratum name on the
+    y-axis, strategy segments colour- and hatch-coded). ``'vertical'``
+    keeps the older notebook layout.
+
+    The helper is deliberately style-free w.r.t. titles: callers that
+    want a title should add it afterwards. Keeping the helper
+    title-less matches the paper-figure convention (LaTeX caption
+    carries the label).
+    """
+    if order is None:
+        order = [c for c in STRATEGY_ORDER if c in df.columns]
+    if palette is None:
+        palette = STRATEGY_PALETTE
+    if hatches is None:
+        hatches = STRATEGY_HATCH
+
+    df = df.reindex(columns=order).fillna(0)
+
+    if ax is None:
+        if orientation == "horizontal":
+            height = max(2.2, 0.45 * len(df) + 1.2)
+            fig, ax = plt.subplots(figsize=(7.2, height))
+        else:
+            width = max(4.5, 0.9 * len(df) + 2)
+            fig, ax = plt.subplots(figsize=(width, 3.6))
+
+    kind = "barh" if orientation == "horizontal" else "bar"
+    (df * 100).plot(
+        kind=kind, stacked=True,
+        color=[palette[s] for s in order],
+        ax=ax,
+        width=0.8,
+        legend=False,
+    )
+    _apply_hatches(ax, order, hatches)
+
+    if orientation == "horizontal":
+        ax.set_xlim(0, 100)
+        ax.set_xlabel("% of chunks")
+        ax.set_ylabel("")
+        ax.invert_yaxis()
+        ax.grid(axis="y", visible=False)
+        ax.xaxis.set_major_locator(plt.MultipleLocator(20))
+    else:
+        ax.set_ylim(0, 100)
+        ax.set_ylabel("% of chunks")
+        ax.set_xlabel("")
+        ax.grid(axis="x", visible=False)
+        ax.yaxis.set_major_locator(plt.MultipleLocator(20))
+        plt.setp(ax.get_xticklabels(), rotation=20, ha="right")
+
+    if annotate_n and "n" in df.attrs:
+        counts = df.attrs["n"]
+        labels = [f"n={counts.get(idx, 0):,}" for idx in df.index]
+        if orientation == "horizontal":
+            for i, lbl in enumerate(labels):
+                ax.text(101, i, lbl, va="center", ha="left", fontsize=8,
+                        color="dimgray")
+        else:
+            for i, lbl in enumerate(labels):
+                ax.text(i, 101, lbl, ha="center", va="bottom", fontsize=8,
+                        color="dimgray")
+
+    if legend:
+        handles = [
+            plt.Rectangle((0, 0), 1, 1,
+                          facecolor=palette[s],
+                          hatch=hatches.get(s, ""),
+                          edgecolor="black", linewidth=0.5)
+            for s in order
+        ]
+        ax.legend(
+            handles, order,
+            title="Strategy",
+            bbox_to_anchor=(1.02, 1), loc="upper left",
+            frameon=False,
+        )
+
+    return ax
+
+
+def strategy_frame_for_plot(
+    chunks: pd.DataFrame,
+    group_col: str,
+    exclude_imprecise: bool = True,
+    sort_by_count: bool = True,
+) -> pd.DataFrame:
+    """Build a plot-ready row-normalised strategy frame.
+
+    Wraps :func:`strategy_distribution` and attaches per-stratum chunk
+    counts under ``df.attrs['n']`` so :func:`plot_strategy_stacked`
+    can annotate each bar with ``n=...``. When
+    ``sort_by_count=True`` rows are ordered by total (classifiable)
+    chunk count, descending — the same ordering Ghiotto et~al.\\ use
+    in their Figure 16.
+    """
+    dist = strategy_distribution(chunks, group_col=group_col,
+                                 exclude_imprecise=exclude_imprecise)
+    if exclude_imprecise:
+        counted = chunks[chunks["strategy"] != "Imprecise"]
+    else:
+        counted = chunks
+    counts = counted.groupby(group_col).size()
+    if sort_by_count:
+        dist = dist.reindex(counts.sort_values(ascending=False).index)
+    dist.attrs["n"] = counts.to_dict()
+    return dist
 
 
 def save_fig(fig: plt.Figure, name: str, directory: Path | str = FIGURES_DIR) -> tuple[Path, Path]:
