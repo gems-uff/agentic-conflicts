@@ -8,52 +8,79 @@ Reallocating 'singl_function' (item size: 4) to 100 items.
 Reallocating 'singl_function' (item size: 4) to 100 items.
 Reallocating 'wiz_functions' (item size: 4) to 6000 items.
 Database file #1: references.bib
-Warning--I didn't find a database entry for "TODO-related-work"
 Reallocating 'singl_function' (item size: 4) to 100 items.
 Reallocating 'wiz_functions' (item size: 4) to 9000 items.
 Reallocating 'glb_str_end' (item size: 4) to 20 items.
 Reallocating 'glb_str_ptr' (item size: 4) to 20 items.
 Reallocating 'global_strs' (item size: 1) to 4000000 items.
 Reallocating 'singl_function' (item size: 4) to 100 items.
-You've used 1 entry,
+Warning--no number and no volume in alfadel2023dependabot
+Warning--page numbers missing in both pages and numpages fields in alfadel2023dependabot
+Warning--empty address in apel2011semistructured
+Warning--empty address in boll2024semi
+Warning--page numbers missing in both pages and numpages fields in boll2024semi
+Warning--empty address in brindescu2020planning
+Warning--empty address in brun2011proactive
+Warning--empty address in camposjunior2022sbes
+Warning--page numbers missing in both pages and numpages fields in camposjunior2022sbes
+Warning--no number and no volume in camposjunior2024sbcr
+Warning--page numbers missing in both pages and numpages fields in camposjunior2024sbcr
+Warning--no number and no volume in cavalcanti2019
+Warning--page numbers missing in both pages and numpages fields in cavalcanti2019
+Warning--empty address in dong2023mergegen
+Warning--page numbers missing in both pages and numpages fields in dong2023mergegen
+Warning--empty publisher in jimenez2024swebench
+Warning--empty address in jimenez2024swebench
+Warning--page numbers missing in both pages and numpages fields in jimenez2024swebench
+Warning--empty address in kasi2013cassandra
+Warning--empty address in owhadikareshk2019
+Warning--page numbers missing in both pages and numpages fields in owhadikareshk2019
+Warning--empty address in pan2021synthesis
+Warning--page numbers missing in both pages and numpages fields in pan2021synthesis
+Warning--empty address in shen2023chatmerge
+Warning--page numbers missing in both pages and numpages fields in shen2023chatmerge
+Warning--empty address in svyatkovskiy2022mergebert
+Warning--page numbers missing in both pages and numpages fields in svyatkovskiy2022mergebert
+Warning--empty address in wohlin2012experimentation
+You've used 35 entries,
             6273 wiz_defined-function locations,
-            1523 strings with 18309 characters,
-and the built_in function-call counts, 805 in all, are:
-= -- 79
-> -- 17
+            1734 strings with 26379 characters,
+and the built_in function-call counts, 40387 in all, are:
+= -- 5336
+> -- 1407
 < -- 0
-+ -- 4
-- -- 7
-* -- 38
-:= -- 90
-add.period$ -- 5
-call.type$ -- 1
-change.case$ -- 5
-chr.to.int$ -- 1
-cite$ -- 1
-duplicate$ -- 69
-empty$ -- 50
-format.name$ -- 7
-if$ -- 157
++ -- 484
+- -- 467
+* -- 3026
+:= -- 3856
+add.period$ -- 179
+call.type$ -- 35
+change.case$ -- 285
+chr.to.int$ -- 35
+cite$ -- 63
+duplicate$ -- 3457
+empty$ -- 2423
+format.name$ -- 587
+if$ -- 9935
 int.to.chr$ -- 2
 int.to.str$ -- 1
-missing$ -- 0
-newline$ -- 48
-num.names$ -- 7
-pop$ -- 23
+missing$ -- 130
+newline$ -- 345
+num.names$ -- 245
+pop$ -- 1359
 preamble$ -- 1
-purify$ -- 13
+purify$ -- 560
 quote$ -- 0
-skip$ -- 30
+skip$ -- 1248
 stack$ -- 0
-substring$ -- 52
-swap$ -- 4
+substring$ -- 2855
+swap$ -- 331
 text.length$ -- 0
 text.prefix$ -- 0
 top$ -- 0
-type$ -- 30
-warning$ -- 0
-while$ -- 7
+type$ -- 797
+warning$ -- 28
+while$ -- 185
 width$ -- 0
-write$ -- 56
-(There was 1 warning)
+write$ -- 725
+(There were 28 warnings)
