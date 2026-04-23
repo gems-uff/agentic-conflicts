@@ -107,15 +107,13 @@ For each chunk, the pipeline records `v1_loc`, `v2_loc`, `base_loc`, and `resolu
 
 The author of the internal merge commit `M` (field `pr_commits.author`, which stores the login when available and the name otherwise) is cross-referenced with the set of agent-account signatures known to AIDev. The AIDev paper (Table 2) documents the search queries used to scope each agent's PRs, and these queries expose the bot/account login per agent (for example, `devin-ai-integration[bot]`, `copilot-swe-agent[bot]`, etc.). We compile the definitive mapping directly from the `pull_request.parquet` field `user`, grouped by `agent`, which yields the set of account signatures each agent uses. A merge commit authored by an account in that set is labeled `agent-resolved`; otherwise it is labeled `human-resolved`.
 
-A PR is labeled `abandoned-with-conflict` when (i) the PR state is `closed` with `merged_at` null, and (ii) at least one internal merge commit in the PR produced a conflict per step 5.2. A PR that is `open` and carries an unresolved conflict in an internal merge is labeled `open-with-conflict`; it is reported separately to account for the snapshot nature of AIDev (cutoff August 1, 2025) without forcing an interpretation as abandonment.
-
 ### 5.7 Analyses per research question
 
 **RQ1** — For each of `#chunks per merge`, `v1_loc`, `v2_loc`, and `resolution_loc`, we report the distribution (histogram, median, mean, standard deviation, selected percentiles) over the full agent universe and over the cross-cutting strata. Visualizations follow Ghiotto et al.'s figures to enable direct visual comparison.
 
 **RQ2** — We report the relative frequency of each resolution label (V1, V2, CC, CB, NC, NN, Imprecise) at the chunk level, globally and per stratum. The comparison with Ghiotto is numerical and textual (no empirical human cohort is collected in this study, per scope decision). The discussion explicitly addresses how the `Imprecise` bucket, which does not exist in Ghiotto et al., affects comparability.
 
-**RQ3** — We report the distribution of the resolver label at the merge-commit level (`agent-resolved`, `human-resolved`) and, at the PR level, the fraction of PRs falling into `abandoned-with-conflict`, `open-with-conflict`, and `resolved` (merged or closed without any internal conflict).
+**RQ3** — We report the distribution of the resolver label at the merge-commit level (`agent-resolved`, `human-resolved`).
 
 ---
 
@@ -135,7 +133,7 @@ A PR is labeled `abandoned-with-conflict` when (i) the PR state is `closed` with
 
 **Stage 5 — Strategy classification.** Apply `identify_resolution(v1, v2, resolution)` and emit `classified_chunks.parquet` adding `(strategy)`.
 
-**Stage 6 — Resolver attribution.** Build the agent-account signature map from `pull_request.parquet` grouped by `agent`, cross-reference `internal_merges.parquet.author` against it, and emit `resolver_labels.parquet` with `(pr_id, merge_sha, resolver_type)` where `resolver_type` is one of `agent` / `human`. For PR-level labels (`abandoned-with-conflict`, `open-with-conflict`), emit `pr_labels.parquet` with `(pr_id, pr_outcome)`.
+**Stage 6 — Resolver attribution.** Build the agent-account signature map from `pull_request.parquet` grouped by `agent`, cross-reference `internal_merges.parquet.author` against it, and emit `resolver_labels.parquet` with `(pr_id, merge_sha, resolver_type)` where `resolver_type` is one of `agent` / `human`.
 
 **Stage 7 — Analysis.** Notebooks joining the parquet outputs, producing the per-RQ tables and plots.
 
@@ -162,7 +160,6 @@ data/nature_of_agent_conflicts/         # Pass B output (extract_aidev_nature.py
   resolved_chunks.parquet
   classified_chunks.parquet
   resolver_labels.parquet
-  pr_labels.parquet
   extraction_errors.parquet             # audit table: clone failures, missing SHAs,
                                         # octopus merges, integration merges, timeouts
   final_merge_audit.parquet             # one-off audit of PR→base final merges
