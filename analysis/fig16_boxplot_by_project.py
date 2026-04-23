@@ -39,7 +39,8 @@ RAW_TO_CANONICAL = {
     "Postponed":  "Imprecise",
 }
 
-STRATEGY_ORDER = ["V1", "V2", "CC", "CB", "NC", "NN", "Imprecise"]
+# STRATEGY_ORDER = ["V1", "V2", "CC", "CB", "NC", "NN", "Imprecise"]
+STRATEGY_ORDER = ["V1", "V2", "CC", "CB", "NC", "NN"]
 
 STRATEGY_PALETTE = {
     "V1":        "#0072B2",

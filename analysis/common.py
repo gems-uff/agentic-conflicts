@@ -648,12 +648,21 @@ def plot_strategy_stacked(
                           edgecolor="black", linewidth=0.5)
             for s in order
         ]
-        ax.legend(
-            handles, order,
-            title="Strategy",
-            bbox_to_anchor=(1.02, 1), loc="upper left",
-            frameon=False,
-        )
+        if orientation == 'horizontal' and annotate_n:
+            ax.legend(
+                handles, order,
+                title="Strategy",
+                bbox_to_anchor=(1.12, 1), loc="upper left",
+                frameon=False,
+            )
+        else:
+            ax.legend(
+                handles, order,
+                title="Strategy",
+                bbox_to_anchor=(1.02, 1), loc="upper left",
+                frameon=False,
+            )
+        
 
     return ax
 
@@ -663,6 +672,7 @@ def strategy_frame_for_plot(
     group_col: str,
     exclude_imprecise: bool = True,
     sort_by_count: bool = True,
+    exclude_unknown: bool = True,
 ) -> pd.DataFrame:
     """Build a plot-ready row-normalised strategy frame.
 
@@ -679,6 +689,9 @@ def strategy_frame_for_plot(
         counted = chunks[chunks["strategy"] != "Imprecise"]
     else:
         counted = chunks
+    if exclude_unknown:
+        counted = chunks[chunks['language_top']!='Unknown']
+    
     counts = counted.groupby(group_col).size()
     if sort_by_count:
         dist = dist.reindex(counts.sort_values(ascending=False).index)
