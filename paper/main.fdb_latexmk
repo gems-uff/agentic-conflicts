@@ -1,18 +1,13 @@
 # Fdb version 4
-["bibtex main"] 1777056019.72126 "main.aux" "main.bbl" "main" 1777056025.37431 0
+["bibtex main"] 1777060991.93608 "main.aux" "main.bbl" "main" 1777060998.23773 0
   "./ACM-Reference-Format.bst" 1776623149 93560 12e0ced1522ea2bfa9b2fb12855c7e9e ""
   "./references.bib" 1776987091 15850 ddcc600257970aa5f5336ee9e2c1c698 ""
-  "main.aux" 1777056023 20109 680e9141b1957d635f2f94c54aab3e59 "pdflatex"
+  "main.aux" 1777060996 20473 0c9b8d79425e94761cf756918527cbe5 "pdflatex"
   (generated)
   "main.bbl"
   "main.blg"
   (rewritten before read)
-["pdflatex"] 1777056020.39323 "main.tex" "main.pdf" "main" 1777056025.37539 0
-  "../analysis/figures/rq2_boxplot_by_project.pdf" 1776975022 22492 ed1c1e5344a892cd0d8f844098bf4c99 ""
-  "../analysis/figures/rq2_by_agent_excl_imprecise.pdf" 1777064286 16913 d83ee399e20dccf0e4fa98724c379702 ""
-  "../analysis/figures/rq2_fig16_by_resolver_excl_imprecise.pdf" 1777064292 15282 935106f70fc5ba17b771fb0722503616 ""
-  "../analysis/figures/rq2_global_vs_ghiotto_excl_imprecise.pdf" 1777064286 14724 5236d75a1e1c955a100f5c21a9fda17c ""
-  "../analysis/figures/rq2_size_distributions.pdf" 1777064294 12718 56d0a9aa2883335733a432381512cb95 ""
+["pdflatex"] 1777060992.56382 "main.tex" "main.pdf" "main" 1777060998.23943 0
   "C:/Users/Heleno/AppData/Local/MiKTeX/fonts/map/pdftex/pdftex.map" 1776969596 243844 e50cfda7c012dc6c83339193b4f6ab67 ""
   "C:/Users/Heleno/AppData/Local/MiKTeX/miktex/data/le/pdftex/pdflatex.fmt" 1769706376 24225518 5ddfd4ff0229a63444a459c07ece6800 ""
   "C:/Users/Heleno/AppData/Local/Programs/MiKTeX/fonts/enc/dvips/inconsolata/i4-t1-4.enc" 1557958141 7693 0f2dce6d313c82989ec3a67fc24df2a0 ""
@@ -222,10 +217,15 @@
   "C:/Users/Heleno/AppData/Local/Programs/MiKTeX/tex/latex/zref/zref-base.sty" 1773584792 20785 8db5f0a2b2ce96dda9fac87ccab29449 ""
   "acmart.cls" 1776623149 121725 55c82b1c8415ebc97f8e984a7d310e9c ""
   "figures/pipeline.png" 1776972722 666159 e60b3092ecae4680201d77ba8ca199f1 ""
-  "main.aux" 1777056023 20109 680e9141b1957d635f2f94c54aab3e59 "pdflatex"
-  "main.bbl" 1777056020 23430 d14d03aef947b95c8b12badac768e3c0 "bibtex main"
-  "main.out" 1777056023 5500 e86496752e4c9eccdae34a8351a3497b "pdflatex"
-  "main.tex" 1777055653 77599 11e798b1618e7fb9433144702bc9ed47 ""
+  "figures/rq2_boxplot_by_project.pdf" 1776975022 22492 ed1c1e5344a892cd0d8f844098bf4c99 ""
+  "figures/rq2_by_agent_excl_imprecise.pdf" 1777064286 16913 d83ee399e20dccf0e4fa98724c379702 ""
+  "figures/rq2_fig16_by_resolver_excl_imprecise.pdf" 1777064292 15282 935106f70fc5ba17b771fb0722503616 ""
+  "figures/rq2_global_vs_ghiotto_excl_imprecise.pdf" 1777064286 14724 5236d75a1e1c955a100f5c21a9fda17c ""
+  "figures/rq2_size_distributions.pdf" 1777064294 12718 56d0a9aa2883335733a432381512cb95 ""
+  "main.aux" 1777060996 20473 0c9b8d79425e94761cf756918527cbe5 "pdflatex"
+  "main.bbl" 1777060992 23430 d14d03aef947b95c8b12badac768e3c0 "bibtex main"
+  "main.out" 1777060996 5500 cc6e2ce2ccfe7cfcc8ef4d6ff2c23fd0 "pdflatex"
+  "main.tex" 1777060967 80904 08ad1188b9091305a72a8e954eade80b ""
   (generated)
   "main.aux"
   "main.log"

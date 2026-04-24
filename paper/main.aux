@@ -83,8 +83,6 @@
 \newlabel{sec:meth-conflicts}{{3.3}{4}{Reproducing Merges and Extracting Conflict Chunks}{subsection.3.3}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {3.4}Localizing the Resolution}{4}{subsection.3.4}\protected@file@percent }
 \newlabel{sec:meth-resolution}{{3.4}{4}{Localizing the Resolution}{subsection.3.4}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {3.5}Classifying Resolution Strategies}{4}{subsection.3.5}\protected@file@percent }
-\newlabel{sec:meth-strategies}{{3.5}{4}{Classifying Resolution Strategies}{subsection.3.5}{}}
 \citation{ghiotto2020nature}
 \citation{ghiotto2020nature}
 \citation{liaidev2025se3}
@@ -96,6 +94,8 @@
 \citation{bergsma2013bias}
 \citation{ghiotto2020nature}
 \citation{dinella2022deepmerge}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.5}Classifying Resolution Strategies}{5}{subsection.3.5}\protected@file@percent }
+\newlabel{sec:meth-strategies}{{3.5}{5}{Classifying Resolution Strategies}{subsection.3.5}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {3.6}Identifying the Resolver}{5}{subsection.3.6}\protected@file@percent }
 \newlabel{sec:meth-resolver}{{3.6}{5}{Identifying the Resolver}{subsection.3.6}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {3.7}Analyses per Research Question}{5}{subsection.3.7}\protected@file@percent }
@@ -103,8 +103,6 @@
 \@writefile{toc}{\contentsline {paragraph}{Statistical analyses.}{5}{section*.10}\protected@file@percent }
 \@writefile{lot}{\contentsline {table}{\numberline {1}{\ignorespaces Dataset overview (after merge-level deduplication).}}{5}{table.caption.11}\protected@file@percent }
 \newlabel{tab:dataset-overview}{{1}{5}{Dataset overview (after merge-level deduplication)}{table.caption.11}{}}
-\@writefile{lot}{\contentsline {table}{\numberline {2}{\ignorespaces Per-agent scope and conflict incidence.}}{5}{table.caption.12}\protected@file@percent }
-\newlabel{tab:scope-per-agent}{{2}{5}{Per-agent scope and conflict incidence}{table.caption.12}{}}
 \@writefile{toc}{\contentsline {section}{\numberline {4}Results}{5}{section.4}\protected@file@percent }
 \newlabel{sec:results}{{4}{5}{Results}{section.4}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {4.1}Dataset Overview}{5}{subsection.4.1}\protected@file@percent }
@@ -115,6 +113,8 @@
 \citation{ghiotto2020nature}
 \citation{ghiotto2020nature}
 \citation{ghiotto2020nature}
+\@writefile{lot}{\contentsline {table}{\numberline {2}{\ignorespaces Per-agent scope and conflict incidence.}}{6}{table.caption.12}\protected@file@percent }
+\newlabel{tab:scope-per-agent}{{2}{6}{Per-agent scope and conflict incidence}{table.caption.12}{}}
 \@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces Size distributions in agent-authored merges (outliers omitted for clarity). \textit  {Left:} number of conflicting chunks per merge commit (conflicting merges only, $n{=}14{,}960$). \textit  {Right:} non-blank LOC for the $v_1$, $v_2$, and resolution sides of the $121{,}599$ conflict chunks.}}{6}{figure.caption.13}\protected@file@percent }
 \newlabel{fig:size-distributions}{{2}{6}{Size distributions in agent-authored merges (outliers omitted for clarity). \textit {Left:} number of conflicting chunks per merge commit (conflicting merges only, $n{=}14{,}960$). \textit {Right:} non-blank LOC for the $v_1$, $v_2$, and resolution sides of the $121{,}599$ conflict chunks}{figure.caption.13}{}}
 \@writefile{toc}{\contentsline {paragraph}{Side sizes.}{6}{section*.15}\protected@file@percent }
@@ -125,7 +125,6 @@
 \@writefile{toc}{\contentsline {subsection}{\numberline {4.3}RQ2: Resolution Strategies}{6}{subsection.4.3}\protected@file@percent }
 \newlabel{sec:rq2}{{4.3}{6}{RQ2: Resolution Strategies}{subsection.4.3}{}}
 \@writefile{toc}{\contentsline {paragraph}{Global distribution.}{6}{section*.19}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Per-agent breakdown.}{6}{section*.20}\protected@file@percent }
 \citation{ghiotto2020nature}
 \citation{ghiotto2020nature}
 \citation{ghiotto2020nature}
@@ -133,47 +132,45 @@
 \citation{ghiotto2020nature}
 \citation{ghiotto2020nature}
 \citation{ghiotto2020nature}
-\@writefile{lot}{\contentsline {table}{\numberline {3}{\ignorespaces Strategy proportions (classifiable chunks only): this study vs.\ \citet  {ghiotto2020nature}. $\Delta $\nonbreakingspace =\nonbreakingspace ours\,$-$\,Ghiotto. ``In CI?'' flags whether Ghiotto's point estimate falls within our 95\% Wilson CI (descriptive check only; no GoF test was run; see Section\nonbreakingspace \ref {sec:meth-analyses}).}}{7}{table.caption.23}\protected@file@percent }
-\newlabel{tab:ghiotto-compare}{{3}{7}{Strategy proportions (classifiable chunks only): this study vs.\ \citet {ghiotto2020nature}. $\Delta $~=~ours\,$-$\,Ghiotto. ``In CI?'' flags whether Ghiotto's point estimate falls within our 95\% Wilson CI (descriptive check only; no GoF test was run; see Section~\ref {sec:meth-analyses})}{table.caption.23}{}}
+\@writefile{toc}{\contentsline {paragraph}{Per-agent breakdown.}{7}{section*.20}\protected@file@percent }
 \@writefile{toc}{\contentsline {paragraph}{Per-language and per-task-type breakdowns.}{7}{section*.21}\protected@file@percent }
 \@writefile{toc}{\contentsline {paragraph}{Comparison with Ghiotto et\nonbreakingspace al.}{7}{section*.22}\protected@file@percent }
 \@writefile{toc}{\contentsline {paragraph}{Statistical tests.}{7}{section*.24}\protected@file@percent }
-\@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces Global resolution strategy distribution for agent-authored merges (this study, $n{=}75{,}752$ classifiable chunks) versus the human Java baseline of \citet  {ghiotto2020nature}. Imprecise chunks ($37.7\%$) are excluded; per-stratum rates are reported in the text.}}{7}{figure.caption.26}\protected@file@percent }
-\newlabel{fig:rq2-global-ghiotto}{{3}{7}{Global resolution strategy distribution for agent-authored merges (this study, $n{=}75{,}752$ classifiable chunks) versus the human Java baseline of \citet {ghiotto2020nature}. Imprecise chunks ($37.7\%$) are excluded; per-stratum rates are reported in the text}{figure.caption.26}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {4}{\ignorespaces Resolution strategy distribution per coding agent (Imprecise excluded). The $V_1 / V_2$ polarity inverts for Claude Code and Devin relative to Copilot and OpenAI Codex.}}{7}{figure.caption.27}\protected@file@percent }
-\newlabel{fig:rq2-by-agent}{{4}{7}{Resolution strategy distribution per coding agent (Imprecise excluded). The $V_1 / V_2$ polarity inverts for Claude Code and Devin relative to Copilot and OpenAI Codex}{figure.caption.27}{}}
-\@writefile{toc}{\contentsline {paragraph}{Resolver-conditional distribution.}{7}{section*.25}\protected@file@percent }
-\zref@newlabel{mdf@pagelabel-2}{\default{4.3}\page{7}\abspage{7}\mdf@pagevalue{7}}
-\@writefile{lof}{\contentsline {figure}{\numberline {5}{\ignorespaces Per-project distribution of the fraction of chunks resolved by each strategy (box plots over all repositories with at least one classifiable chunk). The layout mirrors Fig.\nonbreakingspace 16 of \citet  {ghiotto2020nature}, enabling direct visual comparison at the project level.}}{8}{figure.caption.28}\protected@file@percent }
-\newlabel{fig:rq2-boxplot-project}{{5}{8}{Per-project distribution of the fraction of chunks resolved by each strategy (box plots over all repositories with at least one classifiable chunk). The layout mirrors Fig.~16 of \citet {ghiotto2020nature}, enabling direct visual comparison at the project level}{figure.caption.28}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {3}{\ignorespaces Strategy proportions (classifiable chunks only): this study vs.\ \citet  {ghiotto2020nature}. $\Delta $\nonbreakingspace =\nonbreakingspace ours\,$-$\,Ghiotto. ``In CI?'' flags whether Ghiotto's point estimate falls within our 95\% Wilson CI (descriptive check only; no GoF test was run; see Section\nonbreakingspace \ref {sec:meth-analyses}).}}{7}{table.caption.23}\protected@file@percent }
+\newlabel{tab:ghiotto-compare}{{3}{7}{Strategy proportions (classifiable chunks only): this study vs.\ \citet {ghiotto2020nature}. $\Delta $~=~ours\,$-$\,Ghiotto. ``In CI?'' flags whether Ghiotto's point estimate falls within our 95\% Wilson CI (descriptive check only; no GoF test was run; see Section~\ref {sec:meth-analyses})}{table.caption.23}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces Global resolution strategy distribution for agent-authored merges (this study, $n{=}75{,}752$ classifiable chunks) versus the human Java baseline of \citet  {ghiotto2020nature}. Imprecise chunks ($37.7\%$) are excluded; per-stratum rates are reported in the text.}}{7}{figure.caption.27}\protected@file@percent }
+\newlabel{fig:rq2-global-ghiotto}{{3}{7}{Global resolution strategy distribution for agent-authored merges (this study, $n{=}75{,}752$ classifiable chunks) versus the human Java baseline of \citet {ghiotto2020nature}. Imprecise chunks ($37.7\%$) are excluded; per-stratum rates are reported in the text}{figure.caption.27}{}}
+\@writefile{toc}{\contentsline {paragraph}{Postponed resolutions.}{7}{section*.25}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Resolver-conditional distribution.}{7}{section*.26}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {4}{\ignorespaces Resolution strategy distribution per coding agent (Imprecise excluded). The $V_1 / V_2$ polarity inverts for Claude Code and Devin relative to Copilot and OpenAI Codex.}}{8}{figure.caption.28}\protected@file@percent }
+\newlabel{fig:rq2-by-agent}{{4}{8}{Resolution strategy distribution per coding agent (Imprecise excluded). The $V_1 / V_2$ polarity inverts for Claude Code and Devin relative to Copilot and OpenAI Codex}{figure.caption.28}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {5}{\ignorespaces Per-project distribution of the fraction of chunks resolved by each strategy (box plots over all repositories with at least one classifiable chunk). The layout mirrors Fig.\nonbreakingspace 16 of \citet  {ghiotto2020nature}, enabling direct visual comparison at the project level.}}{8}{figure.caption.29}\protected@file@percent }
+\newlabel{fig:rq2-boxplot-project}{{5}{8}{Per-project distribution of the fraction of chunks resolved by each strategy (box plots over all repositories with at least one classifiable chunk). The layout mirrors Fig.~16 of \citet {ghiotto2020nature}, enabling direct visual comparison at the project level}{figure.caption.29}{}}
+\zref@newlabel{mdf@pagelabel-2}{\default{4.3}\page{8}\abspage{8}\mdf@pagevalue{8}}
+\@writefile{lot}{\contentsline {table}{\numberline {4}{\ignorespaces Resolver of the internal merge by PR-authoring agent (merge-commit level).}}{8}{table.caption.32}\protected@file@percent }
+\newlabel{tab:resolver-by-agent}{{4}{8}{Resolver of the internal merge by PR-authoring agent (merge-commit level)}{table.caption.32}{}}
 \zref@newlabel{mdf@pagelabel-3}{\default{4.3}\page{8}\abspage{8}\mdf@pagevalue{8}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {4.4}RQ3: Resolver}{8}{subsection.4.4}\protected@file@percent }
 \newlabel{sec:rq3}{{4.4}{8}{RQ3: Resolver}{subsection.4.4}{}}
-\@writefile{toc}{\contentsline {paragraph}{Overall resolver distribution.}{8}{section*.29}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Per-agent contingency.}{8}{section*.30}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Statistical tests.}{8}{section*.32}\protected@file@percent }
-\@writefile{lot}{\contentsline {table}{\numberline {4}{\ignorespaces Resolver of the internal merge by PR-authoring agent (merge-commit level).}}{8}{table.caption.31}\protected@file@percent }
-\newlabel{tab:resolver-by-agent}{{4}{8}{Resolver of the internal merge by PR-authoring agent (merge-commit level)}{table.caption.31}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {6}{\ignorespaces Resolution strategy distribution conditioned on the resolver (agent vs.\ human), Imprecise excluded. This is the largest effect observed in the study: agent resolvers concentrate $79.7\%$ of decisions on $V_1$, while human resolvers spread decisions across all strategies.}}{8}{figure.caption.34}\protected@file@percent }
-\newlabel{fig:rq3-resolver-strategy}{{6}{8}{Resolution strategy distribution conditioned on the resolver (agent vs.\ human), Imprecise excluded. This is the largest effect observed in the study: agent resolvers concentrate $79.7\%$ of decisions on $V_1$, while human resolvers spread decisions across all strategies}{figure.caption.34}{}}
-\@writefile{toc}{\contentsline {paragraph}{Resolver $\times $ strategy.}{8}{section*.33}\protected@file@percent }
-\citation{dinella2022deepmerge,svyatkovskiy2022mergebert,dong2023mergegen}
-\citation{alfadel2023dependabot}
+\@writefile{toc}{\contentsline {paragraph}{Overall resolver distribution.}{8}{section*.30}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Per-agent contingency.}{8}{section*.31}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Statistical tests.}{8}{section*.33}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {6}{\ignorespaces Resolution strategy distribution conditioned on the resolver (agent vs.\ human), Imprecise excluded. This is the largest effect observed in the study: agent resolvers concentrate $79.7\%$ of decisions on $V_1$, while human resolvers spread decisions across all strategies.}}{9}{figure.caption.35}\protected@file@percent }
+\newlabel{fig:rq3-resolver-strategy}{{6}{9}{Resolution strategy distribution conditioned on the resolver (agent vs.\ human), Imprecise excluded. This is the largest effect observed in the study: agent resolvers concentrate $79.7\%$ of decisions on $V_1$, while human resolvers spread decisions across all strategies}{figure.caption.35}{}}
+\@writefile{toc}{\contentsline {paragraph}{Resolver $\times $ strategy.}{9}{section*.34}\protected@file@percent }
 \zref@newlabel{mdf@pagelabel-4}{\default{4.4}\page{9}\abspage{9}\mdf@pagevalue{9}}
+\zref@newlabel{mdf@pagelabel-5}{\default{4.4}\page{9}\abspage{9}\mdf@pagevalue{9}}
 \@writefile{toc}{\contentsline {section}{\numberline {5}Discussion}{9}{section.5}\protected@file@percent }
 \newlabel{sec:discussion}{{5}{9}{Discussion}{section.5}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {5.1}Key Findings and Implications}{9}{subsection.5.1}\protected@file@percent }
 \newlabel{sec:disc-findings}{{5.1}{9}{Key Findings and Implications}{subsection.5.1}{}}
-\@writefile{toc}{\contentsline {paragraph}{Agents rely on verbatim strategies.}{9}{section*.35}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Conflict incidence is agent- and language-specific.}{9}{section*.36}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Human integration dominates.}{9}{section*.37}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Agents rely on verbatim strategies.}{9}{section*.36}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Conflict incidence is agent- and language-specific.}{9}{section*.37}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Human integration dominates.}{9}{section*.38}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {5.2}Implications for Tool Design}{9}{subsection.5.2}\protected@file@percent }
 \newlabel{sec:disc-tools}{{5.2}{9}{Implications for Tool Design}{subsection.5.2}{}}
-\@writefile{toc}{\contentsline {paragraph}{Targeted resolver augmentation.}{9}{section*.38}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Conflict-complexity triage.}{9}{section*.39}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Imprecise rate as a pipeline health signal.}{9}{section*.40}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {5.3}Collaborative Dynamics Between AI and Humans}{9}{subsection.5.3}\protected@file@percent }
-\newlabel{sec:disc-collaboration}{{5.3}{9}{Collaborative Dynamics Between AI and Humans}{subsection.5.3}{}}
+\citation{dinella2022deepmerge,svyatkovskiy2022mergebert,dong2023mergegen}
+\citation{alfadel2023dependabot}
 \citation{wohlin2012experimentation}
 \citation{ghiotto2020nature,boll2024semi,owhadikareshk2019}
 \citation{ghiotto2020nature}
@@ -181,13 +178,22 @@
 \citation{ghiotto2020nature}
 \citation{liaidev2026}
 \citation{liaidev2026}
-\citation{ghiotto2020nature,boll2024semi,owhadikareshk2019}
-\citation{bergsma2013bias}
+\@writefile{toc}{\contentsline {paragraph}{Targeted resolver augmentation.}{10}{section*.39}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Conflict-complexity triage.}{10}{section*.40}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Imprecise rate as a pipeline health signal.}{10}{section*.41}\protected@file@percent }
+\newlabel{sec:disc-postponed}{{5.2}{10}{Agents rarely commit unresolved conflicts}{section*.42}{}}
+\@writefile{toc}{\contentsline {paragraph}{Agents rarely commit unresolved conflicts.}{10}{section*.42}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.3}Collaborative Dynamics Between AI and Humans}{10}{subsection.5.3}\protected@file@percent }
+\newlabel{sec:disc-collaboration}{{5.3}{10}{Collaborative Dynamics Between AI and Humans}{subsection.5.3}{}}
 \@writefile{toc}{\contentsline {section}{\numberline {6}Threats to Validity}{10}{section.6}\protected@file@percent }
 \newlabel{sec:threats}{{6}{10}{Threats to Validity}{section.6}{}}
+\citation{bergsma2013bias}
 \citation{ghiotto2020nature}
 \bibstyle{ACM-Reference-Format}
 \bibdata{references}
+\@writefile{toc}{\contentsline {section}{\numberline {7}Conclusion and Future Work}{11}{section.7}\protected@file@percent }
+\newlabel{sec:conclusion}{{7}{11}{Conclusion and Future Work}{section.7}{}}
+\@writefile{toc}{\contentsline {paragraph}{Future work.}{11}{section*.43}\protected@file@percent }
 \bibcite{accioly2018semistructured}{{1}{2018}{{Accioly et~al\mbox  {.}}}{{}}}
 \bibcite{aldndni2023rpredictor}{{2}{2023}{{Aldndni et~al\mbox  {.}}}{{}}}
 \bibcite{alfadel2023dependabot}{{3}{2023}{{Alfadel et~al\mbox  {.}}}{{}}}
@@ -204,10 +210,6 @@
 \bibcite{dong2023mergegen}{{14}{2023}{{Dong et~al\mbox  {.}}}{{}}}
 \bibcite{dunn1964multiple}{{15}{1964}{{Dunn}}{{}}}
 \bibcite{elias2023mestre}{{16}{2023}{{Elias et~al\mbox  {.}}}{{}}}
-\@writefile{toc}{\contentsline {section}{\numberline {7}Conclusion and Future Work}{11}{section.7}\protected@file@percent }
-\newlabel{sec:conclusion}{{7}{11}{Conclusion and Future Work}{section.7}{}}
-\@writefile{toc}{\contentsline {paragraph}{Future work.}{11}{section*.41}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{References}{11}{section*.45}\protected@file@percent }
 \bibcite{ghiotto2020nature}{{17}{2020}{{Ghiotto et~al\mbox  {.}}}{{}}}
 \bibcite{jimenez2024swebench}{{18}{2024}{{Jimenez et~al\mbox  {.}}}{{}}}
 \bibcite{kasi2013cassandra}{{19}{2013}{{Kasi and Sarma}}{{}}}
@@ -234,5 +236,6 @@
 \newlabel{tocindent3}{0pt}
 \newlabel{tocindent4}{0pt}
 \newlabel{tocindent5}{0pt}
+\@writefile{toc}{\contentsline {section}{References}{12}{section*.47}\protected@file@percent }
 \newlabel{TotPages}{{12}{12}{}{page.12}{}}
 \gdef \@abspage@last{12}

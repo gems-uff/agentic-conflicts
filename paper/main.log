@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.25 (MiKTeX 24.1) (preloaded format=pdflatex 2026.1.29)  24 APR 2026 15:40
+This is pdfTeX, Version 3.141592653-2.6-1.40.25 (MiKTeX 24.1) (preloaded format=pdflatex 2026.1.29)  24 APR 2026 17:03
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -1279,35 +1279,36 @@ T1/LinuxLibertineT-TLF/m/it/9 (-20) New Code\T1/LinuxLibertineT-TLF/m/n/9 (-20)
  ): The res-o-lu-tion in-tro-duces con-tent not present
  []
 
-<../analysis/figures/rq2_size_distributions.pdf, id=272, 513.77542pt x 253.1042
-2pt>
-File: ../analysis/figures/rq2_size_distributions.pdf Graphic file (type pdf)
-<use ../analysis/figures/rq2_size_distributions.pdf>
-Package pdftex.def Info: ../analysis/figures/rq2_size_distributions.pdf  used o
-n input line 297.
+
+Overfull \hbox (52.80412pt too wide) in paragraph at lines 260--275
+ [][] 
+ []
+
+<figures/rq2_size_distributions.pdf, id=275, 513.77542pt x 253.10422pt>
+File: figures/rq2_size_distributions.pdf Graphic file (type pdf)
+<use figures/rq2_size_distributions.pdf>
+Package pdftex.def Info: figures/rq2_size_distributions.pdf  used on input line
+ 298.
 (pdftex.def)             Requested size: 241.14749pt x 118.79678pt.
 LaTeX Font Info:    Font shape `T1/LinuxLibertineT-TLF/b/it' will be
-(Font)              scaled to size 9.0pt on input line 298.
+(Font)              scaled to size 9.0pt on input line 299.
 [5.5]
-Overfull \hbox (10.16805pt too wide) in paragraph at lines 314--315
+Overfull \hbox (10.16805pt too wide) in paragraph at lines 315--316
 []\T1/LinuxLibertineT-TLF/b/n/9 (-20) Summary. \T1/LinuxLibertineT-TLF/m/n/9 (-
 20) Struc-turally, merge con-flicts in agent-authored branches
  []
 
-Package mdframed Info: mdframed works in twoside mode on input line 317.
+Package mdframed Info: mdframed works in twoside mode on input line 318.
 Package mdframed Info: mdframed detected package amsthm 
  changed the theorem header of amsthm
-(mdframed)              on input line 317.
+(mdframed)              on input line 318.
 
 Class acmart Warning: \vspace should only be used to provide space above/below 
-surrounding objects on input line 317.
+surrounding objects on input line 318.
 
-
-Underfull \vbox (badness 10000) has occurred while \output is active []
-
- [6.6{C:/Users/Heleno/AppData/Local/Programs/MiKTeX/fonts/enc/dvips/libertine/l
-btn_ki75ao.enc} <../analysis/figures/rq2_size_distributions.pdf>]
-Overfull \hbox (11.0773pt too wide) in paragraph at lines 349--350
+[6.6{C:/Users/Heleno/AppData/Local/Programs/MiKTeX/fonts/enc/dvips/libertine/lb
+tn_ki75ao.enc} <./figures/rq2_size_distributions.pdf>]
+Overfull \hbox (11.0773pt too wide) in paragraph at lines 350--351
 \T1/LinuxLibertineT-TLF/m/n/9 (-20) strat-egy and agent on the $\OT1/LinuxLiber
 tineT-TLF/m/n/9 (-20) 75[]752$ \T1/LinuxLibertineT-TLF/m/n/9 (-20) clas-si-fi-a
 ble chunks yields $\OML/nxlmi/m/it/9 ^^_[]\LMS/ntxsy/m/n/9 ¹\OT1/LinuxLibertine
@@ -1315,91 +1316,87 @@ T-TLF/m/n/9 (-20) 20\LMS/ntxsy/m/n/9 º[]\OT1/LinuxLibertineT-TLF/m/n/9 (-20) 21
 86$\T1/LinuxLibertineT-TLF/m/n/9 (-20) ,
  []
 
-<../analysis/figures/rq2_global_vs_ghiotto_excl_imprecise.pdf, id=324, 513.6414
-pt x 238.90932pt>
-File: ../analysis/figures/rq2_global_vs_ghiotto_excl_imprecise.pdf Graphic file
- (type pdf)
-<use ../analysis/figures/rq2_global_vs_ghiotto_excl_imprecise.pdf>
-Package pdftex.def Info: ../analysis/figures/rq2_global_vs_ghiotto_excl_impreci
-se.pdf  used on input line 355.
+
+Underfull \vbox (badness 2073) has occurred while \output is active []
+
+<figures/rq2_global_vs_ghiotto_excl_imprecise.pdf, id=327, 513.6414pt x 238.909
+32pt>
+File: figures/rq2_global_vs_ghiotto_excl_imprecise.pdf Graphic file (type pdf)
+<use figures/rq2_global_vs_ghiotto_excl_imprecise.pdf>
+Package pdftex.def Info: figures/rq2_global_vs_ghiotto_excl_imprecise.pdf  used
+ on input line 358.
 (pdftex.def)             Requested size: 241.14749pt x 112.16708pt.
-<../analysis/figures/rq2_by_agent_excl_imprecise.pdf, id=327, 462.61143pt x 252
-.92459pt>
-File: ../analysis/figures/rq2_by_agent_excl_imprecise.pdf Graphic file (type pd
-f)
-<use ../analysis/figures/rq2_by_agent_excl_imprecise.pdf>
-Package pdftex.def Info: ../analysis/figures/rq2_by_agent_excl_imprecise.pdf  u
-sed on input line 363.
+<figures/rq2_by_agent_excl_imprecise.pdf, id=330, 462.61143pt x 252.92459pt>
+File: figures/rq2_by_agent_excl_imprecise.pdf Graphic file (type pdf)
+<use figures/rq2_by_agent_excl_imprecise.pdf>
+Package pdftex.def Info: figures/rq2_by_agent_excl_imprecise.pdf  used on input
+ line 366.
 (pdftex.def)             Requested size: 241.14749pt x 131.84186pt.
-<../analysis/figures/rq2_boxplot_by_project.pdf, id=328, 570.91167pt x 353.5533
-9pt>
-File: ../analysis/figures/rq2_boxplot_by_project.pdf Graphic file (type pdf)
-<use ../analysis/figures/rq2_boxplot_by_project.pdf>
-Package pdftex.def Info: ../analysis/figures/rq2_boxplot_by_project.pdf  used o
-n input line 371.
+<figures/rq2_boxplot_by_project.pdf, id=331, 570.91167pt x 353.55339pt>
+File: figures/rq2_boxplot_by_project.pdf Graphic file (type pdf)
+<use figures/rq2_boxplot_by_project.pdf>
+Package pdftex.def Info: figures/rq2_boxplot_by_project.pdf  used on input line
+ 374.
 (pdftex.def)             Requested size: 241.14749pt x 149.33838pt.
-Package mdframed Info: mdframed works in twoside mode on input line 380.
+ [7.7 <./figures/rq2_global_vs_ghiotto_excl_imprecise.pdf>]
+Package mdframed Info: mdframed works in twoside mode on input line 383.
 Package mdframed Info: mdframed detected package amsthm 
  changed the theorem header of amsthm
-(mdframed)              on input line 380.
+(mdframed)              on input line 383.
+
 
 Class acmart Warning: \vspace should only be used to provide space above/below 
-surrounding objects on input line 380.
+surrounding objects on input line 383.
 
-[7.7 <../analysis/figures/rq2_global_vs_ghiotto_excl_imprecise.pdf> <../analysi
-s/figures/rq2_by_agent_excl_imprecise.pdf>]
-Overfull \hbox (1.73012pt too wide) in paragraph at lines 387--388
+
+Overfull \hbox (1.73012pt too wide) in paragraph at lines 391--392
 \T1/LinuxLibertineT-TLF/m/n/9 (-20) pears along-side a hu-man com-mit-ter. The 
 pic-ture is there-fore strongly
  []
 
-<../analysis/figures/rq2_fig16_by_resolver_excl_imprecise.pdf, id=371, 503.0241
-2pt x 177.78209pt>
-File: ../analysis/figures/rq2_fig16_by_resolver_excl_imprecise.pdf Graphic file
- (type pdf)
-<use ../analysis/figures/rq2_fig16_by_resolver_excl_imprecise.pdf>
-Package pdftex.def Info: ../analysis/figures/rq2_fig16_by_resolver_excl_impreci
-se.pdf  used on input line 415.
+[8.8 <./figures/rq2_by_agent_excl_imprecise.pdf> <./figures/rq2_boxplot_by_proj
+ect.pdf>]
+<figures/rq2_fig16_by_resolver_excl_imprecise.pdf, id=427, 503.02412pt x 177.78
+209pt>
+File: figures/rq2_fig16_by_resolver_excl_imprecise.pdf Graphic file (type pdf)
+<use figures/rq2_fig16_by_resolver_excl_imprecise.pdf>
+Package pdftex.def Info: figures/rq2_fig16_by_resolver_excl_imprecise.pdf  used
+ on input line 419.
 (pdftex.def)             Requested size: 241.14749pt x 85.22862pt.
 
-Overfull \hbox (7.2229pt too wide) in paragraph at lines 421--422
+Overfull \hbox (7.2229pt too wide) in paragraph at lines 425--426
 []\T1/LinuxLibertineT-TLF/b/n/9 (-20) Summary. \T1/LinuxLibertineT-TLF/m/n/9 (-
 20) RQ3 shows that in-te-gra-tion of agent-authored branches
  []
 
-[8.8 <../analysis/figures/rq2_boxplot_by_project.pdf> <../analysis/figures/rq2_
-fig16_by_resolver_excl_imprecise.pdf>]
-Package mdframed Info: mdframed works in twoside mode on input line 424.
+Package mdframed Info: mdframed works in twoside mode on input line 428.
 Package mdframed Info: mdframed detected package amsthm 
  changed the theorem header of amsthm
-(mdframed)              on input line 424.
-
+(mdframed)              on input line 428.
 
 Class acmart Warning: \vspace should only be used to provide space above/below 
-surrounding objects on input line 424.
+surrounding objects on input line 428.
 
 
-Overfull \hbox (4.40117pt too wide) in paragraph at lines 437--438
+Overfull \hbox (4.40117pt too wide) in paragraph at lines 441--442
 \T1/LinuxLibertineT-TLF/m/n/9 (-20) Our re-sults re-veal a co-her-ent pic-ture 
 of \T1/LinuxLibertineT-TLF/m/it/9 (-20) con-ser-va-tive, human-delegated
  []
 
-
-Underfull \vbox (badness 3579) has occurred while \output is active []
-
- [9.9]
+[9.9 <./figures/rq2_fig16_by_resolver_excl_imprecise.pdf>]
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
  [10.10]
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
  (main.bbl
+[11.11]
 LaTeX Font Info:    Font shape `T1/LinuxLibertineT-TLF/m/it' will be
 (Font)              scaled to size 7.0pt on input line 46.
 
-Underfull \vbox (badness 3623) has occurred while \output is active []
+Underfull \vbox (badness 1558) has occurred while \output is active []
 
- [11.11])
+)
 
 Class acmart Warning: ACM reference format is mandatory 
 (acmart)              for papers over one page. 
@@ -1410,7 +1407,8 @@ Class acmart Warning: ACM reference format is mandatory
 Class acmart Warning: CCS concepts are mandatory for papers over two pages.
 
 
-Overfull \vbox (1.16599pt too high) has occurred while \output is active []
+Package balance Warning: You have called \balance in second column
+(balance)                Columns might not be balanced.
 
 
 (C:\Users\Heleno\AppData\Local\Programs\MiKTeX\tex/generic/stringenc\se-pdfdoc.
@@ -1426,16 +1424,16 @@ LaTeX2e <2023-11-01> patch level 1
 L3 programming layer <2024-01-04>
  ***********
 Package rerunfilecheck Info: File `main.out' has not changed.
-(rerunfilecheck)             Checksum: E86496752E4C9ECCDAE34A8351A3497B;5500.
+(rerunfilecheck)             Checksum: CC6E2CE2CCFE7CFCC8EF4D6FF2C23FD0;5500.
  ) 
 Here is how much of TeX's memory you used:
- 24120 strings out of 474486
- 402061 string characters out of 5743283
- 1957542 words of memory out of 5000000
- 45086 multiletter control sequences out of 15000+600000
- 726204 words of font info for 506 fonts, out of 8000000 for 9000
+ 24122 strings out of 474486
+ 401631 string characters out of 5743283
+ 1964542 words of memory out of 5000000
+ 45083 multiletter control sequences out of 15000+600000
+ 726594 words of font info for 508 fonts, out of 8000000 for 9000
  1302 hyphenation exceptions out of 8191
- 90i,12n,131p,4256b,724s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 90i,12n,131p,3175b,604s stack positions out of 10000i,1000n,20000p,200000b,200000s
 <C:/Users/Heleno/AppData/Local/Programs/MiKTeX/fonts/type1/public/inconsolata
 /Inconsolata-zi4r.pfb><C:/Users/Heleno/AppData/Local/Programs/MiKTeX/fonts/type
 1/public/newtx/LibertineMathMI.pfb><C:/Users/Heleno/AppData/Local/Programs/MiKT
@@ -1450,9 +1448,9 @@ ograms/MiKTeX/fonts/type1/public/libertine/LinLibertineTI.pfb><C:/Users/Heleno/
 AppData/Local/Programs/MiKTeX/fonts/type1/public/newtx/NewTXMI.pfb><C:/Users/He
 leno/AppData/Local/Programs/MiKTeX/fonts/type1/public/newtx/txmiaX.pfb><C:/User
 s/Heleno/AppData/Local/Programs/MiKTeX/fonts/type1/public/newtx/txsys.pfb>
-Output written on main.pdf (12 pages, 1285244 bytes).
+Output written on main.pdf (12 pages, 1289349 bytes).
 PDF statistics:
- 619 PDF objects out of 1000 (max. 8388607)
- 118 named destinations out of 1000 (max. 500000)
+ 623 PDF objects out of 1000 (max. 8388607)
+ 120 named destinations out of 1000 (max. 500000)
  70407 words of extra memory for PDF output out of 74296 (max. 10000000)
 
