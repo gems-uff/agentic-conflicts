@@ -89,7 +89,7 @@ def _df_to_records(df: pd.DataFrame) -> list[dict[str, Any]]:
     if df is None or df.empty:
         return []
     out = df.reset_index().to_dict(orient="records")
-    # JSON-safe: convert numpy scalars, NaN → None.
+    # JSON-safe: convert numpy scalars, NaN -> None.
     cleaned = []
     for row in out:
         cleaned.append({
@@ -140,13 +140,17 @@ def _raw_aidev_universe_stats() -> dict[str, Any]:
         out["pr_read_note"] = f"full read (column selection failed: {exc})"
 
     out["aidev_total_prs"] = int(len(prs))
-    repo_col = "repo_full_name" if "repo_full_name" in prs.columns else ("full_name" if "full_name" in prs.columns else None)
+    repo_col = "repo_full_name" if "repo_full_name" in prs.columns else (
+        "full_name" if "full_name" in prs.columns else None
+    )
     if repo_col:
         out["aidev_total_repos"] = int(prs[repo_col].nunique())
     if "agent" in prs.columns:
         out["aidev_prs_per_agent"] = prs["agent"].value_counts().to_dict()
     if "language" in prs.columns:
-        out["aidev_prs_per_language_top15"] = prs["language"].fillna("Unknown").value_counts().head(15).to_dict()
+        out["aidev_prs_per_language_top15"] = (
+            prs["language"].fillna("Unknown").value_counts().head(15).to_dict()
+        )
     if "state" in prs.columns:
         out["aidev_prs_per_state"] = prs["state"].value_counts().to_dict()
 
@@ -216,7 +220,9 @@ def _merges_stats(t_raw: AnalysisTables, t_dedup: AnalysisTables) -> dict[str, A
         )
 
     if "resolver_type" in im_dedup.columns:
-        out["resolver_breakdown"] = im_dedup["resolver_type"].fillna("Unknown").value_counts().to_dict()
+        out["resolver_breakdown"] = (
+            im_dedup["resolver_type"].fillna("Unknown").value_counts().to_dict()
+        )
 
     return out
 
@@ -256,16 +262,29 @@ def _characterisation_section() -> dict[str, Any]:
         conflicting_merges = int(
             chunks_dedup[key].drop_duplicates().shape[0]
         )
+    # PR-level counts: PRs that have at least one internal merge and at least
+    # one conflicting merge.  build_pr_frame joins the per-PR merge/chunk
+    # aggregates onto the universe, so has_internal_merge and has_conflict are
+    # already computed there.
+    pr_frame = build_pr_frame(t_dedup)
+    n_prs_with_internal_merge = int(pr_frame["has_internal_merge"].sum()) if not pr_frame.empty else 0
+    n_prs_with_conflict = int(pr_frame["has_conflict"].sum()) if not pr_frame.empty else 0
+    n_prs_total = int(pr_frame.shape[0]) if not pr_frame.empty else 1  # avoid division by zero
+
     section["headline"] = {
         "n_projects": section["universe"].get("unique_repos"),
         "n_prs": section["universe"].get("universe_unique_prs_dedup"),
+        "n_prs_with_internal_merge": n_prs_with_internal_merge,
+        "pct_prs_with_internal_merge": _pct(n_prs_with_internal_merge, n_prs_total),
+        "n_prs_with_conflicting_merge": n_prs_with_conflict,
+        "pct_prs_with_conflicting_merge": _pct(n_prs_with_conflict, n_prs_total),
         "n_internal_merges": _safe_len(im_dedup),
         "n_conflicting_merges": conflicting_merges,
         "n_conflict_chunks": _safe_len(chunks_dedup),
         "conflicting_merges_pct": _pct(conflicting_merges, _safe_len(im_dedup)),
     }
 
-    # Strata on the merge frame — useful for the paper's "per-agent /
+    # Strata on the merge frame -- useful for the paper's "per-agent /
     # per-language / per-task-type" one-liners in the Dataset Overview.
     merge_frame = build_merge_frame(t_dedup)
     for axis_col, label in (
@@ -278,7 +297,9 @@ def _characterisation_section() -> dict[str, Any]:
             section["headline"][label] = vc.to_dict()
             section["headline"][label + "_conflict_rate"] = {
                 str(k): _pct(
-                    int(merge_frame[(merge_frame[axis_col] == k) & merge_frame["has_conflict"]].shape[0]),
+                    int(merge_frame[
+                        (merge_frame[axis_col] == k) & merge_frame["has_conflict"]
+                    ].shape[0]),
                     int(vc.get(k, 0)),
                 )
                 for k in vc.index
@@ -327,6 +348,28 @@ def _rq1_section(t: AnalysisTables) -> dict[str, Any]:
                 "ok": ok,
                 "total": total,
                 "pct": _pct(ok, total),
+            }
+
+        # Decomposition of the Imprecise bucket into its two distinct sources:
+        #   (a) localization_failures: LocalizeResRegion could not anchor the
+        #       resolution region -> resolution is None -> strategy_raw = "Imprecise"
+        #   (b) postponed: localization succeeded but the resolved file still
+        #       contained conflict markers (<<<<<<<, =======, >>>>>>>) ->
+        #       strategy_raw = "Postponed" -> folded into canonical "Imprecise"
+        # This decomposition is needed because the two phenomena have different
+        # methodological implications.
+        if "strategy_raw" in chunks.columns and "localized_ok" in chunks.columns:
+            n_loc_fail = int((~chunks["localized_ok"]).sum())
+            n_postponed = int((chunks["strategy_raw"] == "Postponed").sum())
+            out["imprecise_decomposition"] = {
+                "localization_failures": n_loc_fail,
+                "postponed": n_postponed,
+                "total_imprecise": n_loc_fail + n_postponed,
+                "note": (
+                    "localization_failures = chunks where LocalizeResRegion returned None; "
+                    "postponed = chunks where localization succeeded but resolved file "
+                    "still contained conflict markers"
+                ),
             }
 
     # PR outcome breakdown (resolved / abandoned / open-with-conflict).
@@ -396,10 +439,84 @@ def _rq2_section(t: AnalysisTables) -> dict[str, Any]:
         }
     out["per_stratum"] = per_stratum
 
-    # Raw strategy counts — useful to double-check any percentage.
-    out["strategy_counts_incl_imprecise"] = chunks["strategy"].value_counts().reindex(
-        STRATEGY_ORDER, fill_value=0
-    ).to_dict()
+    # Raw strategy counts -- useful to double-check any percentage.
+    out["strategy_counts_incl_imprecise"] = (
+        chunks["strategy"].value_counts().reindex(STRATEGY_ORDER, fill_value=0).to_dict()
+    )
+
+    # ---------- Postponed analysis ----------
+    # "Postponed" is a raw strategy label (emitted by identify_resolution when
+    # the resolved file still contains conflict markers) that is folded into
+    # "Imprecise" during canonicalisation.  Exposing it separately lets us
+    # quantify how many merges were committed without actually resolving the
+    # conflict, and compare that rate across resolver types and agents.
+    #
+    # The Imprecise bucket therefore decomposes as:
+    #   Imprecise = localization_failures (strategy_raw == "Imprecise")
+    #             + postponed             (strategy_raw == "Postponed")
+    if "strategy_raw" in chunks.columns:
+        n_total = int(chunks.shape[0])
+        n_imprecise_canonical = int(out["strategy_counts_incl_imprecise"].get("Imprecise", 0))
+        n_postponed = int((chunks["strategy_raw"] == "Postponed").sum())
+        n_loc_fail  = int((chunks["strategy_raw"] == "Imprecise").sum())
+
+        postponed_out: dict[str, Any] = {
+            "n_postponed_total":          n_postponed,
+            "pct_postponed_of_total":     _pct(n_postponed, n_total),
+            "pct_postponed_of_imprecise": _pct(n_postponed, n_imprecise_canonical),
+            "n_localization_failures":    n_loc_fail,
+            "pct_loc_fail_of_total":      _pct(n_loc_fail, n_total),
+            "pct_loc_fail_of_imprecise":  _pct(n_loc_fail, n_imprecise_canonical),
+            "total_imprecise_check":      n_postponed + n_loc_fail,
+            "note": (
+                "total_imprecise_check should equal "
+                "strategy_counts_incl_imprecise['Imprecise']. "
+                "Any gap indicates raw strategy values not yet in _RAW_TO_CANONICAL."
+            ),
+        }
+
+        def _postponed_group_stats(g: pd.DataFrame) -> pd.Series:
+            n = len(g)
+            n_post = int((g["strategy_raw"] == "Postponed").sum())
+            n_fail = int((g["strategy_raw"] == "Imprecise").sum())
+            n_imp = n_post + n_fail
+            return pd.Series({
+                "n_chunks":               n,
+                "n_postponed":            n_post,
+                "pct_postponed":          _pct(n_post, n),
+                "n_localization_failure": n_fail,
+                "pct_localization_failure": _pct(n_fail, n),
+                "n_imprecise_total":      n_imp,
+                "pct_imprecise_total":    _pct(n_imp, n),
+            })
+
+        # By resolver_type (agent / human / agent-assisted).
+        if "resolver_type" in chunks.columns:
+            grp = chunks.groupby("resolver_type", observed=True).apply(
+                _postponed_group_stats
+            )
+            postponed_out["by_resolver_type"] = {
+                str(idx): {
+                    kk: (float(vv) if isinstance(vv, float) else int(vv))
+                    for kk, vv in row.items()
+                }
+                for idx, row in grp.iterrows()
+            }
+
+        # By agent.
+        if "agent" in chunks.columns:
+            grp_agent = chunks.groupby("agent", observed=True).apply(
+                _postponed_group_stats
+            )
+            postponed_out["by_agent"] = {
+                str(idx): {
+                    kk: (float(vv) if isinstance(vv, float) else int(vv))
+                    for kk, vv in row.items()
+                }
+                for idx, row in grp_agent.iterrows()
+            }
+
+        out["postponed_analysis"] = postponed_out
 
     return out
 
@@ -436,7 +553,7 @@ def _rq3_section(t: AnalysisTables) -> dict[str, Any]:
                 sub, group_col="resolver_type"
             ).to_dict()
 
-    # Resolver x agent cross-tab — who resolves the conflicts that agent-opened PRs raise?
+    # Resolver x agent cross-tab -- who resolves the conflicts that agent-opened PRs raise?
     if not merges.empty and {"agent", "resolver_type"}.issubset(merges.columns):
         ct = pd.crosstab(
             merges["agent"].fillna("Unknown"),
