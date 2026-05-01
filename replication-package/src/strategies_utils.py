@@ -1,105 +1,113 @@
 """Conflict resolution strategy classification utilities.
 
-Classifies merge conflict resolutions into 6 strategy categories:
-- V1: Take version 1 (ours)
-- V2: Take version 2 (theirs)
-- CC: Concatenate both versions
-- CB: Concatenate both with manual edits
-- NC: New code combining both
-- NN: New code, unrelated to conflict
+Classifies merge conflict resolutions using multiset-based analysis to detect
+strategy patterns: V1, V2, CC (concatenate clean), CB (concatenate with edits),
+NC (new code combining both), NN (new unrelated code), Imprecise, Postponed.
 """
 
-import re
-from typing import Optional, Dict, List, Tuple
+from typing import Optional, List
+from multiset import Multiset
 
 
-def classify_strategy(
-    version1: str,
-    version2: str,
-    resolution: str,
-    base: Optional[str] = None
+def normalize_line(line: str) -> str:
+    """Normalize a line by removing whitespace."""
+    return line.replace(" ", "").replace("\t", "").replace("\n", "")
+
+
+def normalize_lines(lines: List[str]) -> List[str]:
+    """Normalize a list of lines."""
+    return [normalize_line(line) for line in lines]
+
+
+def remove_empty_lines(lines: List[str]) -> List[str]:
+    """Remove empty lines from a list."""
+    return [line for line in lines if line.strip()]
+
+
+def identify_resolution(
+    v1: str,
+    v2: str,
+    resolution: Optional[str],
 ) -> str:
-    """
-    Classify a conflict resolution into one of 6 strategies.
+    """Classify conflict resolution strategy using multiset analysis.
 
     Args:
-        version1: Content from version 1 (ours)
-        version2: Content from version 2 (theirs)
-        resolution: The resolved content
-        base: Original base version (optional, for context)
+        v1: Version 1 (ours) content
+        v2: Version 2 (theirs) content
+        resolution: Resolved content (None means Imprecise)
 
     Returns:
-        Strategy label: 'V1', 'V2', 'CC', 'CB', 'NC', or 'NN'
+        Strategy string: V1, V2, CC, CB, NC, NN, Imprecise, or Postponed
     """
-    # Normalize for comparison
-    v1_norm = version1.strip()
-    v2_norm = version2.strip()
-    res_norm = resolution.strip()
+    if resolution is None:
+        return "Imprecise"
 
-    # Check for exact matches (V1, V2)
-    if res_norm == v1_norm:
-        return 'V1'
-    if res_norm == v2_norm:
-        return 'V2'
+    v1_lines = normalize_lines(remove_empty_lines(v1.splitlines()))
+    v2_lines = normalize_lines(remove_empty_lines(v2.splitlines()))
+    resolution_lines = normalize_lines(remove_empty_lines(resolution.splitlines()))
 
-    # Check for concatenation (CC, CB)
-    if v1_norm in res_norm and v2_norm in res_norm:
-        # Both versions appear in resolution
-        if (res_norm == v1_norm + v2_norm or
-            res_norm == v2_norm + v1_norm or
-            res_norm == v1_norm + '\n' + v2_norm or
-            res_norm == v2_norm + '\n' + v1_norm):
-            return 'CC'
-        else:
-            # Concatenation with modifications
-            return 'CB'
+    if not resolution_lines:
+        return "None"
 
-    # Check if resolution contains both versions with modifications (NC)
-    if v1_norm in res_norm and v2_norm in res_norm:
-        return 'NC'
+    if '<<<<<<<' in resolution or '=======' in resolution or '>>>>>>>' in resolution:
+        return "Postponed"
 
-    # Check if only v1 or v2 is present in modified form (NC)
-    if v1_norm in res_norm or v2_norm in res_norm:
-        return 'NC'
+    if normalize_line(v1) == normalize_line(resolution):
+        return "V1"
+    elif normalize_line(v2) == normalize_line(resolution):
+        return "V2"
+    elif normalize_line(resolution) == normalize_line(v1) + normalize_line(v2):
+        return "CC"
+    elif normalize_line(resolution) == normalize_line(v2) + normalize_line(v1):
+        return "CC"
+    else:
+        v1_ms = Multiset(v1_lines)
+        v2_ms = Multiset(v2_lines)
+        resolution_ms = Multiset(resolution_lines)
 
-    # Neither version is clearly in resolution (NN)
-    return 'NN'
+        new_code = resolution_ms - (v1_ms + v2_ms)
+        if len(new_code) > 0:
+            if v1_lines and v2_lines:
+                return "NC"
+            else:
+                return "NN"
+
+        if len(resolution_lines) == 0:
+            return "None"
+
+        return "CB"
 
 
-def is_imprecise(
-    resolution: str,
-    min_lines: int = 1,
-    max_conflict_markers: int = 0
-) -> bool:
-    """
-    Determine if a resolution is imprecise (contains unresolved conflict markers).
+_RAW_TO_CANONICAL = {
+    "V1": "V1",
+    "V2": "V2",
+    "ConcatV1V2": "CC",
+    "ConcatV2V1": "CC",
+    "New code": "NC",
+    "Combination": "CB",
+    "None": "NN",
+    "CC": "CC",
+    "CB": "CB",
+    "NC": "NC",
+    "NN": "NN",
+    "Imprecise": "Imprecise",
+    "Postponed": "Postponed",
+}
 
-    Args:
-        resolution: The resolved content
-        min_lines: Minimum lines to consider valid
-        max_conflict_markers: Maximum unresolved markers allowed
+STRATEGY_ORDER = ["V1", "V2", "CC", "CB", "NC", "NN", "Imprecise"]
 
-    Returns:
-        True if resolution appears imprecise
-    """
-    # Check for conflict markers
-    markers = (
-        resolution.count('<<<<<<<') +
-        resolution.count('=======') +
-        resolution.count('>>>>>>>')
-    )
 
-    if markers > max_conflict_markers:
-        return True
-
-    # Check minimum content
-    if len(resolution.strip().split('\n')) < min_lines:
-        return True
-
-    return False
+def canonicalize_strategy(raw_strategy: str) -> str:
+    """Convert raw strategy name to canonical form."""
+    return _RAW_TO_CANONICAL.get(raw_strategy, "Imprecise")
 
 
 __all__ = [
-    'classify_strategy',
-    'is_imprecise',
+    "normalize_line",
+    "normalize_lines",
+    "remove_empty_lines",
+    "identify_resolution",
+    "canonicalize_strategy",
+    "STRATEGY_ORDER",
+    "_RAW_TO_CANONICAL",
 ]

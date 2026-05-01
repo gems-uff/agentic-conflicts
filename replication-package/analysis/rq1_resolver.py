@@ -1,67 +1,89 @@
-"""RQ1 Analysis: Who Resolves Merge Conflicts?
+"""RQ1 Analysis: Who Resolves Merge Conflicts?"""
 
-Determines resolver attribution (agent vs. human) and analyzes:
-- Overall human vs. agent resolution rates
-- Per-agent self-resolution rates
-- Distribution by language and task type
-"""
-
+import logging
+from pathlib import Path
 import pandas as pd
 from .common import AnalysisTables
 
 
-def analyze_rq1(tables: AnalysisTables, output_dir: str = './results'):
-    """
-    Analyze RQ1: Who resolves merge conflicts?
+def _export_results(results: dict, output_dir: str):
+    """Export RQ1 results to CSV and TXT formats."""
+    output_dir = Path(output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
 
-    Args:
-        tables: AnalysisTables object
-        output_dir: Where to save results
-    """
-    print("\nRQ1: Who Resolves Merge Conflicts?")
-    print("=" * 50)
+    # Export as TXT (human-readable)
+    txt_file = output_dir / "rq1_resolver_attribution.txt"
+    with open(txt_file, 'w', encoding='utf-8') as f:
+        f.write("RQ1: Who Resolves Merge Conflicts?\n")
+        f.write("=" * 50 + "\n\n")
+        f.write(f"Total Merges: {results.get('total_merges', 0)}\n\n")
+        f.write("Resolver Attribution:\n")
+        for key, value in results.items():
+            if key.startswith('resolver_') and key.endswith('_pct'):
+                resolver_type = key.replace('resolver_', '').replace('_pct', '')
+                count = results.get(f'resolver_{resolver_type}', 0)
+                f.write(f"  {resolver_type}: {count} ({value:.1f}%)\n")
 
+    logging.info(f"Exported results to {txt_file}")
+
+    # Export as CSV
+    csv_file = output_dir / "rq1_resolver_attribution.csv"
+    rows = []
+    for key, value in results.items():
+        if key.startswith('resolver_') and not key.endswith('_pct'):
+            resolver_type = key.replace('resolver_', '')
+            rows.append({
+                'resolver_type': resolver_type,
+                'count': value,
+                'percentage': results.get(f'{key}_pct', 0)
+            })
+    if rows:
+        df = pd.DataFrame(rows)
+        df.to_csv(csv_file, index=False)
+        logging.info(f"Exported summary to {csv_file}")
+
+
+def analyze_rq1(tables: AnalysisTables, output_dir: str = './results') -> dict:
+    """Analyze RQ1: Who resolves merge conflicts (agent vs. human)?"""
+    logging.info("\nRQ1: Who Resolves Merge Conflicts?")
+    logging.info("=" * 50)
+
+    results = {}
     resolver_labels = tables.resolver_labels
+    if resolver_labels is None or resolver_labels.empty:
+        logging.warning("WARNING: No resolver labels available for RQ1 analysis")
+        logging.info("=" * 50)
+        # Export empty results
+        _export_results(results, output_dir)
+        return results
 
-    if resolver_labels is None:
-        print("ERROR: resolver_labels table not found")
-        return
-
-    # Overall resolution rate
     total = len(resolver_labels)
-    agent_resolved = (resolver_labels['resolver'] == 'agent').sum()
-    human_resolved = (resolver_labels['resolver'] == 'human').sum()
+    results['total_merges'] = total
 
-    agent_rate = agent_resolved / total if total > 0 else 0
-    human_rate = human_resolved / total if total > 0 else 0
+    if 'resolver_type' in resolver_labels.columns:
+        logging.info(f"\nResolver Attribution:")
+        resolver_dist = resolver_labels['resolver_type'].value_counts()
+        for resolver_type, count in resolver_dist.items():
+            pct = count / total * 100
+            logging.info(f"  {resolver_type}: {count:,} ({pct:.1f}%)")
+            results[f'resolver_{resolver_type}'] = count
+            results[f'resolver_{resolver_type}_pct'] = pct
+    else:
+        logging.warning("WARNING: resolver_type column not found in resolver_labels")
 
-    print(f"\nOverall Resolution Attribution:")
-    print(f"  Total Conflicts: {total:,}")
-    print(f"  Agent-Resolved: {agent_resolved:,} ({agent_rate:.1%})")
-    print(f"  Human-Resolved: {human_resolved:,} ({human_rate:.1%})")
+    logging.info("=" * 50)
 
-    # Per-agent self-resolution rates
-    if 'agent_name' in resolver_labels.columns:
-        print(f"\nSelf-Resolution Rates by Agent:")
-        per_agent = resolver_labels.groupby('agent_name').apply(
-            lambda g: (g['resolver'] == 'agent').sum() / len(g)
-        ).sort_values(ascending=False)
+    # Export results
+    _export_results(results, output_dir)
 
-        for agent, rate in per_agent.items():
-            count = (resolver_labels[resolver_labels['agent_name'] == agent]['resolver'] == 'agent').sum()
-            total_agent = len(resolver_labels[resolver_labels['agent_name'] == agent])
-            print(f"  {agent}: {rate:.1%} ({count}/{total_agent})")
-
-    print("\n" + "=" * 50)
+    return results
 
 
 if __name__ == '__main__':
     import sys
-
     if len(sys.argv) > 1:
         data_dir = sys.argv[1]
     else:
         data_dir = './data'
-
     tables = AnalysisTables(data_dir)
     analyze_rq1(tables, output_dir=f'{data_dir}/results')

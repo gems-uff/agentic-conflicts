@@ -59,7 +59,7 @@ pip install -r requirements.txt
 
 ### Option A: Full Pipeline (Server, 5-7 days)
 
-Requires the AIDev dataset (private, available by request) and sufficient compute resources.
+Requires the [AIDev dataset](https://huggingface.co/datasets/hao-li/AIDev) and sufficient compute resources.
 
 ```bash
 python launch_pipeline.py \
@@ -131,8 +131,8 @@ If you use this replication package, please cite:
 ```bibtex
 @inproceedings{camposjunior2026merge,
   title={How AI Coding Agents Resolve Merge Conflicts: An Empirical Study},
-  author={Campos Junior, Heleno de Souza and Murta, Leonardo Gresta Paulino},
-  booktitle={Proceedings of the 40th Brazilian Symposium on Software Engineering (SBES)},
+  author={Omitted for Review},
+  booktitle={TBA},
   year={2026}
 }
 ```
