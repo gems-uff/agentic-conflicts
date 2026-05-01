@@ -6,3 +6,6 @@ jupyter
 notebook
 matplotlib
 seaborn
+scikit-posthocs
+scipy
+statsmodels
