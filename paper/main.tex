@@ -28,6 +28,27 @@
 \usepackage{multirow}   % For multi-row table cells
 \usepackage{xcolor}     % For colored text (e.g., TODO markers)
 \usepackage{listings}   % For code listings if needed
+\usepackage{graphicx}   % For including figures
+\usepackage{mdframed}   % For finding boxes
+\usepackage{microtype}  % Better line breaking and overflow prevention
+\exhyphenpenalty=0      % Allow line breaks after explicit hyphens (e.g., per-agent)
+\emergencystretch=2em   % Help breaking lines that have no good break point
+
+%% Path to figures (relative to the paper/ compilation directory)
+% \graphicspath{{../analysis/figures/}{../results/rq2/}{../results/rq3/}}
+
+%% Finding-box environment
+\newmdenv[
+  linecolor=black!55,
+  linewidth=0.75pt,
+  backgroundcolor=black!4,
+  innertopmargin=5pt,
+  innerbottommargin=5pt,
+  innerleftmargin=7pt,
+  innerrightmargin=7pt,
+  skipabove=8pt,
+  skipbelow=4pt,
+]{findingbox}
 
 %% TODO command for draft annotations (remove before submission)
 \newcommand{\TODO}[1]{\textcolor{red}{\textbf{[TODO: #1]}}}
@@ -36,34 +57,34 @@
 \begin{document}
 
 %% Title
-\title{How Do AI Agents Resolve Merge Conflicts? An Empirical Study of Conflict Resolution Strategies in AI-Authored Pull Requests}
+\title{How AI Coding Agents Resolve Merge Conflicts: An Empirical Study}
 
 %% Authors (hidden during double-anonymous review)
-\author{FirstName Surname}
+\author{Heleno de Souza Campos Junior}
 \affiliation{
-  \institution{Department, University}
-  \city{City}
-  \country{Country}
+  \institution{Federal Fluminense University}
+  \city{Niterói}
+  \country{Brazil}
 }
-\email{email@email.com}
+\email{helenocampos@id.uff.br}
 
-\author{FirstName Surname}
+\author{Leonardo Gresta Paulino Murta}
 \affiliation{
-  \institution{Department, University}
-  \city{City}
-  \country{Country}
+  \institution{Federal Fluminense University}
+  \city{Niterói}
+  \country{Brazil}
 }
-\email{email@email.com}
+\email{leomurta@ic.uff.br}
 
 %% Short author list for page headers
-\renewcommand{\shortauthors}{Surname et al.}
-\renewcommand{\shorttitle}{How Do AI Agents Resolve Merge Conflicts?}
+\renewcommand{\shortauthors}{Campos Junior and Murta}
+\renewcommand{\shorttitle}{How AI Coding Agents Resolve Merge Conflicts}
 
 % ============================================================
 % Abstract
 % ============================================================
 \begin{abstract}
-AI-powered coding agents such as Claude Code, OpenAI Codex, GitHub Copilot, Cursor, and Devin are increasingly contributing to open-source software development through pull requests (PRs). When these AI-authored branches incorporate upstream changes via merge commits, textual merge conflicts can arise and must be resolved---either by the AI agent itself or by a human collaborator. Despite the growing adoption of agentic AI in software development, little is known about how merge conflicts are resolved in this context: which strategies are employed, who performs the resolution, and what factors influence the choice of strategy. In this paper, we present a large-scale empirical study of merge conflict resolution in AI-authored PRs, building upon the AgenticFlict dataset of 142,652 PRs opened by five AI agents across 59,412 repositories. By reproducing real merge commits found within PR branches using three-way \texttt{diff3} merging and comparing the conflicting regions against the actual resolved files, we classify each conflict chunk into one of eight resolution strategies (V1, V2, ConcatV1V2, ConcatV2V1, Combination, New~Code, None, Imprecise) and identify whether the resolver was an AI agent or a human developer. Our results show \TODO{summarize key findings}. We discuss the implications of these findings for the design of AI-assisted merge tools and for understanding the collaborative dynamics between AI agents and human developers.
+AI coding agents (Claude Code, OpenAI Codex, GitHub Copilot, Cursor, and Devin) now open pull requests (PRs) at scale; inside those branches, conflicts eventually arise when upstream changes are merged in. We present the first study of who resolves these conflicts and how each agent's choices differ from one another and from humans, across $14{,}960$ conflicting internal merge commits from AI-authored PRs. Humans commit $96.1\%$ of these conflicting merges, and the per-agent self-resolution rate varies more than $60{\times}$ across vendors. Within the $462$ agent-resolved conflicting merges, the five agents do not share a common resolution strategy: per-agent strategy distributions range from indistinguishable from humans (Claude Code) to strongly divergent (Codex), and pairwise inter-agent comparisons span from indistinguishable (Cursor vs.\ Devin) to nearly disjoint (Copilot vs.\ Codex). Data for two agents exhibit high repository concentration: $90.2\%$ of Codex's self-resolved conflicting merges come from one monorepo, and $83.3\%$ of Claude Code's from one ERP project; their profiles therefore reflect the dominant repository's workflow, not general patterns. Agents commit unresolved conflict markers ten times less often than humans ($0.64\%$ vs.\ $6.56\%$). Two implications follow: tooling for conflict resolution calibrated to a single agent will transfer poorly to the next, and empirical claims about AI-agent behaviour at this volume must surface single-repository concentration before they can be interpreted.
 \end{abstract}
 
 %% Keywords
@@ -78,62 +99,22 @@ AI-powered coding agents such as Claude Code, OpenAI Codex, GitHub Copilot, Curs
 \section{Introduction}
 \label{sec:introduction}
 
-% Qual é o contexto em que esse trabalho está inserido?
-Concurrent work is essential to large-scale software development.
-Once developers finish their independent work, changes must be integrated and made available to other developers, typically through a merge tool that aims to automate as much as possible of the task of combining parallel changes~\cite{mens2002}.
-Despite decades of research on merge techniques, none of them can fully automate the process: when concurrent modifications affect overlapping regions, the tool produces a \emph{merge conflict} that a developer must inspect, understand, and resolve manually~\cite{ghiotto2020nature, brun2011}.
-It has been reported that 10 to 20 percent of all merge attempts result in a conflict~\cite{ghiotto2020nature, kasi2013}, and that resolving them is a difficult, time-consuming, and error-prone task~\cite{vale2022challenges, nelson2019}.
-Surveys with developers reveal that 56\% of them have deferred resolving a conflict due to its complexity, the large size of the conflicting code, or the large number of conflicting locations~\cite{nelson2019}, and that factors such as the number of conflicting chunks, lines of code, and code complexity significantly influence the time required for resolution~\cite{vale2022challenges}.
-To date, the most comprehensive characterization of merge conflicts in the human development context was provided by Ghiotto et al.~\cite{ghiotto2020nature}, who examined over 960,000 merges across 2,731 open-source Java projects and established a multi-dimensional empirical portrait of conflicting chunks, covering the number of chunks per failed merge, chunk size in lines of code, the resolution strategies chosen by developers (V1, V2, Concatenation, Combination, New Code, and None), and the relationships between conflict characteristics and resolution decisions.
-A key finding of that study is that 87\% of the conflict resolutions are composed exclusively of lines already present in the conflicting versions, without introducing any new code~\cite{ghiotto2020nature}. This result, independently confirmed by subsequent work~\cite{dinella2022deepmerge, boll2024derivability, campos2022combining}, has become a central assumption for virtually all automated resolution techniques proposed since.
+The increasing adoption of AI-powered coding agents, such as Claude Code, OpenAI Codex, GitHub Copilot, Cursor, and Devin, represents a paradigm shift in software development workflows. These agents autonomously create branches, implement features, and open pull requests (PRs) in open-source repositories, contributing code alongside human developers at a scale that only became possible in the last two years. The AIDev catalogue~\cite{liaidev2026} alone documents over 930{,}000 AI-authored PRs across 116{,}000 repositories, positioning agentic contributions as a first-class citizen of modern collaborative development.
 
-% Qual é o problema que motiva a existência desse trabalho?
-Software engineering is entering a new era shaped by autonomous coding agents, such as OpenAI Codex, Devin, GitHub Copilot, Cursor, and Claude Code, that go beyond code completion to autonomously create branches, implement features, and open pull requests (PRs) alongside human developers~\cite{li2025aidev}.
-This shift is no longer speculative: the AIDev dataset documents over 456,000 agent-authored PRs across more than 61,000 repositories, with OpenAI Codex alone producing over 400,000 PRs in less than two months since its release~\cite{li2025aidev, li2026aidev_msr}.
-When an agent-authored branch incorporates upstream changes (for instance via \texttt{git merge main}), textual merge conflicts may arise just as they do in human-driven development.
-However, we do not know whether the nature of the conflicts generated by agent-authored PRs resembles the nature of the conflicts generated by humans.
-This question is urgent for three reasons.
-First, existing automated resolution techniques were designed on top of Ghiotto et al.'s human-centric characterization, and their validity for agent-generated conflicts is an untested assumption.
-Second, every conflict that the agent does not resolve falls back to a human developer, increasing the coordination overhead of agent-driven development.
-Third, the AIDev literature itself lists the treatment of merge conflicts by coding agents as an open research direction~\cite{li2025aidev}.
+When an AI-authored branch needs to incorporate upstream changes (e.g., via \texttt{git merge main}), textual merge conflicts may arise. These conflicts must be resolved before the merged code can be committed, and the resolution may be performed by the AI agent itself, by a human developer, or collaboratively. Despite the scale of agentic contributions, two questions remain unanswered for this new population of merges: \emph{who} performs the integration step on AI-authored branches, and \emph{how} the agents that do close their own merges behave relative to each other and to humans.
 
-% Como a literatura tratou esse problema até então e por que a solução dada pela literatura não foi suficiente?
-Prior work on merge conflict resolution has focused exclusively on human developers.
-Ghiotto et al.~\cite{ghiotto2020nature} characterized the nature of human-authored conflicts, and their findings have served as the empirical substrate on top of which a rich body of subsequent research has been conceived.
-On the resolution side, approaches range from structured and semi-structured merge techniques that exploit the syntactic structure of programs~\cite{cavalcanti2019impact} to data-driven methods such as DeepMerge~\cite{dinella2022deepmerge} and MergeBERT~\cite{svyatkovskiy2022mergebert}, which learn resolution patterns from historical merge data, and MergeGen~\cite{dong2023mergegen}, which reframes resolution as a generation task rather than a classification task.
-More recent work has applied large language models to generate resolutions~\cite{shen2023chatmerge} and search-based software engineering to explore the combinatorial space of candidate solutions~\cite{campos2025evaluation}.
-On the prediction side, tools such as MESTRE~\cite{elias2023mestre} and RPredictor~\cite{aldndni2023rpredictor} use machine learning to predict which resolution strategy a developer is likely to adopt, while Boll et al.~\cite{boll2024derivability} studied the derivability of resolutions across 131,154 conflicting merge commits from 10,000 projects and found that 87.9\% of individual chunks can be derived from a fixed set of language-agnostic patterns.
-All of these efforts share a common trait: they were designed, trained, and evaluated exclusively on conflicts produced by human developers.
-On the agent side, the AIDev dataset~\cite{li2025aidev, li2026aidev_msr} cataloged hundreds of thousands of agent-authored PRs with rich metadata on authorship, review timelines, and task types, but does not provide conflict-level analysis.
-More recently, Ogenrwot and Businge~\cite{ogenrwot2026agenticflict} introduced \textsc{AgenticFlict}, a large-scale dataset of 142,652 agent PRs processed through deterministic merge simulation, identifying approximately 29,000 PRs with conflicts and extracting over 336,000 fine-grained conflict regions.
-While \textsc{AgenticFlict} represents an important step toward understanding integration friction in AI-assisted development, the dataset focuses on conflict \emph{detection} (recording conflict markers and line spans) rather than on characterizing the \emph{resolution}: which strategies are employed, what the structural properties of conflicts and resolutions are, and who performs the resolution.
-To the best of our knowledge, no study has yet characterized the nature of merge conflicts in the agent-authored regime along the dimensions established by Ghiotto et al.
+Prior work on merge conflict resolution has focused exclusively on human developers~\cite{ghiotto2020nature,vale2022challenges,dinella2022deepmerge,svyatkovskiy2022mergebert,dong2023mergegen}; the one dataset that targets agentic PRs, AgenticFlict~\cite{agenticflict2025}, analyzes merges between the PR head and base branches, but does not distinguish AI from human actors in the integration step. In addition, they do not study the resolution strategies used for resolving these conflicts. Consequently, no prior study has separated AI-performed from human-performed resolutions on merge commits and characterized the strategies applied by each agent individually.
 
-% Como o seu trabalho trata o problema?
-In this paper, we replicate and adapt Ghiotto et al.'s analytical framework over AIDev-pop, the curated subset of AIDev restricted to repositories with more than 100 stars, comprising approximately 33,600 PRs across 2,807 repositories~\cite{li2026aidev_msr}.
-Unlike \textsc{AgenticFlict}, which simulates the merge between the PR head and base branches, our study targets the \emph{internal merge commits} within PR branches, that is, merge commits created when the agent (or a human collaborator) pulls upstream changes into the feature branch.
-For each such merge, we replay the three-way merge between its parents, extract every conflicting chunk, localize the resolution actually adopted in the merge commit, and classify it into one of the canonical strategies (V1, V2, Concatenation, Combination, New Code, None).
-We further identify whether the conflict was resolved by the coding agent or by a human developer.
-Specifically, we address the following research questions:
+In this paper, we address these gaps by conducting an empirical study on internal merge commits within AI-authored pull requests from the AIDev catalogue~\cite{liaidev2026}. We identify and reproduce each internal merge, localize the developer's resolution for every conflicting chunk following \citet{dinella2022deepmerge}, classify each resolution using the \citet{ghiotto2020nature} taxonomy, and attribute each resolution to an AI agent or a human based on the committer identity~\cite{liaidev2025se3}. Our main contributions are: (i)~the first attribution of conflict resolutions to specific AI coding agents on real merge commits at scale; (ii)~a characterization of the resolution strategies used by AI agents and humans; (iii)~a replication package containing all collection and analysis scripts. Concretely, we answer the following research questions:
 
 \begin{itemize}
-    \item \textbf{RQ1 (Structural nature).} What are the distributions of the number of conflicting chunks per failed merge, the size of each version (\textit{v1}, \textit{v2}), and the size of the resolution?
-    \item \textbf{RQ2 (Resolution strategies).} How are resolution decisions distributed across conflicting chunks, and how does this distribution compare to the one reported by Ghiotto et al.\ for human-authored merges?
-    \item \textbf{RQ3 (Resolver).} Who resolves these conflicts: the coding agent itself or a human collaborator?
+    \item \textbf{RQ1: Who resolves the merge conflicts introduced in AI-authored PRs, and how does this vary across coding agents?} Whether conflicts are resolved by the agent autonomously or by a human has direct implications for pipeline design and trust in agentic workflows. We identify who commits each internal merge and how the propensity for self-resolution differs by agent.
+    \item \textbf{RQ2: How do AI coding agents resolve their own merge conflicts, both individually and relative to one another?} Aggregating across agents can mask large vendor-specific differences. We compare each agent's per-agent resolution-strategy distribution against the human reference within our corpus, run pairwise agent-against-agent contrasts, stratify the heterogeneity by file category, and surface the repository-concentration that confounds two of the five agent profiles.
 \end{itemize}
 
-For every research question in which it is meaningful, results are stratified by coding agent, programming language, and PR task type.
+Our headline results, developed in Sections~\ref{sec:rq1}--\ref{sec:rq2}, are: among the $14{,}960$ conflicting internal merges, humans commit $96.1\%$ and the per-agent self-resolution rate spans more than~$60{\times}$ (Codex $0.5\%$ to Devin $29.4\%$); the five agents differ markedly from each other in resolution strategy (per-agent contrasts $V{\in}[0.02,0.32]$; pairwise inter-agent contrasts $V{\in}[0.08,0.90]$); and two of the five agents (Codex and Claude Code) are each dominated by a single repository ($>83\%$ of their self-resolved conflicting merges in each case), so their per-agent profile reflects the dominant repository's workflow, not the agent.
 
-% Quais foram os resultados obtidos nessa avaliação?
-\TODO{Summarize key findings once the data extraction is complete.}
-
-% Como o seu artigo está organizado?
-The remainder of this paper is organized as follows.
-Section~\ref{sec:background} presents background on software merging, merge conflict resolution strategies, and AI coding agents.
-Section~\ref{sec:methodology} describes the methodology used to collect, replay, and classify merge conflicts.
-Section~\ref{sec:results} presents our results, organized by research question.
-Section~\ref{sec:discussion} discusses the implications of our findings.
-Section~\ref{sec:threats} covers threats to validity, and Section~\ref{sec:conclusion} concludes with future work directions.
+The remainder of the paper is organized as follows. Section~\ref{sec:background} presents background and related work. Section~\ref{sec:methodology} describes our methodology and pipeline. Section~\ref{sec:results} reports results for each RQ. Section~\ref{sec:discussion} discusses implications. Section~\ref{sec:threats} addresses threats to validity, and Section~\ref{sec:conclusion} concludes.
 
 % ============================================================
 % 2. Background and Related Work
@@ -144,22 +125,37 @@ Section~\ref{sec:threats} covers threats to validity, and Section~\ref{sec:concl
 \subsection{Software Merging and Merge Conflicts}
 \label{sec:bg-merging}
 
-\TODO{Explain three-way merge, diff3 format, conflict markers. Cite foundational work on merge conflicts (e.g., Mens 2002, Brun et al. 2011, Accioly et al. 2018).}
+Collaborative development relies on branching, whereby developers work in parallel and later reconcile their contributions via \emph{merging}~\cite{mens2002survey}. Textual three-way merge, as implemented in tools such as \texttt{git merge}, automatically combines non-overlapping edits and reports a \emph{conflict} when changes overlap~\cite{mens2002survey,ghiotto2020nature,cavalcanti2019}. The \texttt{diff3} output additionally preserves the common ancestor between \verb+|||||||+ and \verb|=======|, providing a three-way view on which subsequent analyses can rely~\cite{dong2023mergegen,dinella2022deepmerge}.
+
+Merge conflicts are frequent and time-consuming. \citet{ghiotto2020nature} inspected 960{,}366 merge scenarios across 2{,}731 Java projects and found that 11.9\% resulted in at least one conflict; comparable rates (10--20\%) have been reported in other ecosystems~\cite{vale2022challenges,lessenich2018indicators}. \citet{vale2022challenges} surveyed developers and identified four recurring challenges: understanding the conflict, deciding on a resolution, dealing with tooling, and coordinating with teammates. \citet{nelson2019lifecycle} complemented these findings with a life-cycle perspective, characterizing the understand--plan--resolve--verify workflow. Beyond line-based merging, semistructured approaches~\cite{apel2011semistructured,cavalcanti2019,accioly2018semistructured} reduce spurious conflicts, while proactive approaches~\cite{brun2011proactive,kasi2013cassandra} warn developers in advance. Finally, \citet{boll2024semi} showed that 87.9\% of conflicting chunks follow a small, language-agnostic catalogue, suggesting that semi-automation may be more feasible than previously assumed.
 
 \subsection{Merge Conflict Resolution Strategies}
 \label{sec:bg-strategies}
 
-\TODO{Discuss prior taxonomies of resolution strategies. Explain the eight categories we adopt: V1, V2, ConcatV1V2, ConcatV2V1, Combination, New Code, None, Imprecise. Cite DeepMerge (Dinella et al. 2022) and related work.}
+\paragraph{Taxonomy of resolutions.}
+\citet{ghiotto2020nature} introduced the canonical taxonomy that classifies each resolved chunk by comparing the merged text against the two conflicting versions ($v_1$, $v_2$): the developer may adopt one version verbatim (\textit{V1}, \textit{V2}), concatenate both sides in either order (\textit{Concatenation}), interleave lines from both (\textit{Combination}), write content absent from both sides (\textit{New Code}), or resolve to an empty region (\textit{None}). %An additional \textit{Imprecise} label is used when the resolution cannot be reliably mapped to the conflict region (e.g., because the file was substantially reorganized).
+Across the 175{,}805 Java chunks they studied, \textit{V1} accounts for 50\% of the resolutions, \textit{V2} for 25\%, \textit{New Code} for 13\%, \textit{Combination} for 9\%, and \textit{Concatenation} for 3\%. A very small percentage (0.07\%) of the resolutions were classified as \textit{None}. We adopt this taxonomy, which gives us six classifiable labels (V1, V2, CC, CB, NC, NN), directly comparable to the human baseline.
+
+\paragraph{Automated resolution: classification and generation.}
+ML-based resolvers have matured along two paradigms. The \emph{classification} paradigm (e.g., \textsc{DeepMerge}~\cite{dinella2022deepmerge} and \textsc{Merge\-BERT}~\cite{svyatkovskiy2022mergebert}) trains models to select a strategy label. The \emph{generation} paradigm (\textsc{MergeGen}~\cite{dong2023mergegen}, \textsc{ChatMerge}~\cite{shen2023chatmerge}) synthesizes resolution text directly, outperforming classifiers and capturing \textit{New Code} resolutions that label-pickers cannot emit. Search-based approaches (\textsc{SBCR}~\cite{camposjunior2024sbcr}, \citet{camposjunior2022sbes}) recommend resolutions using lines already present in the conflicting versions. Further specialized methods include template-based synthesis~\cite{pan2021synthesis}, and data-mining resolution strategy recommenders (e.g., \textsc{MESTRE}~\cite{elias2023mestre} and \textsc{RPredictor}~\cite{aldndni2023rpredictor}).
+
+\paragraph{Prediction and benchmarks.}
+Complementary to resolution, conflict \emph{prediction} aims to warn developers early. \citet{owhadikareshk2019} trained a lightweight classifier on 267{,}657 merge scenarios across seven languages and reported F1 above 0.80 on most projects, without running the full merge. \citet{brindescu2020planning} pushed the prediction target further, using chunk-level features (size, construct, number of edit locations) to estimate the \emph{time} a developer will spend on a conflict. \textsc{ConflictBench}~\cite{shenmeng2024conflictbench} curates 180 Java scenarios with ground-truth resolutions to standardize the evaluation of merge tools, addressing the reproducibility gap left by project-specific mining studies.
+
+\paragraph{Gap.}
+All the studies above treat \emph{humans} as the implicit resolvers. No prior work has separated AI-performed from human-performed conflict resolutions on AI-authored branches, characterized how individual coding agents differ in their resolution strategies, or examined how robust an aggregate agent-versus-human contrast is to the per-agent or per-repository composition of the corpus. Our work fills these gaps by reusing \citet{ghiotto2020nature} taxonomy on a population of merges that only became possible after the recent rise of autonomous coding agents and by reporting per-agent contrasts and explicit robustness checks alongside the aggregate.
 
 \subsection{AI Agents in Software Development}
 \label{sec:bg-agents}
 
-\TODO{Overview of the five agents under study (Claude Code, Codex, Copilot, Cursor, Devin). Discuss the growing role of AI in OSS contributions.}
+The past two years have seen the emergence of autonomous coding agents that act as first-class contributors on GitHub. \citet{liaidev2025se3} label this regime \emph{Software Engineering 3.0}, in which agents open branches, write code, run tests, and submit pull requests reviewed by humans or other agents. \citet{peng2023copilot} reported a 55\% speed-up in a randomized controlled trial of GitHub Copilot, and \citet{wang2024llmagents} survey LLM-based agent architectures and benchmarks, prominently \textsc{SWE-bench}~\cite{jimenez2024swebench}. We target five representative agents: Anthropic's \textbf{Claude Code}, OpenAI's \textbf{Codex}, GitHub's \textbf{Copilot} (agentic mode), \textbf{Cursor}, and Cognition's \textbf{Devin}. Each authors commits under a distinctive bot identity (e.g., \texttt{claude[bot]}, \texttt{copilot[bot]}, \texttt{devin-ai-integration[bot]}), which makes attribution possible at scale.
 
-\subsection{The AgenticFlict Dataset}
+Empirical studies of these agents remain scarce. \citet{liaidev2025se3,liaidev2026} characterize agentic PRs along dimensions such as acceptance rate, size, and review turnaround, but do not examine how branches are integrated. \citet{agenticflict2025} study simulated merges between the PR head and base commits to count conflicts, but do not examine the resolutions adopted by the developers. Earlier studies of bot-authored PRs~\cite{alfadel2021dependabot} established the methodology for studying bot contributions, but modern agents synthesize open-ended code rather than applying fixed templates, warranting dedicated study. We complement this prior work by analyzing merge commits within PR branches, distinguishing AI- from human-driven resolutions, and applying the human-centric taxonomy at the per-agent level rather than only on the aggregate.
+
+\subsection{The AIDev and AgenticFlict Datasets}
 \label{sec:bg-agenticflict}
 
-\TODO{Summarize the AgenticFlict dataset: 142,652 PRs, 59,412 repositories, five agents. Explain its limitations regarding conflict resolution (only simulated conflicts, no resolution data). Position our study as an extension.}
+Two datasets currently underpin empirical research on AI coding agents. \textbf{AIDev}~\cite{liaidev2026} catalogues 932{,}791 PRs opened by five agents (Claude Code, Codex, Copilot, Cursor, Devin) across 116{,}211 repositories and 72{,}631 developers, mined from the GitHub Archive. It provides the full PR metadata (title, body, diff summary, state, \texttt{base\_oid}, \texttt{head\_oid}, \texttt{merged\_at}) but no conflict information. \textbf{AgenticFlict}~\cite{agenticflict2025} adds a first conflict layer by locally cloning each repository and running a \texttt{git merge} between the PR's \texttt{base\_oid} and \texttt{head\_oid}, identifying 29{,}609 conflicting PRs (27.67\% rate) and 336{,}380 conflict regions. AgenticFlict shows that conflicts in agent-authored code are frequent and non-trivial, but it has two limitations that motivate our work: (i)~the conflicts are \emph{simulated} from the PR's tip commits and sometimes may not correspond to a real merge ever committed, so there are no \emph{resolutions} to study; and (ii)~no resolver actor exists in the simulated setup, so AI and human cannot be distinguished in integration. Our study addresses both gaps from AIDev directly: we look \emph{inside} each PR branch for real two-parent commits (``internal merges''), reproduce them with \texttt{git merge} and \texttt{diff3} output, localize the accepted resolution for every conflicting chunk, and attribute each resolution to the merge committer.
 
 % ============================================================
 % 3. Methodology
@@ -167,37 +163,28 @@ Section~\ref{sec:threats} covers threats to validity, and Section~\ref{sec:concl
 \section{Methodology}
 \label{sec:methodology}
 
-Figure~\ref{fig:pipeline} provides an overview of our data collection and analysis pipeline.
+This study employs a multi-stage pipeline to systematically extract, reconstruct, and analyze merge conflicts from pull request histories in large-scale software repositories, as illustrated in Figure~\ref{fig:pipeline}. Starting from the AIDev dataset, we identify in-scope pull requests, recover their commit histories, and isolate internal merge commits that incorporate upstream changes. These merges are then reproduced using three-way merge techniques to extract fine-grained conflict chunks, which serve as the unit of analysis. Each conflict is localized within the resolved code and classified into a standardized taxonomy of resolution strategies, while resolver attribution is inferred from commit metadata. The following sections describe each stage of this pipeline in detail, from data selection and merge identification to conflict reconstruction, resolution localization, and strategy classification
 
-\TODO{Create and include a pipeline figure.}
-
-%\begin{figure}[ht]
-%  \centering
-%  \includegraphics[width=\linewidth]{figures/pipeline}
-%  \caption{Overview of the data collection and analysis pipeline.}
-%  \Description{A flowchart showing the five stages of the pipeline: PR selection, merge listing, conflict extraction, authorship collection, and strategy classification.}
-%  \label{fig:pipeline}
-%\end{figure}
+\begin{figure}[ht]
+ \centering
+ \includegraphics[width=\linewidth]{figures/pipelinev2}
+ \caption{Overview of the data collection and analysis pipeline.}
+ \label{fig:pipeline}
+\end{figure}
 
 \subsection{PR Selection and Scope}
 \label{sec:meth-selection}
 
-Our study leverages the AgenticFlict dataset as its starting point. We consider all 142,652 PRs authored by AI agents for which both \texttt{base\_oid} and \texttt{head\_oid} are available. For each PR, we classify its outcome (\textit{merged}, \textit{closed\_unmerged}, or \textit{open}) based on the \texttt{merged\_at} and \texttt{gh\_state} fields.
+Our study is scoped to the full AIDev catalogue~\cite{liaidev2026} (approximately $930{,}000$ PRs from five agents across $116{,}000$ repositories). We consider PRs in all states (\textit{merged}, \textit{closed}, \textit{open}); restricting to merged PRs would bias toward histories rewritten by rebase or squash-merge and drop the intermediate merge commits we want to study. The per-PR commit data needed to locate internal merges is not shipped with AIDev, so we produce it ourselves by fetching \texttt{refs/pull/*/head} for every in-scope repository and enumerating, per PR, the commits between the fork-point with the base branch and the PR tip.
 
-\TODO{Report the actual number of PRs after filtering.}
+Applying this procedure yields a universe of $210{,}902$ in-scope PRs across $57{,}582$ repositories; the complete SHA list could not be found for $25{,}571$ of these PRs ($12.1\%$), mostly because of disconnected histories ($20{,}439$) or PR head references no longer reachable ($5{,}132$). %Table~\ref{tab:scope-per-agent} reports the per-agent distribution: OpenAI Codex dominates (approximately 76\% of the study's PRs), with Copilot, Cursor, Devin, and Claude Code covering the long tail.
 
 \subsection{Identifying Merge Commits Within PR Branches}
 \label{sec:meth-merges}
 
-For each PR, we identify merge commits (commits with exactly two parents) that exist within the PR branch but not in the base branch:
+For each PR, we identify merge commits (commits with exactly two parents). These are merges created to bring upstream changes into the feature branch, distinct from the single ``integration merge'' that GitHub creates when a PR is accepted. We exclude octopus merges (three or more parents), following \citet{ghiotto2020nature}, and the GitHub integration merge itself: any two-parent commit whose subject matches \texttt{\textasciicircum{}Merge pull request \#$d$+} (case-insensitive) is filtered out, since GitHub's pre-merge already check them for conflicts before integration. This step excluded $70{,}042$ integration-merge SHAs and $93$ octopus-merge SHAs.
 
-\begin{verbatim}
-git rev-list --merges base_oid..head_oid
-\end{verbatim}
-
-These are merges that the PR author (or collaborators) created to bring upstream changes into the feature branch---typically via \texttt{git merge main}. We exclude octopus merges (more than two parents) and do not consider the integration merge created by GitHub when the PR is accepted.
-
-\TODO{Report the number of merge commits found and the fraction of PRs that contain at least one merge commit.}
+\paragraph{Merge-level deduplication.} A single merge commit can appear on the head branches of several PRs (force-push, re-open, cherry-pick), so naive per-PR indexing overcounts the same artefact. All merge- and chunk-level statistics use natural keys that discard the PR identifier: (repository, merge SHA) for merges and (repository, merge SHA, file path, chunk index) for chunks. Applying these filters returns $452{,}114$ raw PR-level merge references, which collapse to $50{,}700$ distinct merge commits ($8.92\times$ inflation); the most extreme single merge appears on $848$ distinct PRs. Only $12{,}299$ PRs ($5.8\%$ of the in-scope PRs) contribute at least one internal merge.
 
 \subsection{Reproducing Merges and Extracting Conflict Chunks}
 \label{sec:meth-conflicts}
@@ -208,45 +195,63 @@ For each merge commit with parents $p_1$ and $p_2$, we compute the merge base ($
 git merge-file -p --diff3 p1_file base_file p2_file
 \end{verbatim}
 
-We parse the resulting diff3 output to extract individual conflict chunks, each delimited by \texttt{<<<<<<<}, \texttt{|||||||}, \texttt{=======}, and \texttt{>>>>>>>} markers. Each chunk produces three text regions: \textit{v1} (from $p_1$), \textit{base} (from $b$), and \textit{v2} (from $p_2$).
+We parse the resulting diff3 output to extract individual conflict chunks, each delimited by \verb|<<<<<<<|, \verb+|||||||+ , \verb|=======|, and \verb|>>>>>>>| markers. Each chunk produces three text regions: \textit{v1} (from $p_1$), \textit{base} (from $b$), and \textit{v2} (from $p_2$). For each chunk we also record the non-blank line count of each side, computed after trimming whitespace, consistent with \citet{ghiotto2020nature} normalization.
 
 \subsection{Localizing the Resolution}
 \label{sec:meth-resolution}
 
-For each conflict chunk, we retrieve the resolved file from the merge commit itself via \texttt{git show \{merge\_sha\}:\{file\_path\}}. Since this file contains the entire contents (including non-conflicting regions and other resolutions), we isolate the specific resolution text for each chunk using contextual anchoring: we identify the unique prefix and suffix surrounding the conflict region in the merged output and use them to extract the corresponding slice from the resolved file.
+For each conflict chunk, we retrieve the resolved file from the merge commit and apply the \textsc{LocalizeResRegion} algorithm of \citet{dinella2022deepmerge}, which isolates the specific resolution text by anchoring on the unique textual context (prefix and suffix) surrounding the conflict region in the three-way merge output. If unique anchors cannot be found, the chunk is marked \emph{Imprecise}. \citet{dinella2022deepmerge} validated the algorithm on 174 conflict regions from 50 randomly selected merges and found 100\% correct localization (95\%~CI: $[0.979, 1.0]$); we use it on this basis. We also record the non-blank line count of the resolution text.
 
-\TODO{Report the proportion of chunks with successfully localized resolutions vs.\ not\_localizable, file\_removed, etc.}
+A potential confound is a \emph{differential Imprecise rate} across resolver types: if localization fails at different rates for agent- and human-resolved chunks, the observed strategy distributions may not be directly comparable. To bound this effect, we conduct a sensitivity analysis that reassigns all Imprecise chunks to $V_1$ (upper bound for $V_1$ dominance) or to NC (lower bound), and assess whether the per-agent contrasts survive across both extremes. The results of this analysis are reported in Section~\ref{sec:threats}.
 
 \subsection{Classifying Resolution Strategies}
 \label{sec:meth-strategies}
 
-We classify each resolved chunk into one of eight resolution strategies using the \texttt{identify\_resolution} function, which compares the normalized resolution text against \textit{v1} and \textit{v2}:
+We classify each resolved chunk into one of six resolution strategies, following the taxonomy of \citet{ghiotto2020nature}, by comparing the normalized resolution text against both conflict sides:
 
 \begin{itemize}
     \item \textbf{V1} / \textbf{V2}: The resolution is identical to one side of the conflict.
-    \item \textbf{ConcatV1V2} / \textbf{ConcatV2V1}: The resolution is the concatenation of both sides, in the given order.
-    \item \textbf{Combination}: The resolution contains elements from both sides but is not a simple concatenation.
-    \item \textbf{New Code}: The resolution introduces content not present in either side.
-    \item \textbf{None}: Both sides and the resolution are empty.
-    \item \textbf{Imprecise}: The resolution could not be reliably classified.
+    \item \textbf{CC} (\emph{Concatenation}): The resolution is the concatenation of both sides in either order (we fold both orderings into \textit{CC} to stay comparable with \citet{ghiotto2020nature}).
+    \item \textbf{CB} (\emph{Combination}): The resolution interleaves lines from both sides without introducing new lines.
+    \item \textbf{NC} (\emph{New Code}): The resolution introduces content not present in either side.
+    \item \textbf{NN} (\emph{None}): The resolution is empty.
+    \item \textbf{Imprecise}: The resolution could not be reliably isolated (Section~\ref{sec:meth-resolution}) and is kept as a separate bucket to avoid silent misclassification.
 \end{itemize}
 
-For the statistical analysis in RQ4, we also define an aggregated four-level taxonomy: \textit{take-one-side} (V1, V2), \textit{combine} (ConcatV1V2, ConcatV2V1, Combination), \textit{introduce-new} (New Code), and \textit{trivial-or-other} (None, Imprecise).
+Because \citet{ghiotto2020nature} do not report an \textit{Imprecise} bucket, RQ2 distributions are reported over the six classifiable labels, with the \textit{Imprecise} share stated separately.
+
+\subsection{File-Path Categorisation}
+\label{sec:meth-filecats}
+
+To condition the strategy analysis on what kind of file each conflict occurs in, we assign each conflicting file to one of six mutually exclusive categories using a deterministic, priority-ordered heuristic applied to the repository-relative file path. The categories and their matching rules are as follows, applied in the order listed (the first matching rule wins):
+
+\begin{itemize}
+    \item \textbf{lock} --- the file's basename exactly matches one of 16 known dependency lock-file names across all major ecosystems represented in the dataset: \texttt{package-lock.json}, \texttt{yarn.lock}, \texttt{pnpm-lock.yaml}, \texttt{npm-shrinkwrap.json}, \texttt{Pipfile.lock}, \texttt{poetry.lock}, \texttt{uv.lock}, \texttt{Gemfile.lock}, \texttt{composer.lock}, \texttt{Cargo.lock}, \texttt{go.sum}, \texttt{mix.lock}, \texttt{flake.lock}, \texttt{pubspec.lock}, \texttt{Podfile.lock}, and \texttt{bun.lockb}.
+    \item \textbf{generated} --- the file path ends with one of the suffixes \texttt{.min.js}, \texttt{.min.css}, \texttt{.bundle.js}, \texttt{.map}, or \texttt{.snap}; or the path traverses a known build-output or dependency directory (\texttt{dist/}, \texttt{build/}, \texttt{out/}, \texttt{node\_modules/}, \texttt{vendor/}, \texttt{target/}, \texttt{coverage/}, \texttt{\_\_pycache\_\_/}, \texttt{.next/}, \texttt{.nuxt/}, \texttt{.cache/}, or \texttt{.parcel-cache/}).
+    \item \textbf{doc} --- the file extension is one of \texttt{.md}, \texttt{.rst}, \texttt{.txt}, or \texttt{.adoc}.
+    \item \textbf{config} --- the file extension is one of \texttt{.json}, \texttt{.yaml}, \texttt{.yml}, \texttt{.toml}, \texttt{.ini}, \texttt{.cfg}, \texttt{.conf}, or \texttt{.env}.
+    \item \textbf{migration} --- the file extension is \texttt{.sql} or the path contains a \texttt{/migrations/} or \texttt{/migration/} segment.
+    \item \textbf{source} --- all remaining files, treated as source code.
+\end{itemize}
+
+The heuristic is basename- and path-prefix-based and is ecosystem-agnostic by design; its known limitation, that some files (e.g., \texttt{package.json} in a monorepo) can be functionally generated artefacts yet fall into \emph{config} rather than \emph{generated}, is discussed in Section~\ref{sec:threats}.
 
 \subsection{Identifying the Resolver}
 \label{sec:meth-resolver}
 
-We determine who resolved each conflict by analyzing the author and committer metadata of the merge commit. We classify the resolver as \textit{AI}, \textit{Human}, or \textit{Unknown} based on a curated list of known AI agent signatures (e.g., \texttt{claude[bot]}, \texttt{openai-codex[bot]}, \texttt{copilot[bot]}, \texttt{cursor-agent[bot]}, \texttt{devin-ai-integration[bot]}).
+We determine who resolved each conflict from the author metadata of the merge commit using a substring/suffix heuristic over the author login: a login that ends in \texttt{[bot]} or contains any of \texttt{copilot}, \texttt{devin}, \texttt{claude}, \texttt{cursor}, \texttt{openai} is labelled \textit{Agent}; otherwise, if a \texttt{Co-authored-by:} trailer in the commit message matches the same rule, the merge is labelled \textit{Agent-assisted}; otherwise it is \textit{Human}. The PR-authoring agent is recorded separately, taken from AIDev's bot-account mapping~\cite{liaidev2025se3,liaidev2026}. When per-agent strategy distributions are reported (Section~\ref{sec:rq2-heterogeneity} onward), the per-agent slice is defined as chunks where the resolver is \textit{Agent} and the PR-authoring agent is the same one named in the row; the proxy and the heuristic's known failure modes are discussed in Section~\ref{sec:threats}.
 
-\subsection{Textual Similarity Metrics}
-\label{sec:meth-similarity}
+\subsection{Analyses per Research Question}
+\label{sec:meth-analyses}
 
-For each resolved chunk, we compute the Gestalt pattern matching (longest common subsequence) similarity between the resolution and each side of the conflict (\textit{sim\_res\_v1}, \textit{sim\_res\_v2}), as well as between \textit{v1} and \textit{v2} themselves (\textit{sim\_v1\_v2}).
+\textbf{RQ1: Resolver attribution.} We report the distribution of resolver type (agent-resolved, agent-assisted, human-resolved) at the merge-commit level, globally and per agent, with per-agent Wilson confidence intervals~\cite{wilson1927probable}.
 
-\subsection{Statistical Analysis}
-\label{sec:meth-statistics}
+\textbf{RQ2: Strategies and heterogeneity.} We report the relative frequency of each resolution label (V1, V2, CC, CB, NC, NN) at the chunk level for each agent and for the human-resolved subset, with the \textit{Imprecise} share reported separately. We then test the heterogeneity of the strategy distribution across agents by (i)~comparing each agent against the human-resolved subset of our own corpus in a $2{\times}$~strategy table, (ii)~running pairwise agent-against-agent contrasts with Bonferroni-corrected $p$-values across the ten agent pairs, and (iii)~stratifying each agent's strategy distribution by conflicting file category (\emph{source}, \emph{lock}, \emph{config}, \emph{generated}, \emph{doc}, \emph{migration}). We complement these contrasts with a per-agent repository-concentration analysis (top-1 repo share among self-resolved merges) and a focused case study of the two most concentrated agents.
 
-\TODO{Detail the statistical tests used in RQ4: Pearson's chi-squared test (or Fisher's exact test for small cells), Cramér's V for categorical associations, Kruskal--Wallis and Mann--Whitney for categorical vs.\ continuous variables, with Bonferroni correction. Mention exploratory multinomial logistic regression.}
+\paragraph{Baseline calibration.} The strategy distribution of the $65{,}798$ chunks resolved by humans in our own corpus matches the Java baseline of \citet{ghiotto2020nature} to within five percentage points on every strategy ($V_1$: $45.1$ vs.\ $50.0$; $V_2$: $26.0$ vs.\ $25.0$; CC: $6.8$ vs.\ $3.0$; CB: $9.9$ vs.\ $9.0$; NC: $11.4$ vs.\ $13.0$; NN: $0.7$ vs.\ $0.0$). On this basis, the human-resolved subset of our corpus is used throughout the paper as the single human reference distribution; comparisons against \citet{ghiotto2020nature} are not revisited in the results.
+
+\paragraph{Statistical analyses.}
+All proportions are reported with 95\% Wilson confidence intervals~\cite{wilson1927probable}. For association between categorical variables (RQ1, RQ2) we use chi-squared tests with the bias-corrected Cram\'{e}r's~$V$~\cite{bergsma2013bias} as primary effect-size metric ($V{<}0.10$: weak; $0.10$--$0.30$: moderate; ${\geq}0.30$: strong). At $n{\approx}60{,}000$ chunks virtually any difference yields $p{<}0.001$, so magnitude carries more information than significance. Conflict chunks within the same merge and repository are not fully independent, so $p$-values are anti-conservative and all~$V$ values are treated as \emph{upper bounds}. For per-merge structural distributions (e.g., chunks per merge) we use Kruskal--Wallis with post-hoc Dunn tests (Bonferroni-corrected)~\cite{dunn1964multiple}; effect sizes are Cliff's~$\delta$~\cite{cliff1993dominance} since distributions are right-skewed.
 
 % ============================================================
 % 4. Results
@@ -257,49 +262,196 @@ For each resolved chunk, we compute the Gestalt pattern matching (longest common
 \subsection{Dataset Overview}
 \label{sec:res-overview}
 
-\TODO{Report descriptive statistics: number of PRs with merge commits, number of merge commits, number of conflicting merges, number of conflict chunks. Break down by agent and PR outcome. Include a summary table.}
+After merge-level deduplication, our pipeline covers $50{,}700$ distinct internal merge commits authored inside the $12{,}299$ PRs across $4{,}806$ repositories (Table~\ref{tab:dataset-overview}). Of those merges, $14{,}960$ ($29.5\%$) produce at least one textual conflict, yielding $121{,}599$ conflict chunks. At the PR level, $12{,}299$ PRs ($5.8\%$ of all in-scope PRs) contribute at least one internal merge and $7{,}268$ ($3.4\%$) contain at least one conflicting merge, indicating that internal merges are the exception rather than the rule in agent-authored PRs and that conflicts, when they do arise, cluster inside a comparatively small slice of the dataset. The resolution-localization algorithm of \citet{dinella2022deepmerge} uniquely identifies the resolution region for $83{,}043$ of the $121{,}599$ chunks ($68.3\%$); the remaining $38{,}556$ ($31.7\%$) failed to find unique anchors and are kept as \emph{Imprecise}. Within the localized chunks, $7{,}291$ ($6.0\%$ of all chunks) are \emph{Postponed}: localization succeeded but the committed file still contained unresolved conflict markers (\verb|<<<<<<<|, \verb|=======|, \verb|>>>>>>>|), meaning the conflict was committed without being resolved. We fold Postponed into the analytical Imprecise bucket alongside anchor failures (combined $45{,}847$ chunks, $37.7\%$) to avoid silent misclassification; the Postponed sub-category is analyzed further in Section~\ref{sec:rq2-postponed}.
 
-%\begin{table}
-%  \caption{Dataset overview}
-%  \label{tab:dataset-overview}
-%  \begin{tabular}{lrrr}
-%    \toprule
-%    Metric & Total & Conflicting & \% \\
-%    \midrule
-%    PRs with merge commits & \TODO{} & --- & --- \\
-%    Merge commits & \TODO{} & \TODO{} & \TODO{} \\
-%    Conflict chunks & --- & \TODO{} & --- \\
-%    \bottomrule
-%  \end{tabular}
-%\end{table}
+\begin{table}
+  \caption{Dataset overview (after merge-level deduplication).}
+  \label{tab:dataset-overview}
+  \small\setlength{\tabcolsep}{4pt}
+  \begin{tabular}{lrr}
+    \toprule
+    Metric & Count & Share \\
+    \midrule
+    Repositories                 & $4{,}806$  & --- \\
+    PRs with $\geq 1$ internal merge      & $12{,}299$  & --- \\
+    PRs with $\geq 1$ conflicting merge   & $7{,}268$   & $59.1\%$ of PRs \\
+    Internal merge commits (dedup.)       & $50{,}700$  & --- \\
+    Conflicting merge commits             & $14{,}960$  & $29.5\%$ of merges \\
+    Conflict chunks                       & $121{,}599$ & --- \\
+    Chunks with localized resolution      & $83{,}043$  & $68.3\%$ of chunks \\
+    \quad of which: Postponed              & $7{,}291$   & $6.0\%$ of chunks \\
+    Resolved chunks                       & $75{,}752$  & $62.3\%$ of chunks \\
+    \bottomrule
+  \end{tabular}
+\end{table}
 
-\subsection{RQ1: Resolution Strategies}
+
+
+\paragraph{Structural shape of the conflict data.} For context, conflict size in internal merges from agent-authored PRs is heavily right-skewed (Figure~\ref{fig:size-distributions}). Across the $14{,}960$ conflicting merges, the median number of chunks per merge is $2$, the 75th percentile is $4$, the 90th is $10$, but the mean is $8.13$ because the tail reaches $9{,}791$ chunks in a single merge. Per-chunk side sizes are similarly small (median $v_1{=}3$ LOC, $v_2{=}2$ LOC, resolution $1$ LOC), with a heavy tail (99th percentile $275$, $150$, $1{,}407$ LOC respectively). The merge-level conflict incidence, i.e., the fraction of internal merges that produce at least one textual conflict, ranges from $10.5\%$ (PRs authored by Copilot) to $47.8\%$ (PRs authored by Cursor), a more than $4{\times}$ spread (Table~\ref{tab:scope-per-agent}). A Kruskal--Wallis test on the number of conflicting chunks per conflicting merge across the different PR-authoring agents yields $H{=}92.1$ ($p{<}0.001$), with all post-hoc Dunn pairwise effects negligible to small (Cliff's~$\delta{<}0.17$); structural differences across the different PR-authoring agents are detectable but not practically large, and serve mainly as context for the strategy heterogeneity examined in RQ2.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\columnwidth]{figures/rq2_size_distributions}
+  \caption{Size distributions in internal merges from agent-authored PRs (outliers omitted for clarity). \textit{Left:} number of conflicting chunks per merge commit (conflicting merges only, $n{=}14{,}960$). \textit{Right:} non-blank LOC for the $v_1$, $v_2$, and resolution sides of the $75{,}752$ localized and resolved conflict chunks.}
+  \label{fig:size-distributions}
+\end{figure}
+
+\begin{table}[t]
+  \caption{Scope and conflict incidence by PR-authoring agent. \emph{Rate} is the fraction of internal merges that produce at least one textual conflict, computed as Conf.\ merges / Int.\ merges per agent.}
+  \label{tab:scope-per-agent}
+  \small\setlength{\tabcolsep}{4pt}
+  \begin{tabular}{lrrrr}
+    \toprule
+    Agent & PRs & Int.~merges & Conf.~merges & Rate \\
+    \midrule
+    OpenAI Codex & $8{,}984$ & $29{,}250$ & $11{,}684$ & $39.9\%$ \\
+    Copilot      & $1{,}670$  & $17{,}216$ & $1{,}809$  & $10.5\%$ \\
+    Devin        & $814$  & $2{,}369$  & $763$      & $32.2\%$ \\
+    Cursor       & $551$  & $1{,}013$  & $484$      & $47.8\%$ \\
+    Claude Code  & $280$   & $852$      & $220$      & $25.8\%$ \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\subsection{RQ1: Who Resolves the Conflicts?}
 \label{sec:rq1}
 
-\TODO{Report the distribution of the eight resolution strategies. Show barplot (stacked or grouped) by agent and by resolver type. Discuss dominant strategies.}
+\paragraph{Overall resolver distribution.} Among the $14{,}960$ conflicting internal merges, $14{,}381$ ($96.1\%$) are merged by\emph{humans}, $462$ ($3.1\%$) by the \emph{agent}, and $117$ ($0.8\%$) are \emph{agent-assisted}, i.e., merges where an agent-authored trailer (e.g., \texttt{Co-authored-by: devin-ai-integration[bot]}) appears alongside a human committer. Even when an internal merge within an agent-authored PR \emph{produces a conflict}, requiring an explicit resolution,  the integration step remains overwhelmingly human-led: humans perform the merge in about 96\% of the cases.
 
-\textbf{Summary.} \TODO{One-paragraph summary of RQ1 findings.}
+\paragraph{Per-agent contingency.} Table~\ref{tab:resolver-by-agent} cross-tabulates the PR-authoring agent against the resolver of the internal merge conflicts. The agent-performed share differs by nearly two orders of magnitude across agents. Devin resolves its own conflicting merges most frequently ($29.4\%$, $224$ of $763$), followed by Cursor ($8.9\%$, $43$ of $484$), Copilot ($6.7\%$, $122$ of $1{,}809$), Claude Code ($5.5\%$, $12$ of $220$), and OpenAI Codex ($0.5\%$, $61$ of $11{,}684$). The \emph{agent-assisted} bucket is dominated by Claude Code ($24.1\%$ of its conflicting merges, $53$ of $220$), confirming an explicit pair-programming usage mode largely absent in the other four agents (assisted share ${\leq}0.9\%$ each). In absolute terms, Devin contributes the largest share of agent-resolved conflicting merges ($224$, $48.5\%$ of $462$ total), followed by Copilot ($122$, $26.4\%$), OpenAI Codex ($61$, $13.2\%$), Cursor ($43$), and Claude Code ($12$).
 
-\subsection{RQ2: Who Resolves the Conflicts?}
+\begin{table}
+  \caption{Resolver of the internal merge conflicts by PR-authoring agent.}
+  \label{tab:resolver-by-agent}
+  \begin{tabular}{lrrrr}
+    \toprule
+    PR author & \# Agent & \# Assisted & \# Human & Agent~\% \\
+    \midrule
+    Devin        & $224$ & $2$   & $537$        & $29.4\%$ \\
+    Cursor       & $43$  & $4$   & $437$        & $8.9\%$ \\
+    Copilot      & $122$ & $3$   & $1{,}684$    & $6.7\%$ \\
+    Claude Code  & $12$  & $53$  & $155$        & $5.5\%$ \\
+    OpenAI Codex & $61$  & $55$  & $11{,}568$   & $0.5\%$ \\
+    \midrule
+    Total        & $462$ & $117$ & $14{,}381$   & $3.1\%$ \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\paragraph{Statistical tests.} A chi-squared test of independence between the resolver type (agent / human / agent-assisted) and the PR-authoring agent over the $14{,}960$ conflicting merges yields $\chi^2(8){=}3{,}724.5$, $p{<}0.001$, Cram\'{e}r's~$V{=}0.35$ (strong effect), confirming sharp heterogeneity in resolver propensity across the five agents. Per-agent Wilson 95\%~CIs on the self-resolution rate clearly separate Devin ($29.4\%$, $[26.2\%, 32.7\%]$) from Cursor ($8.9\%$, $[6.7\%, 11.8\%]$), Copilot ($6.7\%$, $[5.7\%, 8.0\%]$), Claude Code ($5.5\%$, $[3.2\%, 9.3\%]$), and Codex ($0.5\%$, $[0.4\%, 0.7\%]$). The agent-assisted bucket is dominated by Claude Code ($24.1\%$, $[18.9\%, 30.2\%]$); for the other four agents the assisted CI is below $1\%$.
+
+\begin{findingbox}
+\textbf{Finding 1.} Conflict resolution in agent-authored PRs is overwhelmingly human-driven: of the $14{,}960$ conflicting internal merges, $96.1\%$ are committed by a human and only $3.1\%$ by the agent itself. Vendor practices vary by more than $60{\times}$ in self-resolution rate, from Codex ($0.5\%$) to Devin ($29.4\%$); Claude Code is the only agent with a substantial agent-assisted share ($24.1\%$), confirming an explicit pair-programming usage mode.
+\end{findingbox}
+
+\subsection{RQ2: How Do Agents Resolve Their Own Merges?}
 \label{sec:rq2}
 
-\TODO{Report the distribution of resolver types (AI, Human, Unknown) at the chunk, merge, and PR levels. Show contingency table of agent (PR author) vs.\ resolver type. Discuss whether PRs opened by a given AI agent tend to have conflicts resolved by the same agent.}
+We now turn to the strategy distribution within the $10{,}782$ chunks inside internal merges committed by agents, using the human-resolved subset of our corpus ($109{,}575$ chunks) as the reference. Considering only the chunks where the resolution was classified,  we have $8{,}979$ chunks resolved by agents, $975$ chunks resolved with human-agent collaboration and $65{,}798$ chunks resolved by humans. We present the per-agent and pairwise contrasts (Section~\ref{sec:rq2-heterogeneity}), show that two of the five agents are dominated by a single repository whose pattern shapes their entire profile (Section~\ref{sec:rq2-codex}), and close with the asymmetry in unresolved-marker commits between agents and humans (Section~\ref{sec:rq2-postponed}).
 
-\textbf{Summary.} \TODO{One-paragraph summary of RQ2 findings.}
+\subsubsection{Per-agent heterogeneity}
+\label{sec:rq2-heterogeneity}
 
-\subsection{RQ3: Textual Similarity}
-\label{sec:rq3}
+Aggregating the five agents into a single ``agent'' bucket implicitly assumes they behave alike. Table~\ref{tab:per-agent-vs-human} disaggregates the contrast: each row reports the strategy distribution that one agent applies in its own self-resolved chunks, alongside the Cram\'{e}r's~$V$ effect size relative to the human baseline ($n=65{,}798$). The Cram\'{e}r's~$V$ ranges over more than an order of magnitude across the five agents.
 
-\TODO{Report distributions of sim\_res\_v1, sim\_res\_v2, stratified by resolution strategy. Include boxplots. Validate sanity checks (e.g., V1 strategy should yield sim\_res\_v1 $\approx$ 1).}
+% borda direita está passando da margem da coluna
+\begin{table}
+  \caption{Resolver strategy distribution (resolved chunks). $n$ is the number of resolved chunks. ``Agents (autonomous)'' sums the five per-agent rows; ``Agents (assisted)'' covers merges with a human committer plus an agent trailer (predominantly Claude Code's pair-programming usage; $743$ of the $975$ assisted chunks are on Claude Code PRs). The three groups together reconstruct the $75{,}752$ resolved chunks of Table~\ref{tab:dataset-overview}. $V$ denotes the bias-corrected Cram'{e}r's~V effect size.}
+  \label{tab:per-agent-vs-human}
+  \small\setlength{\tabcolsep}{3.5pt}
+  \begin{tabular}{lrrrrrrr}
+    \toprule
+    Resolver & $n$ & $V_1$ & $V_2$ & CC & CB & NC & $V$ \\
+    \midrule
+    OpenAI Codex & $6{,}695$ & 99.9\% &  0.1\% &  0.0\% &  0.0\% &  0.0\% & 0.32 \\
+    Devin        & $1{,}235$ & 19.8\% & 55.5\% &  5.2\% &  7.9\% & 11.5\% & 0.09 \\
+    Copilot      & $776$     & 15.9\% & 41.1\% &  5.5\% & 13.0\% & 23.5\% & 0.07 \\
+    Cursor       & $165$     & 21.8\% & 50.9\% &  2.4\% & 12.7\% & 11.5\% & 0.03 \\
+    Claude Code  & $108$     & 57.4\% & 36.1\% &  0.9\% &  1.9\% &  3.7\% & 0.02 \\
+    \midrule
+    Agents (autonomous) & $8{,}979$ & 79.7\% & 12.6\% &  1.2\% &  2.5\% &  3.9\% & 0.23 \\
+    Agents (assisted)   & $975$    & 36.5\% & 37.9\% &  6.4\% &  7.9\% & 11.4\% & --- \\
+    \midrule
+    Humans       & $65{,}798$ & 45.1\% & 26.0\% & 6.8\% & 9.9\% & 11.4\% & --- \\
+    \bottomrule
+  \end{tabular}
+\end{table}
 
-\textbf{Summary.} \TODO{One-paragraph summary of RQ3 findings.}
+The five agents fall into clearly different regions of the strategy space. OpenAI Codex stands at one extreme with $99.9\%$ $V_1$ on $6{,}695$ chunks and $V{=}0.32$ against the human reference. This case is further analyzed in Section~\ref{sec:rq2-codex}. Claude Code is on the opposite end of the same axis ($57.4\%$ $V_1$, $36.1\%$ $V_2$, $V{=}0.02$); Devin, Copilot, and Cursor cluster on a $V_2$-leaning profile ($V_2$ between $41\%$ and $56\%$) with $V$ between $0.03$ and $0.09$ (weak). Aggregating the five into a single autonomous-agents bucket would yield $V{=}0.23$, but Codex's $6{,}695$ chunks dominate that union by an order of magnitude over each of the other agents; the moderate aggregate is therefore a property of corpus composition, not a population-level claim about ``agents.'' The agent-assisted row sits between the autonomous-agent and human profiles ($V_1$ $36.5\%$, $V_2$ $37.9\%$, NC $11.4\%$), as one would expect for a hybrid setting in which a human committer co-authors the resolution with an agent trailer; the bucket is dominated by Claude Code PRs ($743$ of $975$ resolved chunks) and matches the Finding~1 observation that Claude Code is the only agent with a non-negligible explicit pair-programming usage.
 
-\subsection{RQ4: Factors Associated with Resolution Strategy}
-\label{sec:rq4}
+\paragraph{Pairwise contrasts.} Table~\ref{tab:pairwise-agent} reports Cram\'{e}r's~$V$ for the ten pairwise agent-against-agent strategy contrasts, together with Bonferroni-corrected $p$-values. Codex differs strongly from every other agent ($V$ between $0.60$ and $0.90$), confirming its outlier status. Among the remaining four agents, Cursor and Devin are the only \emph{statistically indistinguishable} pair ($V{=}0.08$, $p_{\textsc{bonf}}{=}0.74$); the rest sit in the moderate range ($V$ between $0.14$ and $0.39$) and remain significant after Bonferroni correction.
 
-\TODO{Report associations between resolution\_strategy\_coarse and: primary\_language, resolver\_type, agent, pr\_outcome, conflict\_size, chunks\_per\_merge, chunks\_per\_file. Include heatmaps, violin plots, and table of p-values.}
+\begin{table}
+  \caption{Pairwise strategy contrasts between agents (resolved chunks). $V$~is the bias-corrected Cram\'{e}r's~$V$; $p_b$ is the Bonferroni-corrected $p$-value (over 10 pairs). Bold marks the only non-significant pair.}
+  \label{tab:pairwise-agent}
+  \small\setlength{\tabcolsep}{4pt}
+  \begin{tabular}{lcc}
+    \toprule
+    Agent pair & $V$ & $p_b$ \\
+    \midrule
+    Copilot $\times$ OpenAI Codex   & 0.90 & ${<}10^{-15}$ \\
+    Devin $\times$ OpenAI Codex     & 0.87 & ${<}10^{-15}$ \\
+    Cursor $\times$ OpenAI Codex    & 0.85 & ${<}10^{-15}$ \\
+    Claude Code $\times$ OpenAI Codex & 0.60 & ${<}10^{-15}$ \\
+    Claude Code $\times$ Cursor     & 0.39 & $7.3\!\times\!10^{-7}$ \\
+    Claude Code $\times$ Copilot    & 0.36 & $1.8\!\times\!10^{-21}$ \\
+    Claude Code $\times$ Devin      & 0.25 & $2.5\!\times\!10^{-15}$ \\
+    Copilot $\times$ Devin          & 0.21 & $1.1\!\times\!10^{-16}$ \\
+    Copilot $\times$ Cursor         & 0.14 & $0.031$ \\
+    \textbf{Cursor $\times$ Devin}  & \textbf{0.08} & \textbf{0.74} \\
+    \bottomrule
+  \end{tabular}
+\end{table}
 
-\textbf{Summary.} \TODO{One-paragraph summary of RQ4 findings.}
+% \begin{figure}[t]
+%   \centering
+%   \includegraphics[width=\columnwidth]{figures/rq2_by_agent_excl_imprecise}
+%   \caption{Resolution strategy distribution per coding agent. The OpenAI Codex column is dominated by a single-repository bulk-version-bump pattern; see Section~\ref{sec:rq2-codex}.}
+%   \Description{Stacked bar chart showing per-agent strategy breakdown.}
+%   \label{fig:rq2-by-agent}
+% \end{figure}
+
+\paragraph{File-category conditioning.} Part of the per-agent heterogeneity is driven by file-type composition rather than resolution strategy alone. The per-agent file-category breakdown of self-resolved chunks reveals distinct specializations: OpenAI Codex is $97.9\%$ \emph{config} (predominantly \texttt{package.json}); Copilot is $75.9\%$ \emph{lock} files (\texttt{pnpm-lock.yaml}, \texttt{package-lock.json}, \texttt{yarn.lock}); Devin is $52.6\%$ \emph{lock} and $41.9\%$ \emph{source}; Cursor is $82.6\%$ \emph{source}; Claude Code is $99.4\%$ \emph{source}. Within lock files, agents overwhelmingly select $V_2$ (Copilot $88\%$, Devin $84\%$ of resolved lock-file chunks), consistent with the convention of accepting upstream-regenerated locks. Within source files the per-agent profiles largely converge. The $V_2$ bias reported in Table~\ref{tab:per-agent-vs-human} for Copilot and Devin therefore reflects \emph{file-type composition} in part, rather than differences in source-level merge behaviour.
+
+\subsubsection{Single-repository concentration as a confound}
+\label{sec:rq2-codex}
+
+The Codex outlier in Table~\ref{tab:per-agent-vs-human} is not, in fact, a generic ``Codex picks $V_1$'' behaviour. Of the $61$ Codex self-resolved merges, $55$ ($90.2\%$) come from a single repository, the \texttt{BlazingSu/nocobase} monorepo, and exhibit a near-identical profile: median $121$ chunks per merge, $99.9\%$ $V_1$, $\sim$$92\%$ one-line chunks. The dominant path within those merges is consistently \texttt{packages/core/app/package.json}: a single file edited in $\sim 121$ regions, each of which is a one-line dependency-version bump (e.g., \texttt{"package-X": "\textasciicircum{}1.2.3"} on one side, a different version on the other), resolved by taking the agent's side ($V_1$) verbatim. These $55$ merges have distinct SHAs that modify different version strings and so cannot be collapsed further by deduplication; they contribute $6{,}590$ of Codex's $6{,}734$ self-resolved chunks ($98\%$), and roughly $60$--$70\%$ of all agent-resolved chunks in the entire corpus.
+
+The same pattern applies to Claude Code at smaller scale. Of the $12$ Claude Code self-resolved merges, $10$ ($83.3\%$) come from a single repository, \texttt{itdojp/ITDO\_ERP2}, and concentrate in three Python source files of an enterprise-resource-planning project (\texttt{test\_users\_extended.py}, \texttt{customer.py}, \texttt{budget.py}). Table~\ref{tab:repo-concentration} reports the top-1 and top-3 repository shares for each agent. Codex and Claude Code are the only two agents with top-1 share above $80\%$; the other three operate across $36$--$123$ distinct repositories with no single repository contributing more than $10\%$ of their merges. The interpretation is methodological: for agents with concentrated samples, the per-agent strategy distribution is a property of the dominant repository's workflow, not a population-level claim about the agent. The $V{=}0.02$ for Claude Code in Table~\ref{tab:per-agent-vs-human} reflects $12$ correlated merges, not $12$ independent observations of agent behaviour, and we abstain from interpreting it as ``Claude Code matches humans''.
+
+\begin{table}
+  \caption{Repository concentration of self-resolved merges per agent. ``Top-1 share'' is the percentage of self-resolved merges that originate from the agent's most frequent repository.}
+  \label{tab:repo-concentration}
+  \small\setlength{\tabcolsep}{4pt}
+  \begin{tabular}{lrrrr}
+    \toprule
+    Agent & Merges & Repos & Top-1 & Top-3 \\
+    \midrule
+    OpenAI Codex & $61$  & $6$   & $90.2\%$ & $95.1\%$ \\
+    Claude Code  & $12$  & $3$   & $83.3\%$ & $100.0\%$ \\
+    Cursor       & $43$  & $36$  & $9.3\%$  & $20.9\%$ \\
+    Devin        & $224$ & $123$ & $5.4\%$  & $14.3\%$ \\
+    Copilot      & $122$ & $89$  & $3.3\%$  & $9.8\%$  \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+The corresponding fragility of any aggregate that involves the two concentrated agents is high. Removing only Codex's self-resolved chunks drops the aggregate agent-vs-human Cram\'{e}r's $V$ from $0.227$ to $0.108$ (weak); also removing bulk merges and lock/generated files brings it to $0.061$. To rule out an ``inherent property of agent-authored conflicts'' explanation, we look at how \emph{humans} resolve conflicts on Codex-authored PRs: the $48{,}617$ resolved chunks committed by humans on Codex PRs follow the human reference almost exactly ($V_1$ $44.0\%$, $V_2$ $25.7\%$, CC $7.7\%$, CB $10.1\%$, NC $11.5\%$). The Codex outlier is therefore a property of \emph{Codex's resolution behaviour on the nocobase monorepo}, not of the conflicts those PRs produce.
+
+\begin{findingbox}
+\textbf{Finding 2.} The five agents do not share a common resolution approach. Per-agent contrasts against the human reference range from indistinguishable from humans (Claude Code, $V{=}0.02$) to strongly divergent (Codex, $V{=}0.32$); pairwise inter-agent contrasts span from indistinguishable (Cursor vs.\ Devin, $V{=}0.08$, the only pair to fail Bonferroni-corrected significance) to nearly disjoint (Copilot vs.\ Codex, $V{=}0.90$). Part of the heterogeneity is driven by file-type composition: Copilot and Devin process mostly lock files ($76\%$ and $53\%$), and lock files mechanically resolve $V_2$. \\[3pt]
+\textbf{Finding 3.} Two of the five agents are concentrated in a single repository: Codex ($90.2\%$ of self-resolved merges from \texttt{BlazingSu/nocobase}) and Claude Code ($83.3\%$ from \texttt{itdojp/ITDO\_ERP2}). For these two agents, the per-agent distribution reflects the dominant repository's workflow rather than the agent itself; reports of agent behaviour at this volume should specify the repository slice they describe.
+\end{findingbox}
+
+\subsubsection{Postponed: Agents Rarely Commit Unresolved Conflicts}
+\label{sec:rq2-postponed}
+
+Within the Imprecise bucket, a qualitatively distinct sub-category deserves separate attention: the $7{,}291$ \emph{Postponed} chunks ($6.0\%$ of all chunks; $15.9\%$ of all Imprecise). For these, the localization algorithm did find a resolution region, but the committed file still contained conflict markers (\verb|<<<<<<<|, \verb|=======|, \verb|>>>>>>>|), meaning the merge was committed without actually resolving the conflict, leaving syntactically broken code in the repository. The Postponed rate is strikingly asymmetric across resolver types: agent resolvers produced only $69$ Postponed chunks out of $10{,}782$ agent-resolved chunks ($0.64\%$), compared to $7{,}190$ out of $109{,}575$ human-resolved chunks ($6.56\%$), a roughly ten-fold difference. Among agents, the per-agent Postponed rate ranges from $0.58\%$ (Devin) to $3.30\%$ (Claude Code), all well below the human rate.
+
+\begin{findingbox}
+\textbf{Finding 4.} Agent resolvers commit \emph{Postponed} chunks (files still containing conflict markers) at $0.64\%$, versus $6.56\%$ for humans, a $10{\times}$ difference. The $7{,}291$ Postponed chunks ($6.0\%$ of all chunks) are syntactically broken code committed without resolving the conflict, almost entirely by humans; a CI-level grep would catch all of them.
+\end{findingbox}
 
 % ============================================================
 % 5. Discussion
@@ -307,20 +459,28 @@ For each resolved chunk, we compute the Gestalt pattern matching (longest common
 \section{Discussion}
 \label{sec:discussion}
 
-\subsection{Key Findings and Implications}
+\subsection{Heterogeneity, Not a Conservative Approach}
 \label{sec:disc-findings}
 
-\TODO{Discuss the main takeaways from RQ1--RQ4. What do the resolution patterns reveal about AI agents' merge behavior? How do they compare to known human patterns?}
+Had we aggregated the five agents into a single ``agent'' bucket, the data would have produced a moderate ``agents are more conservative than humans'' contrast (Cram\'{e}r's $V{=}0.23$). The per-agent disaggregation (Sections~\ref{sec:rq2-heterogeneity}--\ref{sec:rq2-codex}) shows that this reading does not survive. Three of the five agents (Copilot, Cursor, Devin) sit at $V{\leq}0.09$ from the human reference and actually invert the $V_1$/$V_2$ polarity the aggregate suggests, leaning toward $V_2$ rather than $V_1$. The two extremes of the per-agent table both turn out to be repository artefacts: Codex's $V{=}0.32$ is concentrated in $55$ merges from a single \texttt{BlazingSu/nocobase} \texttt{package.json} pattern, and Claude Code's $V{=}0.02$ reflects $12$ merges concentrated in a single ERP repository. Pairwise contrasts confirm the picture from another angle: Cursor and Devin are statistically indistinguishable, while Codex is two to three Cram\'{e}r's-$V$ steps away from every other agent. The substantive story is therefore not that ``agents are conservative,'' but that the five agents analyzed behave very differently from each other; calibrating tooling against a single agent risks transferring poorly to the next.
+
+\paragraph{Against treating AI as a single object.} A growing literature reports performance numbers for ``AI'' on software-engineering tasks as if the underlying systems formed a single class~\cite{liaidev2025se3,peng2023copilot,jimenez2024swebench,wang2024llmagents}, possibly without distinguishing which agent (or which underlying model) produced each output. Our results push back against that framing in the specific case of merge-conflict resolution: even after fixing the task, the same human reference, and the same time period, the five agents we observed produce strategy distributions whose pairwise distance covers nearly the full possible range of Cram\'{e}r's $V$ (from indistinguishable to nearly disjoint). We acknowledge that the distinction between \emph{agent} and \emph{underlying language model} is itself a confound that we cannot fully control: the same agent may be backed by different model versions over time, and we have no per-merge visibility into which model handled each commit. But that confound \emph{strengthens} rather than weakens the argument: if the observed heterogeneity is at least partly downstream of model choice, then aggregate ``AI vs.\ humans'' claims that paper over both the agent and the model layers will be even less stable than ours. For empirical AI-agent studies in software engineering, our recommendation is to report behaviour at least at the agent level, alongside the dominant repositories from which each agent's data is drawn (Section~\ref{sec:rq2-codex}); we believe this is a precondition for any external-validity claim about ``what AI does.''
 
 \subsection{Implications for Tool Design}
 \label{sec:disc-tools}
 
-\TODO{Discuss implications for the design of AI-assisted merge tools and for CI/CD pipelines involving AI agents.}
+\paragraph{Per-agent calibration over global heuristics.} Because the per-agent resolution profile varies by more than an order of magnitude in Cram\'{e}r's~$V$ and is in part driven by what each agent worked on (Copilot and Devin processed mostly lock files, where $V_2$ is the conventional resolution; Codex on its dominant repository collapsed to $V_1$ on \texttt{package.json} version bumps), merge-assistance tools that train or threshold against the union of all five agents will be miscalibrated for any individual one. Vendors and pipeline operators should track per-agent strategy distributions, condition on file category, and apply per-agent guardrails rather than treating the agent population as a single entity.
 
-\subsection{Collaborative Dynamics Between AI and Humans}
-\label{sec:disc-collaboration}
+\paragraph{Targeted resolver augmentation.} Because humans perform $96.1\%$ of conflict resolutions and produce a richer strategy mix ($11.4\%$ NC, $9.9\%$ CB), merge-assistance tools should be designed primarily for human reviewers; tools suggesting reference resolutions or flagging semantically suspicious verbatim picks add the most value. Conversely, the small agent-resolved share is highly predictable in some configurations (e.g., Codex on bulk monorepo updates), where a CI check that flags non-minimum-diff resolutions would catch silent regressions cheaply.
 
-\TODO{Discuss the interplay between AI agents and human developers in conflict resolution. When do humans step in? Does it correlate with conflict complexity?}
+\paragraph{Conflict-complexity triage.} The median conflicting merge contains only two chunks of 2--3 LOC on each side, well within the range that automated resolvers~\cite{dinella2022deepmerge,svyatkovskiy2022mergebert,dong2023mergegen, camposjunior2024sbcr} handle reliably; the heavy right tail justifies tiered escalation, with the extreme tail routed to human reviewers. The per-agent rates (Table~\ref{tab:scope-per-agent}) suggest tuning this triage per agent.
+
+\paragraph{Agents rarely commit unresolved conflicts.}\label{sec:disc-postponed} Among the $7{,}291$ Postponed chunks (Section~\ref{sec:rq2-postponed}), the committed file still contained conflict markers, leaving the code syntactically broken. The asymmetry is striking: agents produced Postponed chunks in $0.64\%$ of resolutions versus $6.56\%$ for humans, likely because agents typically execute within scripted workflows that programmatically verify absence of markers before committing, whereas humans may commit under time pressure. Postponed commits are also the easiest failure mode to catch automatically (a grep for conflict markers suffices), yet the $6.56\%$ human rate suggests this check is far from universal in CI pipelines for AI-authored PRs.
+
+\subsection{Methodological Lesson and Collaboration Dynamics}
+\label{sec:disc-methodology}
+
+A secondary contribution of this paper is methodological. At first glance, the agent-resolved subset of $462$ conflicting merges and $10{,}782$ classifiable chunks looks adequate for a contingency analysis, but two of the five agents are dominated by a single repository: $90.2\%$ of Codex's self-resolved conflicting merges come from \texttt{BlazingSu/nocobase} and $83.3\%$ of Claude Code's from \texttt{itdojp/ITDO\_ERP2} (Table~\ref{tab:repo-concentration}). Without surfacing that concentration, the aggregate $V{=}0.23$ and the per-agent $V{=}0.02$ for Claude Code would both have read as population-level claims rather than as properties of single repositories. Two practices generalize beyond this study: (i)~report the most active repository per cell of any contingency table that involves AI-agent attribution, since agentic workflows can repeat the same scripted pattern thousands of times within a single project, and (ii)~stratify per-agent distributions by file category, since file-type composition (especially the share of lock files) drives a meaningful portion of the apparent strategy heterogeneity. Substantively, our data also indicates that human--AI collaboration is \emph{currently asymmetric}: agents author the branch, but humans resolve the conflicts inside it in $96.1\%$ of cases, mirroring earlier observations about bot-authored PRs~\cite{alfadel2021dependabot}. Devin ($29.4\%$ self-resolution on conflicting merges) and Claude Code ($24.1\%$ agent-assisted, plausibly a pair-programming mode) deviate sharply from this baseline; whether these collaboration patterns correlate with PR acceptance and post-merge defect rates is left to future work.
 
 % ============================================================
 % 6. Threats to Validity
@@ -328,42 +488,32 @@ For each resolved chunk, we compute the Gestalt pattern matching (longest common
 \section{Threats to Validity}
 \label{sec:threats}
 
-\subsection{Internal Validity}
-\label{sec:threats-internal}
+We organize threats following \citet{wohlin2012experimentation}.
 
-\TODO{Discuss: (1) Accuracy of resolution localization (LOCALIZERESREGION may fail for heavily modified files); (2) Strategy classification depends on whitespace normalization; (3) AI signature list may be incomplete.}
+\textbf{Construct validity.} Our pipeline replays three-way merges using \texttt{git\ merge\-file} with the default \texttt{diff3} algorithm; projects with custom merge drivers may therefore yield different conflict counts, a limitation shared with prior large-scale studies~\cite{ghiotto2020nature,boll2024semi,owhadikareshk2019}. When a merge commit edits outside conflict boundaries, the \textsc{LocalizeResRegion} anchor may fail and the chunk is reported as \emph{Imprecise}; we report Imprecise rates explicitly. The classifier uses whitespace-normalized resolution text following \citet{ghiotto2020nature}, a standard normalization in the literature~\cite{elias2023mestre,camposjunior2022sbes}. Our unit of analysis is the internal merge commit, so we do not observe resolutions performed via interactive rebase or branch abandonment; our results should thus be interpreted as a lower bound on observed in-PR conflict resolution activity. The path-category labels used in Section~\ref{sec:rq2-codex} (lock, generated, config, doc, source, migration) are basename- and prefix-based heuristics that do not capture all build artefacts in every ecosystem; consequently, file-type composition effects may be misestimated. The \texttt{packages/core/app/package.json} pattern that drives the Codex outlier illustrates that \texttt{package.json} can act as configuration in some monorepos and as a generated artefact in others.
 
-\subsection{External Validity}
-\label{sec:threats-external}
+\textbf{Internal validity.} Two attribution caveats apply to the per-agent partition of Table~\ref{tab:per-agent-vs-human}. First, we use the PR-authoring agent (from AIDev) as a proxy for the merge-committing agent: this is exact under the canonical workflow where each agent commits only inside its own bot-authored PRs, but inexact if a developer invokes a different agent inside an already-open PR. Second, the substring/suffix heuristic for the resolver (Section~\ref{sec:meth-resolver}) introduces false positives (generic automation bots such as \texttt{kodiakhq[bot]} and \texttt{mergify[bot]}, and human logins containing matching substrings such as \texttt{devinkeehner}) and false negatives for agents committing under non-matching accounts. The dominant findings (Codex single-repo concentration, the order-of-magnitude per-agent $V$ spread, the $10{\times}$ Postponed asymmetry) are unlikely to be reversed under reasonable levels of such misclassification; however, smaller-$n$ rows of Table~\ref{tab:per-agent-vs-human} (Claude Code $n{=}108$, Cursor $n{=}165$, Copilot $n{=}776$) should be interpreted with this noise in mind, and we abstain from fine-grained ranking at sub-$V{=}0.10$ resolution.
 
-\TODO{Discuss: (1) Only PRs with merge commits in the branch are included---PRs without merges (likely the majority) are excluded; (2) Integration merges are not considered; (3) Only five AI agents are covered; (4) Some repositories may be unavailable for cloning.}
+\textbf{External validity.} Our scope is the public-GitHub portion of AIDev, so findings should not be extrapolated directly to private repositories. The agent distribution is heavily skewed toward Codex (approximately 76\% of in-scope PRs); within the agent-resolved subset, the Codex slice is itself dominated by one repository (\texttt{BlazingSu/nocobase}), and we make no claim that other repositories using Codex would reproduce the same $V_1$ collapse. The five agents are the most prominent as of mid-2025, and our baselines should be revisited as the ecosystem matures. Our pipeline reaches $57{,}582$ of the approximately $116{,}000$ AIDev repositories; the gap is primarily due to repositories or PR head references no longer accessible at fetch time (private, deleted, or with refs that GitHub no longer exposes). Within the reached repositories, $108$ ($0.2\%$) were further lost to cloning failures, and $236{,}449$ merge SHAs across $88{,}339$ PRs were unrecoverable for the same reason. We have no evidence of a systematic directional bias arising from these losses.
 
-\subsection{Construct Validity}
-\label{sec:threats-construct}
-
-\TODO{Discuss: (1) The eight-class taxonomy may not capture all nuances; (2) Gestalt similarity as a proxy for resolution quality; (3) Resolver = merge commit author may miss collaborative contributions.}
+\textbf{Conclusion validity.} Conflict chunks exhibit intra-merge and intra-repository dependence, so $p$-values are anti-conservative (i.e., Type~I error may be inflated). We therefore emphasize effect sizes (Cram\'{e}r's~$V$ and Cliff's~$\delta$) and do not treat $p{<}0.05$ alone as evidence of practical importance. A more subtle threat is the differential Imprecise rate across resolver types: $16.7\%$ for agent-resolved chunks versus $40.0\%$ for human-resolved chunks, with two components: \emph{localization failure} ($16.1\%$ vs.\ $33.4\%$) and \emph{Postponed} cases ($0.64\%$ vs.\ $6.56\%$, Section~\ref{sec:rq2-postponed}). The higher localization success for agents is plausibly linked to their higher $V_1$ rate, since $V_1$ resolutions exactly match one parent and are easier to anchor. This differential may inflate the agent's apparent $V_1$ dominance; however, the sensitivity analysis in Section~\ref{sec:meth-resolution}, which reassigns Imprecise chunks under worst-case scenarios, bounds the agent-to-human $V_1$ ratio at $1.24{\times}$--$2.45{\times}$, indicating that the observed per-agent contrasts are not artefacts of differential localization.
 
 % ============================================================
 % 7. Conclusion
 % ============================================================
-\section{Conclusion and Future Work}
+\section{Conclusion}
 \label{sec:conclusion}
 
-\TODO{Summarize contributions. Highlight key findings. Outline future work directions: longitudinal analysis, integration merges, cross-agent comparison, automated resolution quality assessment.}
+We presented the first large-scale empirical study of merge conflicts in AI-authored pull requests that attributes each resolution to a specific coding agent, recovering $50{,}700$ internal merges (of which $14{,}960$ conflicting) across $4{,}806$ repositories from a $210{,}902$-PR scope. Three findings carry the most operational weight. First, conflict resolution in agent-authored PRs is overwhelmingly human-led ($96.1\%$ of conflicting merges), and the per-agent self-resolution rate spans more than $60{\times}$, justifying per-vendor rather than one-size-fits-all review and CI policies. Second, the five agents do not share a common resolution strategy: per-agent contrasts against the same human reference range over an order of magnitude in Cram\'{e}r's~$V$, and Cursor vs.\ Devin is the only indistinguishable pair among the ten. Third, two of the five agents are dominated by a single repository: $55$ of the $61$ Codex self-resolved merges are version-bump patterns from \texttt{BlazingSu/nocobase}, and $10$ of the $12$ Claude Code self-resolved merges come from \texttt{itdojp/ITDO\_ERP2}. For these two agents, the per-agent strategy distribution reflects the dominant repository's workflow, not the agent itself, illustrating that single-repository concentration can drive corpus-wide effect sizes in AI-agent attribution studies.
 
-% ============================================================
-% Artifact Availability (mandatory, unnumbered)
-% ============================================================
+
+As future work, a longitudinal analysis would establish whether the per-agent profiles and the single-repository concentration patterns documented here are stable as agent populations and underlying models evolve. A semantic correctness assessment linking each resolution to downstream test outcomes would quantify the practical cost of the per-agent strategy choices we report. The labelled corpus released with this study can also serve as a stratified training set for specialised agentic merge-resolution models that generalise across agents.
+
 \section*{Artifact Availability}
+The full data-collection and analysis pipeline, the merge-level deduplication scripts, and the per-agent classification outputs that support every table, figure, and statistical claim in this paper are available at \emph{[anonymized for double-anonymous review]}.
 
-The dataset and scripts used in this study are publicly available at \TODO{anonymized repository URL}. The repository includes all data collection scripts, classification algorithms, and analysis notebooks. The conflict resolution content (v1, v2, base, resolution) is shared as SHA-256 hashes; full text content is available upon request due to licensing considerations.
-
-% ============================================================
-% Acknowledgements (unnumbered)
-% ============================================================
 \section*{Acknowledgements}
-
-\TODO{Acknowledge funding, contributors, and AI tool usage per SBES policy (e.g., ``Tool X was used to assist with Y'').}
+We thank \emph{[omitted for double-anonymous review.]} for supporting this research. Claude (Anthropic) was used to assist with data-analysis scripting and manuscript editing.
 
 % ============================================================
 % Bibliography

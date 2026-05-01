@@ -1,0 +1,66 @@
+
+============================================================
+PASS A — PR CHRONOLOGY ERRORS  (data/pr_chronology/errors.parquet)
+============================================================
+  Total error rows            : 40,716
+  Distinct repos affected     : 17,626  (30.6% of universe repos)
+  Distinct PRs affected       : 25,571  (12.1% of universe PRs)
+
+  Breakdown by error tag:
+    no_merge_base                         20,439 rows  (20,439 PRs)
+    clone_failed                          14,410 rows  (     0 PRs)
+    pr_ref_not_found                       5,132 rows  ( 5,132 PRs)
+    other_exception                          735 rows  (     0 PRs)
+
+
+============================================================
+PASS B — CONFLICT EXTRACTION ERRORS  (data/nature_of_agent_conflicts/extraction_errors.parquet)
+============================================================
+  Total error/exclusion rows  : 2,812,423
+    Excluded by design        : 1,574,820 rows  (70,135 unique SHAs,  31,793 PRs,  3,500 repos)
+    Pipeline failures         : 1,237,598 rows  (236,557 unique SHAs,  88,904 PRs,  15,906 repos)
+
+  Excluded-by-design breakdown:
+    octopus_merge                          5,365 rows  (    93 unique SHAs,     581 PRs)
+    pr_integration_merge                1,569,455 rows  (70,042 unique SHAs,  31,793 PRs)
+
+  Failure breakdown:
+    clone_failed                             142 rows  (     0 unique SHAs,       0 PRs,    142 repos)
+    file_processing_exception                  0 rows  (     0 unique SHAs,       0 PRs,      0 repos)
+    localize_timeout                       1,175 rows  (   108 unique SHAs,     626 PRs,     31 repos)
+    no_sha_for_pr                              0 rows  (     0 unique SHAs,       0 PRs,      0 repos)
+    pr_processing_exception                    0 rows  (     0 unique SHAs,       0 PRs,      0 repos)
+    sha_not_in_repo                     1,236,281 rows  (236,449 unique SHAs,  88,339 PRs,  15,785 repos)
+    sha_processing_exception                   0 rows  (     0 unique SHAs,       0 PRs,      0 repos)
+
+  Unrecognised error types (may need classification):
+    sha_still_not_in_repo                      5 rows
+
+  Impact of pipeline failures relative to universe:
+    PRs affected              : 88,904  (42.2%  of universe PRs)
+    Repos affected            : 15,906  (27.6% of universe repos)
+    Repos lost to clone_failed: 142  (0.2% of universe repos)
+    PRs  lost to clone_failed : 0  (0.0% of universe PRs)
+
+
+============================================================
+PAPER HEADLINE NUMBERS
+============================================================
+  --- Pass A (chronology extraction) ---
+  Error rows total            : 40,716
+  PRs lost (at least 1 error) : 25,571  (12.1% of universe)
+
+  --- Pass B (conflict extraction) ---
+  Excluded by design
+    pr_integration_merge SHAs : 70,042  (GitHub bot-generated merge commits, never content conflicts)
+    octopus_merge SHAs        : 93  (≥3-parent merges; diff3 undefined)
+    Total excluded SHAs       : 70,135
+  Pipeline failures
+    PRs affected              : 88,904  (42.2% of universe)
+    Repos affected            : 15,906  (27.6% of universe)
+    localize_timeout rows     : 1,175  (108 unique merge SHAs)
+
+  --- Retained corpus ---
+  Internal merge commits kept : 50,700
+  Universe PRs                : 210,902
+  Universe repos              : 57,582

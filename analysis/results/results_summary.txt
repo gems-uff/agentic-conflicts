@@ -1,0 +1,1469 @@
+
+========================
+DATASET CHARACTERISATION
+========================
+  data_dir: /home/heleno/agentic-conflicts/data/nature_of_agent_conflicts
+  raw_aidev:
+    note: raw AIDev parquet not found; skipping raw-universe stats
+  universe:
+    universe_rows_raw: 7,347,676
+    universe_rows_dedup: 7,347,676
+    universe_unique_prs_raw: 210,902
+    universe_unique_prs_dedup: 210,902
+    prs_per_agent:
+      OpenAI_Codex: 160,832
+      Copilot: 21,846
+      Cursor: 14,903
+      Devin: 11,433
+      Claude_Code: 1,888
+    prs_per_language:
+      Python: 43,624
+      TypeScript: 41,497
+      JavaScript: 26,974
+      Go: 18,037
+      Unknown: 14,621
+      HTML: 11,844
+      Rust: 7,176
+      C#: 6,038
+      Java: 5,942
+      C++: 5,889
+      PHP: 4,711
+      Jupyter Notebook: 2,292
+      C: 2,154
+      Shell: 1,924
+      Dart: 1,886
+      Kotlin: 1,858
+      CSS: 1,729
+      Swift: 1,483
+      Vue: 1,380
+      Ruby: 960
+      Lua: 764
+      MDX: 690
+      Astro: 577
+      R: 435
+      PowerShell: 398
+      Svelte: 384
+      HCL: 298
+      GDScript: 275
+      Solidity: 246
+      Blade: 238
+      SCSS: 222
+      Julia: 214
+      Makefile: 213
+      Dockerfile: 193
+      Crystal: 176
+      Nix: 168
+      TeX: 139
+      Smarty: 132
+      Bicep: 129
+      MQL5: 122
+      Assembly: 115
+      Scala: 109
+      OCaml: 106
+      G-code: 103
+      Liquid: 102
+      Elixir: 102
+      Twig: 93
+      PLpgSQL: 87
+      Haskell: 85
+      Racket: 85
+      Zig: 80
+      EJS: 76
+      MATLAB: 69
+      Circom: 67
+      Jinja: 61
+      Objective-C: 58
+      ShaderLab: 58
+      MoonBit: 53
+      F#: 52
+      Pascal: 51
+      Vim Script: 49
+      Fortran: 47
+      Verilog: 46
+      Lean: 46
+      Nim: 45
+      SystemVerilog: 43
+      D: 39
+      Roff: 37
+      Perl: 36
+      CMake: 35
+      Rich Text Format: 33
+      QML: 31
+      Emacs Lisp: 29
+      TSQL: 27
+      Visual Basic .NET: 27
+      OpenSCAD: 27
+      Mustache: 23
+      Groovy: 22
+      Open Policy Agent: 22
+      Clojure: 21
+      Luau: 20
+      Erlang: 20
+      Starlark: 19
+      Mathematica: 17
+      VBA: 16
+      SQF: 16
+      Elm: 16
+      Nunjucks: 14
+      Hack: 13
+      Game Maker Language: 13
+      Processing: 13
+      Just: 12
+      Batchfile: 12
+      ReScript: 12
+      LLVM: 11
+      AutoHotkey: 10
+      1C Enterprise: 10
+      Cuda: 9
+      nesC: 9
+      Apex: 8
+      Markdown: 8
+      Tcl: 8
+      AMPL: 8
+      Scheme: 8
+      YAML: 8
+      Handlebars: 7
+      Move: 7
+      Motoko: 7
+      GSC: 7
+      XSLT: 6
+      Pug: 6
+      VHDL: 6
+      Logos: 6
+      Common Lisp: 6
+      Smalltalk: 6
+      Gherkin: 5
+      Cairo: 5
+      WebAssembly: 5
+      PLSQL: 5
+      Answer Set Programming: 5
+      Prolog: 5
+      Max: 5
+      CAP CDS: 5
+      Nextflow: 5
+      Mojo: 5
+      CoffeeScript: 4
+      Haxe: 4
+      COBOL: 4
+      AngelScript: 4
+      ColdFusion: 4
+      GLSL: 4
+      AppleScript: 4
+      ASP.NET: 3
+      AL: 3
+      ActionScript: 3
+      Brightscript: 3
+      SourcePawn: 3
+      Vim script: 3
+      DM: 3
+      Visual Basic 6.0: 3
+      CodeQL: 3
+      Matlab: 3
+      GAP: 3
+      Odin: 3
+      OpenEdge ABL: 3
+      Lasso: 3
+      TypeSpec: 2
+      Less: 2
+      Linker Script: 2
+      ABAP: 2
+      PureScript: 2
+      XML: 2
+      Cython: 2
+      reStructuredText: 2
+      PDDL: 2
+      YARA: 2
+      Stata: 2
+      Gleam: 2
+      Pony: 2
+      Nushell: 2
+      Smali: 2
+      NASL: 2
+      Rocq Prover: 2
+      GAML: 2
+      Mermaid: 2
+      Visual Basic: 2
+      Arduino: 1
+      Inno Setup: 1
+      Objective-J: 1
+      Brainfuck: 1
+      JSON: 1
+      StringTemplate: 1
+      VBScript: 1
+      Rascal: 1
+      mIRC Script: 1
+      Raku: 1
+      QMake: 1
+      Standard ML: 1
+      DIGITAL Command Language: 1
+      FreeMarker: 1
+      Fluent: 1
+      Macaulay2: 1
+      Xtend: 1
+      BrighterScript: 1
+      Pkl: 1
+      Sass: 1
+      Thrift: 1
+      BibTeX Style: 1
+      Vala: 1
+      Jai: 1
+      Jsonnet: 1
+      CUE: 1
+      MQL4: 1
+      mdsvex: 1
+      API Blueprint: 1
+      Objective-C++: 1
+      Agda: 1
+      ASP: 1
+      RPGLE: 1
+      Latte: 1
+      Pawn: 1
+      mcfunction: 1
+      Nginx: 1
+      Tree-sitter Query: 1
+      XC: 1
+    prs_per_task_type:
+      Unknown: 193,215
+      feat: 9,087
+      fix: 3,598
+      docs: 1,481
+      test: 1,396
+      refactor: 1,101
+      chore: 369
+      build: 210
+      perf: 207
+      ci: 129
+      style: 86
+      other: 15
+      revert: 8
+    prs_per_state:
+      closed: 152,226
+      open: 58,676
+    unique_repos: 57,582
+  internal_merges:
+    internal_merges_rows_raw: 452,114
+    internal_merges_rows_dedup: 50,700
+    unique_physical_merges: 50,700
+    pr_fanout_desc:
+      n: 50,700.0000
+      mean: 8.9174
+      std: 32.8111
+      min: 1.0000
+      p25: 1.0000
+      median: 2.0000
+      p75: 3.0000
+      p90: 10.0000
+      p95: 41.0000
+      p99: 200.0000
+      max: 848.0000
+    pr_fanout_hist:
+      1: 23,101
+      2: 2,798
+      3: 16,836
+      4: 1,158
+      5: 551
+      6: 338
+      7: 358
+      8: 280
+      9: 156
+      10: 219
+      11: 137
+      12: 133
+      13: 164
+      14: 108
+      15: 142
+      16: 211
+      17: 60
+      18: 81
+      19: 59
+      20: 97
+      21: 58
+      22: 45
+      23: 47
+      24: 47
+      25: 36
+      26: 29
+      27: 34
+      28: 46
+      29: 27
+      30: 37
+      31: 28
+      32: 35
+      33: 59
+      34: 35
+      35: 28
+      36: 34
+      37: 29
+      38: 20
+      39: 14
+      40: 23
+      41: 1,125
+      42: 53
+      43: 20
+      44: 16
+      45: 21
+      46: 32
+      47: 48
+      48: 8
+      49: 14
+      50: 9
+      51: 16
+      52: 14
+      53: 13
+      54: 10
+      55: 11
+      56: 8
+      57: 9
+      58: 10
+      59: 9
+      60: 9
+      61: 17
+      62: 16
+      63: 15
+      64: 15
+      65: 13
+      66: 13
+      67: 31
+      68: 14
+      69: 19
+      70: 13
+      71: 12
+      72: 11
+      73: 7
+      74: 9
+      75: 9
+      76: 54
+      77: 19
+      78: 14
+      79: 7
+      80: 8
+      81: 8
+      82: 11
+      83: 5
+      84: 7
+      85: 2
+      86: 7
+      87: 9
+      88: 5
+      89: 9
+      90: 9
+      91: 3
+      92: 5
+      93: 10
+      94: 10
+      95: 7
+      96: 8
+      97: 8
+      98: 20
+      99: 9
+      100: 5
+      101: 12
+      102: 3
+      103: 7
+      104: 6
+      105: 6
+      106: 9
+      107: 7
+      108: 6
+      109: 11
+      110: 10
+      111: 15
+      112: 7
+      113: 10
+      114: 3
+      115: 9
+      116: 10
+      117: 5
+      118: 12
+      119: 5
+      120: 5
+      121: 6
+      122: 5
+      123: 18
+      124: 8
+      125: 4
+      126: 3
+      127: 3
+      128: 4
+      129: 6
+      130: 5
+      131: 6
+      132: 21
+      133: 4
+      134: 3
+      135: 1
+      136: 4
+      137: 2
+      138: 4
+      139: 11
+      140: 5
+      141: 2
+      142: 2
+      143: 6
+      144: 3
+      145: 4
+      146: 2
+      147: 4
+      148: 4
+      149: 4
+      150: 7
+      151: 17
+      152: 3
+      153: 4
+      154: 1
+      155: 2
+      156: 7
+      157: 3
+      158: 15
+      159: 3
+      160: 2
+      161: 3
+      162: 11
+      163: 5
+      164: 1
+      165: 4
+      166: 2
+      167: 4
+      168: 6
+      169: 11
+      170: 6
+      171: 3
+      172: 2
+      173: 3
+      174: 10
+      175: 4
+      176: 18
+      177: 6
+      179: 8
+      180: 1
+      181: 9
+      183: 3
+      184: 6
+      185: 2
+      186: 4
+      187: 4
+      190: 4
+      191: 30
+      193: 1
+      194: 3
+      195: 2
+      197: 1
+      198: 3
+      200: 17
+      201: 1
+      202: 2
+      203: 1
+      204: 3
+      205: 1
+      206: 34
+      207: 2
+      208: 1
+      209: 3
+      210: 1
+      211: 2
+      212: 25
+      213: 10
+      215: 1
+      216: 1
+      217: 15
+      218: 7
+      219: 2
+      220: 4
+      221: 7
+      222: 3
+      223: 2
+      224: 6
+      225: 1
+      226: 3
+      228: 2
+      229: 1
+      230: 1
+      231: 3
+      233: 1
+      234: 6
+      235: 2
+      236: 5
+      237: 4
+      238: 8
+      239: 2
+      240: 8
+      241: 2
+      242: 2
+      243: 3
+      244: 2
+      245: 5
+      246: 20
+      247: 2
+      249: 1
+      250: 7
+      253: 33
+      255: 1
+      256: 3
+      257: 2
+      258: 2
+      259: 1
+      261: 1
+      262: 2
+      264: 1
+      266: 6
+      270: 77
+      271: 3
+      273: 11
+      274: 1
+      275: 3
+      276: 5
+      277: 3
+      279: 6
+      280: 1
+      281: 4
+      282: 4
+      283: 4
+      284: 1
+      285: 2
+      286: 1
+      287: 1
+      288: 9
+      291: 1
+      292: 1
+      293: 3
+      295: 1
+      306: 1
+      314: 3
+      318: 1
+      321: 4
+      323: 3
+      326: 6
+      339: 1
+      352: 1
+      354: 1
+      355: 47
+      385: 1
+      386: 1
+      404: 3
+      447: 1
+      534: 1
+      700: 1
+      703: 1
+      727: 1
+      848: 4
+    merges_with_multiple_prs: 27,599
+    merges_with_multiple_prs_pct: 54.4359
+    resolver_breakdown:
+      human: 47,812
+      agent: 2,748
+      agent-assisted: 140
+  classified_chunks:
+    rows_raw: 121,599
+    rows_dedup: 121,599
+  resolved_chunks:
+    rows_raw: 121,599
+    rows_dedup: 121,599
+  extraction_errors:
+    rows: 2,812,423
+  headline:
+    n_projects: 57,582
+    n_prs: 210,902
+    n_prs_with_internal_merge: 12,299
+    pct_prs_with_internal_merge: 5.8316
+    n_prs_with_conflicting_merge: 7,268
+    pct_prs_with_conflicting_merge: 3.4462
+    n_internal_merges: 50,700
+    n_conflicting_merges: 14,960
+    n_conflict_chunks: 121,599
+    conflicting_merges_pct: 29.5069
+    merges_per_agent:
+      OpenAI_Codex: 29,250
+      Copilot: 17,216
+      Devin: 2,369
+      Cursor: 1,013
+      Claude_Code: 852
+    merges_per_agent_conflict_rate:
+      OpenAI_Codex: 39.9453
+      Copilot: 10.5077
+      Devin: 32.2077
+      Cursor: 47.7789
+      Claude_Code: 25.8216
+    merges_per_language_top:
+      C: 14,141
+      TypeScript: 7,434
+      Python: 6,008
+      Other: 5,450
+      C++: 5,329
+      Unknown: 4,970
+      JavaScript: 3,071
+      Java: 2,186
+      C#: 2,111
+    merges_per_language_top_conflict_rate:
+      C: 6.6686
+      TypeScript: 31.9882
+      Python: 45.3063
+      Other: 42.2936
+      C++: 28.8422
+      Unknown: 37.3843
+      JavaScript: 52.7190
+      Java: 44.4648
+      C#: 29.6542
+    merges_per_task_type:
+      Unknown: 33,650
+      test: 14,059
+      feat: 1,482
+      fix: 758
+      refactor: 282
+      docs: 192
+      ci: 112
+      perf: 61
+      chore: 57
+      build: 27
+      style: 19
+      other: 1
+    merges_per_task_type_conflict_rate:
+      Unknown: 0.0000
+      test: 6.3091
+      feat: 28.3401
+      fix: 25.7256
+      refactor: 29.4326
+      docs: 32.2917
+      ci: 3.5714
+      perf: 21.3115
+      chore: 40.3509
+      build: 3.7037
+      style: 57.8947
+      other: 0.0000
+
+========================
+RQ1 -- STRUCTURAL NATURE
+========================
+  chunks_per_merge_all_desc:
+    n: 50,700.0000
+    mean: 2.3984
+    std: 50.9904
+    min: 0.0000
+    p25: 0.0000
+    median: 0.0000
+    p75: 1.0000
+    p90: 3.0000
+    p95: 6.0000
+    p99: 28.0000
+    max: 9,791.0000
+  chunks_per_merge_conflicting_desc:
+    n: 14,960.0000
+    mean: 8.1283
+    std: 93.6238
+    min: 1.0000
+    p25: 1.0000
+    median: 2.0000
+    p75: 4.0000
+    p90: 10.0000
+    p95: 19.0000
+    p99: 121.0000
+    max: 9,791.0000
+  v1_loc_desc:
+    n: 121,599.0000
+    mean: 36.1630
+    std: 901.2914
+    min: 0.0000
+    p25: 1.0000
+    median: 3.0000
+    p75: 12.0000
+    p90: 35.0000
+    p95: 67.0000
+    p99: 275.0000
+    max: 199,765.0000
+  v2_loc_desc:
+    n: 121,599.0000
+    mean: 19.0216
+    std: 408.9961
+    min: 0.0000
+    p25: 1.0000
+    median: 2.0000
+    p75: 6.0000
+    p90: 17.0000
+    p95: 35.0000
+    p99: 150.0000
+    max: 88,993.0000
+  base_loc_desc:
+    n: 121,599.0000
+    mean: 16.9867
+    std: 417.0313
+    min: 0.0000
+    p25: 1.0000
+    median: 1.0000
+    p75: 4.0000
+    p90: 11.0000
+    p95: 23.0000
+    p99: 120.0200
+    max: 60,575.0000
+  resolution_loc_desc:
+    n: 121,599.0000
+    mean: 76.0344
+    std: 1,154.8346
+    min: 0.0000
+    p25: 0.0000
+    median: 1.0000
+    p75: 6.0000
+    p90: 31.0000
+    p95: 108.0000
+    p99: 1,407.0000
+    max: 199,769.0000
+  localized_ok:
+    ok: 83,043
+    total: 121,599
+    pct: 68.2925
+  imprecise_decomposition:
+    localization_failures: 38,556
+    postponed: 7,291
+    total_imprecise: 45,847
+    note: localization_failures = chunks where LocalizeResRegion returned None; postponed = chunks where localization succeeded but resolved file still contained conflict markers
+  pr_outcome:
+    resolved: 208,736
+    abandoned-with-conflict: 1,132
+    open-with-conflict: 1,034
+  conflict_incidence:
+    per_agent:
+      Claude_Code:
+        n_prs: 1,888
+        n_with_conflict: 154
+        pct_with_conflict: 8.1568
+      Copilot:
+        n_prs: 21,846
+        n_with_conflict: 647
+        pct_with_conflict: 2.9616
+      Cursor:
+        n_prs: 14,903
+        n_with_conflict: 318
+        pct_with_conflict: 2.1338
+      Devin:
+        n_prs: 11,433
+        n_with_conflict: 374
+        pct_with_conflict: 3.2712
+      OpenAI_Codex:
+        n_prs: 160,832
+        n_with_conflict: 5,775
+        pct_with_conflict: 3.5907
+    per_language_top:
+      C#:
+        n_prs: 6,038
+        n_with_conflict: 226
+        pct_with_conflict: 3.7430
+      Go:
+        n_prs: 18,037
+        n_with_conflict: 228
+        pct_with_conflict: 1.2641
+      HTML:
+        n_prs: 11,844
+        n_with_conflict: 260
+        pct_with_conflict: 2.1952
+      JavaScript:
+        n_prs: 26,974
+        n_with_conflict: 1,255
+        pct_with_conflict: 4.6526
+      Other:
+        n_prs: 41,091
+        n_with_conflict: 1,471
+        pct_with_conflict: 3.5799
+      Python:
+        n_prs: 43,624
+        n_with_conflict: 1,789
+        pct_with_conflict: 4.1010
+      Rust:
+        n_prs: 7,176
+        n_with_conflict: 354
+        pct_with_conflict: 4.9331
+      TypeScript:
+        n_prs: 41,497
+        n_with_conflict: 1,496
+        pct_with_conflict: 3.6051
+      Unknown:
+        n_prs: 14,621
+        n_with_conflict: 189
+        pct_with_conflict: 1.2927
+    per_task_type:
+      build:
+        n_prs: 210
+        n_with_conflict: 1
+        pct_with_conflict: 0.4762
+      chore:
+        n_prs: 369
+        n_with_conflict: 20
+        pct_with_conflict: 5.4201
+      ci:
+        n_prs: 129
+        n_with_conflict: 3
+        pct_with_conflict: 2.3256
+      docs:
+        n_prs: 1,481
+        n_with_conflict: 43
+        pct_with_conflict: 2.9034
+      feat:
+        n_prs: 9,087
+        n_with_conflict: 252
+        pct_with_conflict: 2.7732
+      fix:
+        n_prs: 3,598
+        n_with_conflict: 102
+        pct_with_conflict: 2.8349
+      other:
+        n_prs: 15
+        n_with_conflict: 0
+        pct_with_conflict: 0.0000
+      perf:
+        n_prs: 207
+        n_with_conflict: 8
+        pct_with_conflict: 3.8647
+      refactor:
+        n_prs: 1,101
+        n_with_conflict: 47
+        pct_with_conflict: 4.2688
+      revert:
+        n_prs: 8
+        n_with_conflict: 0
+        pct_with_conflict: 0.0000
+      style:
+        n_prs: 86
+        n_with_conflict: 5
+        pct_with_conflict: 5.8140
+      test:
+        n_prs: 1,396
+        n_with_conflict: 21
+        pct_with_conflict: 1.5043
+
+============================
+RQ2 -- RESOLUTION STRATEGIES
+============================
+  global_incl_imprecise:
+    V1: 0.3060
+    V2: 0.1531
+    CC: 0.0385
+    CB: 0.0559
+    NC: 0.0657
+    NN: 0.0037
+    Imprecise: 0.3770
+  global_excl_imprecise:
+    V1: 0.4912
+    V2: 0.2458
+    CC: 0.0618
+    CB: 0.0897
+    NC: 0.1055
+    NN: 0.0060
+  imprecise_share_global: 0.3770
+  per_stratum:
+    per_agent:
+      incl_imprecise:
+        Claude_Code:
+          V1: 0.2935
+          V2: 0.2573
+          CC: 0.0218
+          CB: 0.0567
+          NC: 0.0739
+          NN: 0.0009
+          Imprecise: 0.2959
+        Copilot:
+          V1: 0.4121
+          V2: 0.1635
+          CC: 0.0300
+          CB: 0.0632
+          NC: 0.0909
+          NN: 0.0024
+          Imprecise: 0.2380
+        Cursor:
+          V1: 0.2301
+          V2: 0.1921
+          CC: 0.0393
+          CB: 0.0786
+          NC: 0.0874
+          NN: 0.0030
+          Imprecise: 0.3694
+        Devin:
+          V1: 0.2072
+          V2: 0.3554
+          CC: 0.0357
+          CB: 0.0773
+          NC: 0.0732
+          NN: 0.0028
+          Imprecise: 0.2482
+        OpenAI_Codex:
+          V1: 0.2987
+          V2: 0.1339
+          CC: 0.0404
+          CB: 0.0524
+          NC: 0.0601
+          NN: 0.0041
+          Imprecise: 0.4105
+      excl_imprecise:
+        Claude_Code:
+          V1: 0.4169
+          V2: 0.3654
+          CC: 0.0310
+          CB: 0.0805
+          NC: 0.1049
+          NN: 0.0013
+        Copilot:
+          V1: 0.5408
+          V2: 0.2146
+          CC: 0.0394
+          CB: 0.0829
+          NC: 0.1192
+          NN: 0.0031
+        Cursor:
+          V1: 0.3649
+          V2: 0.3047
+          CC: 0.0623
+          CB: 0.1247
+          NC: 0.1386
+          NN: 0.0048
+        Devin:
+          V1: 0.2757
+          V2: 0.4728
+          CC: 0.0475
+          CB: 0.1028
+          NC: 0.0974
+          NN: 0.0038
+        OpenAI_Codex:
+          V1: 0.5066
+          V2: 0.2271
+          CC: 0.0685
+          CB: 0.0888
+          NC: 0.1020
+          NN: 0.0069
+      imprecise_share:
+        Claude_Code: 0.2959
+        Copilot: 0.2380
+        Cursor: 0.3694
+        Devin: 0.2482
+        OpenAI_Codex: 0.4105
+    per_language_top:
+      incl_imprecise:
+        C:
+          V1: 0.5455
+          V2: 0.1499
+          CC: 0.0170
+          CB: 0.0413
+          NC: 0.0570
+          NN: 0.0006
+          Imprecise: 0.1887
+        C#:
+          V1: 0.0335
+          V2: 0.0533
+          CC: 0.0270
+          CB: 0.0302
+          NC: 0.0136
+          NN: 0.0034
+          Imprecise: 0.8389
+        C++:
+          V1: 0.3080
+          V2: 0.2158
+          CC: 0.0358
+          CB: 0.1138
+          NC: 0.1482
+          NN: 0.0034
+          Imprecise: 0.1749
+        Java:
+          V1: 0.2970
+          V2: 0.2955
+          CC: 0.0720
+          CB: 0.1237
+          NC: 0.1003
+          NN: 0.0065
+          Imprecise: 0.1051
+        JavaScript:
+          V1: 0.2829
+          V2: 0.1605
+          CC: 0.0721
+          CB: 0.0553
+          NC: 0.0595
+          NN: 0.0089
+          Imprecise: 0.3607
+        Other:
+          V1: 0.3089
+          V2: 0.2023
+          CC: 0.0534
+          CB: 0.0762
+          NC: 0.1005
+          NN: 0.0047
+          Imprecise: 0.2540
+        Python:
+          V1: 0.3232
+          V2: 0.2032
+          CC: 0.0499
+          CB: 0.0606
+          NC: 0.0833
+          NN: 0.0064
+          Imprecise: 0.2734
+        TypeScript:
+          V1: 0.4038
+          V2: 0.1479
+          CC: 0.0250
+          CB: 0.0448
+          NC: 0.0594
+          NN: 0.0032
+          Imprecise: 0.3160
+        Unknown:
+          V1: 0.4759
+          V2: 0.1675
+          CC: 0.0494
+          CB: 0.0463
+          NC: 0.0651
+          NN: 0.0009
+          Imprecise: 0.1948
+      excl_imprecise:
+        C:
+          V1: 0.6724
+          V2: 0.1848
+          CC: 0.0209
+          CB: 0.0509
+          NC: 0.0703
+          NN: 0.0007
+        C#:
+          V1: 0.2079
+          V2: 0.3309
+          CC: 0.1676
+          CB: 0.1875
+          NC: 0.0847
+          NN: 0.0214
+        C++:
+          V1: 0.3733
+          V2: 0.2616
+          CC: 0.0434
+          CB: 0.1379
+          NC: 0.1797
+          NN: 0.0042
+        Java:
+          V1: 0.3319
+          V2: 0.3302
+          CC: 0.0804
+          CB: 0.1382
+          NC: 0.1120
+          NN: 0.0072
+        JavaScript:
+          V1: 0.4426
+          V2: 0.2511
+          CC: 0.1128
+          CB: 0.0864
+          NC: 0.0931
+          NN: 0.0140
+        Other:
+          V1: 0.4141
+          V2: 0.2712
+          CC: 0.0715
+          CB: 0.1021
+          NC: 0.1347
+          NN: 0.0063
+        Python:
+          V1: 0.4448
+          V2: 0.2796
+          CC: 0.0686
+          CB: 0.0834
+          NC: 0.1147
+          NN: 0.0089
+        TypeScript:
+          V1: 0.5903
+          V2: 0.2162
+          CC: 0.0365
+          CB: 0.0655
+          NC: 0.0868
+          NN: 0.0047
+        Unknown:
+          V1: 0.5910
+          V2: 0.2081
+          CC: 0.0614
+          CB: 0.0575
+          NC: 0.0809
+          NN: 0.0012
+      imprecise_share:
+        C: 0.1887
+        C#: 0.8389
+        C++: 0.1749
+        Java: 0.1051
+        JavaScript: 0.3607
+        Other: 0.2540
+        Python: 0.2734
+        TypeScript: 0.3160
+        Unknown: 0.1948
+    per_task_type:
+      incl_imprecise:
+        build:
+          V1: 1.0000
+          V2: 0.0000
+          CC: 0.0000
+          CB: 0.0000
+          NC: 0.0000
+          NN: 0.0000
+          Imprecise: 0.0000
+        chore:
+          V1: 0.4198
+          V2: 0.3359
+          CC: 0.1069
+          CB: 0.0153
+          NC: 0.0382
+          NN: 0.0000
+          Imprecise: 0.0840
+        ci:
+          V1: 0.3333
+          V2: 0.5000
+          CC: 0.1667
+          CB: 0.0000
+          NC: 0.0000
+          NN: 0.0000
+          Imprecise: 0.0000
+        docs:
+          V1: 0.2771
+          V2: 0.5195
+          CC: 0.0346
+          CB: 0.0303
+          NC: 0.0260
+          NN: 0.0000
+          Imprecise: 0.1126
+        feat:
+          V1: 0.3613
+          V2: 0.1925
+          CC: 0.0763
+          CB: 0.0754
+          NC: 0.0702
+          NN: 0.0005
+          Imprecise: 0.2238
+        fix:
+          V1: 0.3594
+          V2: 0.1739
+          CC: 0.0362
+          CB: 0.1645
+          NC: 0.1470
+          NN: 0.0047
+          Imprecise: 0.1144
+        perf:
+          V1: 0.0546
+          V2: 0.5980
+          CC: 0.0149
+          CB: 0.0273
+          NC: 0.0471
+          NN: 0.0000
+          Imprecise: 0.2581
+        refactor:
+          V1: 0.1602
+          V2: 0.2993
+          CC: 0.0352
+          CB: 0.0810
+          NC: 0.0687
+          NN: 0.0053
+          Imprecise: 0.3504
+        style:
+          V1: 0.1605
+          V2: 0.5679
+          CC: 0.0000
+          CB: 0.0247
+          NC: 0.0247
+          NN: 0.0062
+          Imprecise: 0.2160
+        test:
+          V1: 0.5392
+          V2: 0.1543
+          CC: 0.0179
+          CB: 0.0410
+          NC: 0.0556
+          NN: 0.0006
+          Imprecise: 0.1914
+      excl_imprecise:
+        build:
+          V1: 1.0000
+          V2: 0.0000
+          CC: 0.0000
+          CB: 0.0000
+          NC: 0.0000
+          NN: 0.0000
+        chore:
+          V1: 0.4583
+          V2: 0.3667
+          CC: 0.1167
+          CB: 0.0167
+          NC: 0.0417
+          NN: 0.0000
+        ci:
+          V1: 0.3333
+          V2: 0.5000
+          CC: 0.1667
+          CB: 0.0000
+          NC: 0.0000
+          NN: 0.0000
+        docs:
+          V1: 0.3122
+          V2: 0.5854
+          CC: 0.0390
+          CB: 0.0341
+          NC: 0.0293
+          NN: 0.0000
+        feat:
+          V1: 0.4655
+          V2: 0.2480
+          CC: 0.0984
+          CB: 0.0971
+          NC: 0.0904
+          NN: 0.0006
+        fix:
+          V1: 0.4058
+          V2: 0.1963
+          CC: 0.0408
+          CB: 0.1858
+          NC: 0.1660
+          NN: 0.0053
+        perf:
+          V1: 0.0736
+          V2: 0.8060
+          CC: 0.0201
+          CB: 0.0368
+          NC: 0.0635
+          NN: 0.0000
+        refactor:
+          V1: 0.2466
+          V2: 0.4607
+          CC: 0.0542
+          CB: 0.1247
+          NC: 0.1057
+          NN: 0.0081
+        style:
+          V1: 0.2047
+          V2: 0.7244
+          CC: 0.0000
+          CB: 0.0315
+          NC: 0.0315
+          NN: 0.0079
+        test:
+          V1: 0.6669
+          V2: 0.1908
+          CC: 0.0221
+          CB: 0.0507
+          NC: 0.0687
+          NN: 0.0007
+      imprecise_share:
+        build: 0.0000
+        chore: 0.0840
+        ci: 0.0000
+        docs: 0.1126
+        feat: 0.2238
+        fix: 0.1144
+        perf: 0.2581
+        refactor: 0.3504
+        style: 0.2160
+        test: 0.1914
+    per_resolver:
+      incl_imprecise:
+        agent:
+          V1: 0.6633
+          V2: 0.1051
+          CC: 0.0104
+          CB: 0.0206
+          NC: 0.0325
+          NN: 0.0009
+          Imprecise: 0.1672
+        agent-assisted:
+          V1: 0.2866
+          V2: 0.2971
+          CC: 0.0499
+          CB: 0.0620
+          NC: 0.0894
+          NN: 0.0000
+          Imprecise: 0.2150
+        human:
+          V1: 0.2711
+          V2: 0.1562
+          CC: 0.0411
+          CB: 0.0593
+          NC: 0.0687
+          NN: 0.0040
+          Imprecise: 0.3995
+      excl_imprecise:
+        agent:
+          V1: 0.7965
+          V2: 0.1262
+          CC: 0.0125
+          CB: 0.0247
+          NC: 0.0390
+          NN: 0.0011
+        agent-assisted:
+          V1: 0.3651
+          V2: 0.3785
+          CC: 0.0636
+          CB: 0.0790
+          NC: 0.1138
+          NN: 0.0000
+        human:
+          V1: 0.4515
+          V2: 0.2601
+          CC: 0.0685
+          CB: 0.0988
+          NC: 0.1145
+          NN: 0.0067
+      imprecise_share:
+        agent: 0.1672
+        agent-assisted: 0.2150
+        human: 0.3995
+  strategy_counts_incl_imprecise:
+    V1: 37,213
+    V2: 18,618
+    CC: 4,678
+    CB: 6,797
+    NC: 7,994
+    NN: 452
+    Imprecise: 45,847
+  postponed_analysis:
+    n_postponed_total: 7,291
+    pct_postponed_of_total: 5.9959
+    pct_postponed_of_imprecise: 15.9029
+    n_localization_failures: 38,556
+    pct_loc_fail_of_total: 31.7075
+    pct_loc_fail_of_imprecise: 84.0971
+    total_imprecise_check: 45,847
+    note: total_imprecise_check should equal strategy_counts_incl_imprecise['Imprecise']. Any gap indicates raw strategy values not yet in _RAW_TO_CANONICAL.
+    by_resolver_type:
+      agent:
+        n_chunks: 10,782.0000
+        n_postponed: 69.0000
+        pct_postponed: 0.6400
+        n_localization_failure: 1,734.0000
+        pct_localization_failure: 16.0824
+        n_imprecise_total: 1,803.0000
+        pct_imprecise_total: 16.7223
+      agent-assisted:
+        n_chunks: 1,242.0000
+        n_postponed: 32.0000
+        pct_postponed: 2.5765
+        n_localization_failure: 235.0000
+        pct_localization_failure: 18.9211
+        n_imprecise_total: 267.0000
+        pct_imprecise_total: 21.4976
+      human:
+        n_chunks: 109,575.0000
+        n_postponed: 7,190.0000
+        pct_postponed: 6.5617
+        n_localization_failure: 36,587.0000
+        pct_localization_failure: 33.3899
+        n_imprecise_total: 43,777.0000
+        pct_imprecise_total: 39.9516
+    by_agent:
+      Claude_Code:
+        n_chunks: 2,153.0000
+        n_postponed: 71.0000
+        pct_postponed: 3.2977
+        n_localization_failure: 566.0000
+        pct_localization_failure: 26.2889
+        n_imprecise_total: 637.0000
+        pct_imprecise_total: 29.5866
+      Copilot:
+        n_chunks: 15,308.0000
+        n_postponed: 115.0000
+        pct_postponed: 0.7512
+        n_localization_failure: 3,528.0000
+        pct_localization_failure: 23.0468
+        n_imprecise_total: 3,643.0000
+        pct_imprecise_total: 23.7980
+      Cursor:
+        n_chunks: 3,638.0000
+        n_postponed: 61.0000
+        pct_postponed: 1.6767
+        n_localization_failure: 1,283.0000
+        pct_localization_failure: 35.2666
+        n_imprecise_total: 1,344.0000
+        pct_imprecise_total: 36.9434
+      Devin:
+        n_chunks: 6,350.0000
+        n_postponed: 37.0000
+        pct_postponed: 0.5827
+        n_localization_failure: 1,539.0000
+        pct_localization_failure: 24.2362
+        n_imprecise_total: 1,576.0000
+        pct_imprecise_total: 24.8189
+      OpenAI_Codex:
+        n_chunks: 94,150.0000
+        n_postponed: 7,007.0000
+        pct_postponed: 7.4424
+        n_localization_failure: 31,640.0000
+        pct_localization_failure: 33.6059
+        n_imprecise_total: 38,647.0000
+        pct_imprecise_total: 41.0483
+
+===============
+RQ3 -- RESOLVER
+===============
+  resolver_counts_merge_level:
+    human: 47,812
+    agent: 2,748
+    agent-assisted: 140
+  resolver_share_merge_level:
+    human: 0.9430
+    agent: 0.0542
+    agent-assisted: 0.0028
+  strategy_by_resolver_excl_imprecise:
+    agent:
+      V1: 0.7965
+      V2: 0.1262
+      CC: 0.0125
+      CB: 0.0247
+      NC: 0.0390
+      NN: 0.0011
+    human:
+      V1: 0.4515
+      V2: 0.2601
+      CC: 0.0685
+      CB: 0.0988
+      NC: 0.1145
+      NN: 0.0067
+  strategy_by_resolver_incl_imprecise:
+    agent:
+      V1: 0.6633
+      V2: 0.1051
+      CC: 0.0104
+      CB: 0.0206
+      NC: 0.0325
+      NN: 0.0009
+      Imprecise: 0.1672
+    human:
+      V1: 0.2711
+      V2: 0.1562
+      CC: 0.0411
+      CB: 0.0593
+      NC: 0.0687
+      NN: 0.0040
+      Imprecise: 0.3995
+  imprecise_share_by_resolver:
+    agent: 0.1672
+    human: 0.3995
+  resolver_by_agent_counts:
+    Claude_Code:
+      agent: 54
+      agent-assisted: 65
+      human: 733
+    Copilot:
+      agent: 213
+      agent-assisted: 4
+      human: 16,999
+    Cursor:
+      agent: 75
+      agent-assisted: 4
+      human: 934
+    Devin:
+      agent: 575
+      agent-assisted: 2
+      human: 1,792
+    OpenAI_Codex:
+      agent: 1,831
+      agent-assisted: 65
+      human: 27,354
+  resolver_by_agent_shares:
+    Claude_Code:
+      agent: 0.0634
+      agent-assisted: 0.0763
+      human: 0.8603
+    Copilot:
+      agent: 0.0124
+      agent-assisted: 0.0002
+      human: 0.9874
+    Cursor:
+      agent: 0.0740
+      agent-assisted: 0.0039
+      human: 0.9220
+    Devin:
+      agent: 0.2427
+      agent-assisted: 0.0008
+      human: 0.7564
+    OpenAI_Codex:
+      agent: 0.0626
+      agent-assisted: 0.0022
+      human: 0.9352

@@ -20,7 +20,10 @@ __pycache__/
 .DS_Store
 Thumbs.db
 
+logs
+
 # Project-specific ignored files
 *.pdf
 bare_repos/
 data/nature_of_agent_conflicts/scratch/
+data/
