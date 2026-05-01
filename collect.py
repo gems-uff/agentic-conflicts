@@ -19,6 +19,7 @@ import json
 import logging
 import os
 import re
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -105,7 +106,15 @@ def run_git_command(cwd: Path, *args: str, check: bool = True, timeout: int = 30
     command = ["git", "-C", str(cwd), *args]
     my_env = os.environ.copy()
     my_env["GIT_TERMINAL_PROMPT"] = "0"
-    
+    # Prevent git's directory discovery from walking up past `cwd` if the
+    # scratch directory is empty or corrupt. Without this, `git -C <scratch>`
+    # would find the caller's own project .git and operate on it, which has
+    # actually happened in the wild (fetch refusing to update the currently
+    # checked-out branch of /home/.../agentic-conflicts). The ceiling is set
+    # to cwd.parent: git will stay inside cwd, but any attempt to chdir upward
+    # is blocked.
+    my_env["GIT_CEILING_DIRECTORIES"] = str(Path(cwd).resolve().parent)
+
     try:
         result = subprocess.run(
             command,
@@ -212,6 +221,30 @@ def load_processed_merges(
 
 # --- Repository Management ---
 
+def _is_valid_bare_repo(repo_path: Path, env: dict) -> bool:
+    """Return True iff `repo_path` actually contains a bare git repository.
+
+    This guards against the case where a previous clone attempt was interrupted
+    and left an empty or partial directory behind. Without this check, the
+    subsequent fetch would trigger git's upward directory discovery and
+    silently operate on an unintended repository up the tree.
+    """
+    try:
+        result = subprocess.run(
+            ["git", "-C", str(repo_path), "rev-parse", "--is-bare-repository"],
+            check=False,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            timeout=30,
+            env=env,
+        )
+    except Exception:
+        return False
+    if result.returncode != 0:
+        return False
+    return result.stdout.strip() == b"true"
+
+
 def clone_repo_bare(repo_url: str, repos_dir: Path) -> Optional[Path]:
     """
     Clones or updates a bare repository.
@@ -220,12 +253,25 @@ def clone_repo_bare(repo_url: str, repos_dir: Path) -> Optional[Path]:
         repo_url.split("://")[-1].replace("/", "_").replace(".git", "") + ".git"
     )
     repo_path = repos_dir / repo_name
-    
-    # Get current environment and disable interactive prompts
+
+    # Get current environment and disable interactive prompts.
     my_env = os.environ.copy()
     my_env["GIT_TERMINAL_PROMPT"] = "0"
+    # Lock git's repo discovery to the scratch directory. If the scratch slot
+    # is empty or corrupt, git must NOT walk up the tree and silently attach
+    # to the caller's own project repo. See run_git_command for the same
+    # guard on fetch-time commands.
+    my_env["GIT_CEILING_DIRECTORIES"] = str(repos_dir.resolve())
 
     try:
+        if repo_path.exists() and not _is_valid_bare_repo(repo_path, my_env):
+            logging.warning(
+                f"Scratch directory {repo_path} exists but is not a valid "
+                f"bare repository (likely a broken prior clone). Removing "
+                f"it before re-cloning."
+            )
+            shutil.rmtree(repo_path, ignore_errors=True)
+
         if repo_path.exists():
             logging.info(f"Fetching updates for {repo_url}...")
             run_git_command(repo_path, "fetch", "origin", "+refs/heads/*:refs/heads/*", "--prune", timeout=1800)

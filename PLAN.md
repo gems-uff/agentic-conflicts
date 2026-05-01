@@ -1,7 +1,7 @@
 # Research Plan: The Nature of Merge Conflicts in Pull Requests Authored by Autonomous Coding Agents
 
 **Plan author:** Heleno
-**Date:** 2026-04-20
+**Date:** 2026-04-20 (revised 2026-04-21: scope expanded to full AIDev via `extract_pr_chronology.py`)
 **Base dataset:** AIDev (Pradel et al., MSR 2026 Mining Challenge) — `AIDev/`
 **Reference papers in the plan folder:**
 - `AIDev_paper_1.pdf` — AIDev catalog paper (findings and research directions)
@@ -44,17 +44,19 @@ The study deliberately excludes, relative to Ghiotto et al.'s framework, the ana
 
 ### 4.1 Source
 
-AIDev-pop, the curated subset of AIDev restricted to repositories with more than 100 stars. AIDev-pop contains approximately 33,600 pull requests across 2,807 repositories and comes with the enriched tables (`pr_commits`, `pr_commit_details`, `pr_timeline`, `pr_comments`, `pr_reviews`, `pr_review_comments_v2`, `pr_task_type`, `issue`, `related_issue`) not available in the full AIDev tier. All parquet files are already present in `AIDev/`.
+The full AIDev dataset (`all_pull_request.parquet` + `all_repository.parquet`), containing roughly 930,000 PRs across 116,000 repositories as documented in the AIDev paper. The restricted AIDev-pop tier (stars > 100, ~33,600 PRs / ~2,807 repositories) remains available as an optional run mode (`--pop-only`) for faster iteration and for cross-checking against the enriched tables that AIDev only publishes at the pop tier (`pr_task_type`, `pr_timeline`, `pr_comments`, `pr_reviews`, `pr_commit_details`, `issue`, `related_issue`).
+
+AIDev publishes the per-PR commit inventory (`pr_commits.parquet`) only for AIDev-pop, which would bound the study at pop if this file were the only source. To unlock the full AIDev tier, a companion pipeline `extract_pr_chronology.py` fetches `refs/pull/*/head` for every repository in the scope and enumerates, per PR, the commits between the fork-point with the base branch and the PR tip. The output is written to `data/pr_chronology/pr_commits.parquet` with schema `(pr_id, repo_full_name, pr_number, sha, author_date, commit_index, commit_count)` and supersedes AIDev's file; it also carries the full chronology of a PR (the `commit_index` column), which lets us correlate the order of the commits with their outcome.
 
 ### 4.2 Target universe
 
-All PRs in AIDev-pop, regardless of final state (`open`, `closed` without merge, or `merged`). Restricting the universe to merged PRs would bias the sample toward PRs whose history was rewritten via rebase-and-merge or squash-and-merge to keep a linear base-branch history — which would drop exactly the intermediate merge commits that carry the conflicts we want to study. Including PRs of all states lets us characterize the full distribution of conflict-bearing merges.
+All PRs in the selected scope (full AIDev by default, AIDev-pop under `--pop-only`), regardless of final state (`open`, `closed` without merge, or `merged`). Restricting the universe to merged PRs would bias the sample toward PRs whose history was rewritten via rebase-and-merge or squash-and-merge to keep a linear base-branch history — which would drop exactly the intermediate merge commits that carry the conflicts we want to study. Including PRs of all states lets us characterize the full distribution of conflict-bearing merges.
 
 ### 4.3 Unit of analysis
 
-An **internal merge commit** of a PR — that is, a commit referenced by the PR (`pr_commits.sha`) that has two or more parents. Single-parent commits (ordinary commits or fast-forwarded rebases) are excluded because they cannot produce textual conflicts. Octopus merges (three or more parents) are rare in practice and will be counted but excluded from the analysis set to keep the methodology aligned with Ghiotto et al., who studied three-way merges only.
+An **internal merge commit** of a PR — that is, a commit referenced by the PR (`pr_commits.sha`) that has exactly two parents. Single-parent commits (ordinary commits or fast-forwarded rebases) are excluded because they cannot produce textual conflicts. Octopus merges (three or more parents) are rare in practice and are excluded from the analysis set to keep the methodology aligned with Ghiotto et al., who studied three-way merges only; each octopus is recorded in `extraction_errors.parquet` with `error_type="octopus_merge"` so the audit count is preserved.
 
-The **final merge commit** that integrates the PR into the base branch (created automatically by GitHub when a PR is merged via "Create a merge commit") is excluded from the main analysis, because GitHub's mergeability check gates the PR and makes those merges almost always conflict-free. A one-off audit over the full universe will report the fraction of final merges that did produce a conflict, for completeness.
+The **final merge commit** that integrates the PR into the base branch (created automatically by GitHub when a PR is merged via "Create a merge commit") is excluded from the main analysis, because GitHub's mergeability check gates the PR and makes those merges almost always conflict-free. Detection is performed on the commit message: any two-parent commit whose subject matches `^Merge pull request #\d+` (case-insensitive) is filtered out and recorded in `extraction_errors.parquet` with `error_type="pr_integration_merge"`. A one-off audit over the full universe will report the fraction of these integration merges that did produce a conflict, for completeness.
 
 The analysis granularity inside each internal merge commit is the **conflicting chunk**, consistent with Ghiotto et al.
 
@@ -64,7 +66,13 @@ The analysis granularity inside each internal merge commit is the **conflicting 
 
 ### 5.1 Identifying internal merge commits
 
-For each repository in AIDev-pop, a bare clone is created locally. For each PR scoped to that repository, the set of candidate SHAs is taken from `pr_commits.parquet`. For every candidate SHA, `git cat-file -p <sha>` is executed on the bare clone to retrieve its parents. Commits with exactly two parents are kept as internal merges; commits with three or more parents are counted and set aside; commits with one parent are discarded. The bare clone is retained for the duration of the shard that processes its PRs and removed at the end of the shard to bound disk usage.
+The pipeline runs in two passes.
+
+**Pass A — chronology (`extract_pr_chronology.py`).** For every repository in scope, the script adds the remote `origin` and runs `git fetch origin +refs/pull/*/head:refs/pull/*/head`, which populates a local namespace of PR head refs without paying the GitHub API rate limit. For each PR of the repository, it computes `git merge-base refs/pull/<N>/head HEAD` to find the fork-point with the base branch and runs `git log <base>..refs/pull/<N>/head --reverse --format=%H|%aI` to enumerate every commit introduced by the PR, in chronological order. The output is persisted as `data/pr_chronology/pr_commits.parquet` with schema `(pr_id, repo_full_name, pr_number, sha, author_date, commit_index, commit_count)`. PRs whose `refs/pull/<N>/head` is not present on the remote at fetch time are recorded in `data/pr_chronology/errors.parquet` (force-deleted branches, very old PRs whose refs were garbage-collected by GitHub, private forks that have been deleted).
+
+**Pass B — merge extraction (`extract_aidev_nature.py`).** For each repository in scope, a bare clone is created locally. For each PR, the set of candidate SHAs is read from the chronology produced in Pass A; this is the single source of truth for "commits belonging to a PR" and is not supplemented by any `git log` heuristic. PRs absent from the chronology (chronology has not yet processed that repository, or the PR has zero own commits past the fork-point) are logged as `error_type="no_sha_for_pr"` and skipped. For every candidate SHA, `git cat-file -p <sha>` is executed on the bare clone to retrieve its parents. Commits with exactly two parents are candidate internal merges; those whose subject matches the GitHub integration-merge pattern (§4.3) are filtered out at this point; the rest are kept. Commits with three or more parents are recorded as octopus merges and excluded; commits with one parent are discarded. SHAs that are no longer reachable in the clone (typical of force-pushed / rebased PR branches) are logged as `error_type="sha_not_in_repo"` and skipped. The bare clone is retained for the duration of the shard that processes its PRs and removed at the end of the shard to bound disk usage.
+
+The two passes intentionally live in separate scripts. Pass A has an unavoidable network-bound step (one `git fetch` per repository) and its output is idempotent; once produced, the extraction of Pass B can be replayed arbitrarily many times without hitting the network.
 
 ### 5.2 Detecting conflicts per merge
 
@@ -99,15 +107,13 @@ For each chunk, the pipeline records `v1_loc`, `v2_loc`, `base_loc`, and `resolu
 
 The author of the internal merge commit `M` (field `pr_commits.author`, which stores the login when available and the name otherwise) is cross-referenced with the set of agent-account signatures known to AIDev. The AIDev paper (Table 2) documents the search queries used to scope each agent's PRs, and these queries expose the bot/account login per agent (for example, `devin-ai-integration[bot]`, `copilot-swe-agent[bot]`, etc.). We compile the definitive mapping directly from the `pull_request.parquet` field `user`, grouped by `agent`, which yields the set of account signatures each agent uses. A merge commit authored by an account in that set is labeled `agent-resolved`; otherwise it is labeled `human-resolved`.
 
-A PR is labeled `abandoned-with-conflict` when (i) the PR state is `closed` with `merged_at` null, and (ii) at least one internal merge commit in the PR produced a conflict per step 5.2. A PR that is `open` and carries an unresolved conflict in an internal merge is labeled `open-with-conflict`; it is reported separately to account for the snapshot nature of AIDev (cutoff August 1, 2025) without forcing an interpretation as abandonment.
-
 ### 5.7 Analyses per research question
 
 **RQ1** — For each of `#chunks per merge`, `v1_loc`, `v2_loc`, and `resolution_loc`, we report the distribution (histogram, median, mean, standard deviation, selected percentiles) over the full agent universe and over the cross-cutting strata. Visualizations follow Ghiotto et al.'s figures to enable direct visual comparison.
 
 **RQ2** — We report the relative frequency of each resolution label (V1, V2, CC, CB, NC, NN, Imprecise) at the chunk level, globally and per stratum. The comparison with Ghiotto is numerical and textual (no empirical human cohort is collected in this study, per scope decision). The discussion explicitly addresses how the `Imprecise` bucket, which does not exist in Ghiotto et al., affects comparability.
 
-**RQ3** — We report the distribution of the resolver label at the merge-commit level (`agent-resolved`, `human-resolved`) and, at the PR level, the fraction of PRs falling into `abandoned-with-conflict`, `open-with-conflict`, and `resolved` (merged or closed without any internal conflict).
+**RQ3** — We report the distribution of the resolver label at the merge-commit level (`agent-resolved`, `human-resolved`).
 
 ---
 
@@ -115,7 +121,7 @@ A PR is labeled `abandoned-with-conflict` when (i) the PR state is `closed` with
 
 ### 6.1 Stages
 
-**Stage 0 — Universe preparation.** Load `pull_request.parquet`, `repository.parquet`, `pr_commits.parquet`, and `pr_task_type.parquet` from `AIDev/`. Build an in-memory frame keyed by `(repo_full_name, pr_id, commit_sha)` with `agent`, `language`, `pr_task_type`, `state`, `merged_at` attached. Persist as `aidev_pop_universe.parquet`.
+**Stage 0 — Universe preparation.** Load `all_pull_request.parquet`, `all_repository.parquet` from `AIDev/` (or `pull_request.parquet` + `repository.parquet` under `--pop-only`), the chronology from `data/pr_chronology/pr_commits.parquet`, and — when available at the AIDev-pop tier — `pr_task_type.parquet`. Build an in-memory frame keyed by `(repo_full_name, pr_id, commit_sha)` with `agent`, `language`, `pr_task_type`, `state`, `merged_at` attached. Persist as `data/nature_of_agent_conflicts/universe.parquet`.
 
 **Stage 1 — Bare cloning, per-shard.** Shard repositories by the low bits of a hash of `repo_full_name` into groups sized for the worker pool (see §6.2). Each shard clones its repositories with `git clone --bare --filter=blob:none` into a local scratch directory, processes all PRs belonging to those repositories, and removes the clones at the end of the shard to bound disk usage.
 
@@ -140,22 +146,28 @@ Parallelism is granular at the repository level, not at the PR level, because co
 ### 6.3 Output directory layout
 
 ```
-data/nature_of_agent_conflicts/
-  aidev_pop_universe.parquet
+data/pr_chronology/                     # Pass A output (extract_pr_chronology.py)
+  pr_commits.parquet                    # (pr_id, repo_full_name, pr_number, sha,
+                                        #  author_date, commit_index, commit_count)
+  errors.parquet                        # fetch / ref-not-found audit
+  processed_repos.txt                   # incremental tracker
+  logs/
+
+data/nature_of_agent_conflicts/         # Pass B output (extract_aidev_nature.py)
+  universe.parquet
   internal_merges.parquet
   conflict_chunks.parquet
   resolved_chunks.parquet
   classified_chunks.parquet
   resolver_labels.parquet
-  pr_labels.parquet
-  final_merge_audit.parquet   # one-off audit of PR→base final merges
+  extraction_errors.parquet             # audit table: clone failures, missing SHAs,
+                                        # octopus merges, integration merges, timeouts
+  final_merge_audit.parquet             # one-off audit of PR→base final merges
+  processed_repos.txt                   # incremental tracker (one repo full_name per line)
   logs/
-    stage2_*.log
-    stage3_*.log
-    ...
 ```
 
-All parquet files key on `pr_id` and `merge_sha` where applicable, so downstream analyses join by these keys.
+All parquet files key on `pr_id` and `merge_sha` where applicable, so downstream analyses join by these keys. Each chunk-level table is de-duplicated on its natural key — `(repo_full_name, merge_sha, file_path, chunk_index)` for `conflict_chunks` / `resolved_chunks` / `classified_chunks`, and `(repo_full_name, pr_id, merge_sha)` for `internal_merges` — at the JSONL→Parquet aggregation step, so that PRs that legitimately share a commit (force-pushed, re-opened, cherry-picked) do not inflate downstream counts.
 
 ### 6.4 Reuse of existing code
 
@@ -164,7 +176,7 @@ The following routines from the workspace are reused without modification:
 - `collect.py :: clone_repo_bare`, `run_git_command`, `run_merge_file`, `parse_diff3_chunks`, `find_resolution` (LOCALIZERESREGION), `MERGE_TREE_CONFLICT_REGEX`, `DIFF3_CHUNK_REGEX`.
 - `extract_resolution_strategies.py :: identify_resolution`, `normalize_line`, `normalize_lines`, `remove_empty_lines`.
 
-The pipeline driver (Stages 0 through 6) is written as a new script, `extract_aidev_nature.py`, that wires these routines together, handles sharding and parallelism, and writes the parquet artifacts above.
+The pipeline driver (Stages 0 through 6) is written as `extract_aidev_nature.py`, which wires these routines together, handles sharding and parallelism, and writes the parquet artifacts above. A companion script `extract_pr_chronology.py` runs Pass A (the one-off network-bound enumeration of per-PR commits via `refs/pull/*/head`); its output at `data/pr_chronology/pr_commits.parquet` is the input of Stage 0.
 
 ---
 
@@ -172,11 +184,11 @@ The pipeline driver (Stages 0 through 6) is written as a new script, `extract_ai
 
 The expected processing load is dominated by three operations: cloning bare repositories (once per repository), walking each PR's SHAs via `git cat-file` (cheap, O(SHAs) per PR), and replaying merges with `git merge-file` plus localizing resolutions (the dominant cost, concentrated on the subset of PRs that actually contain internal merges).
 
-Back-of-the-envelope sizing for AIDev-pop:
+Back-of-the-envelope sizing for full AIDev (AIDev-pop figures in parentheses):
 
-- ~2,807 repositories, average bare-clone footprint with `--filter=blob:none` ~30–50 MB. Total ~150 GB to clone once; fits the 320 GB shard-rotating budget.
-- ~33,600 PRs, of which an estimated 10–30 % (3,000–10,000 PRs) contain at least one internal merge commit. Average of 1–3 internal merges per such PR yields on the order of 5,000–30,000 merge replays.
-- Per-replay cost: ~5–15 seconds (dominated by `merge-file` on touched files and LOCALIZERESREGION). Total sequential: ~40–125 hours. On 32 cores, wall-clock 1.5–5 hours for replay, plus 3–8 hours for cloning and enumeration. The full pipeline is expected to complete well within the 5-day budget, leaving headroom for reprocessing if needed.
+- ~116,000 repositories (~2,807). Average bare-clone footprint with `--filter=blob:none` ~30–50 MB. The shard-rotating budget (clone a shard, process it, delete, move on) keeps peak disk usage within the 320 GB budget regardless of total repositories.
+- ~930,000 PRs (~33,600). Estimated 10–30 % contain at least one internal merge commit. Average of 1–3 internal merges per such PR yields on the order of 140,000–840,000 merge replays (5,000–30,000 for AIDev-pop alone).
+- Per-replay cost: ~5–15 seconds (dominated by `merge-file` on touched files and LOCALIZERESREGION). Total sequential: thousands of hours for full AIDev. On 32 cores, wall-clock is dominated by the chronology fetch of Pass A and by cloning; the 5-day budget holds for AIDev-pop easily and for full AIDev requires sampling (§10) or distributing Pass B across multiple machines. The incremental tracker (`processed_repos.txt`) lets runs be resumed and shared across machines.
 
 The numbers above are estimates to be validated during Stage 0, which produces the universe frame from which actual counts of PRs and SHAs per repository become known before any replay is executed.
 
@@ -206,9 +218,11 @@ The study is organized into four sequential phases. Calendar durations are tenta
 
 **Construct validity — Coverage of "resolution".** Our unit of analysis is the internal merge commit, which captures the case where the agent (or a human) pulls the base branch into the feature branch and resolves the conflict textually. It does not capture resolutions that happen via rebase with manual conflict handling, which rewrite history and erase the merge commit. This is a lower-bound characterization.
 
-**External validity — AIDev-pop bias.** The AIDev-pop tier is restricted to repositories with more than 100 stars. Results should not be extrapolated to low-visibility or private repositories without care.
+**External validity — Public-GitHub scope.** Results should not be extrapolated to low-visibility or private repositories without care. Under `--pop-only`, the additional restriction to stars > 100 further biases toward popular, actively maintained projects.
 
-**External validity — Agent mix.** Codex dominates AIDev-pop by volume (roughly 87 % of all AIDev PRs). The cross-cutting stratification by agent is the primary means to detect and report this skew; per-agent results should be read with attention to sample sizes.
+**External validity — Agent mix.** Codex dominates AIDev by volume (roughly 87 % of all AIDev PRs). The cross-cutting stratification by agent is the primary means to detect and report this skew; per-agent results should be read with attention to sample sizes.
+
+**Internal validity — Chronology completeness.** `extract_pr_chronology.py` relies on `refs/pull/*/head` being present on the remote at fetch time. GitHub garbage-collects these refs for PRs in very old/inactive repositories or when the PR branch has been force-deleted, in which case the chronology will carry no commits for that PR (recorded as `pr_ref_not_found` in `data/pr_chronology/errors.parquet`). These PRs are therefore excluded from Pass B. A stratified audit (by PR age and agent) is planned to quantify the fraction lost to this effect and to check that it does not correlate with conflict presence.
 
 ---
 
@@ -220,3 +234,5 @@ These are intentionally deferred to be resolved empirically once the universe fr
 - The agent-account signature map will be generated from `pull_request.parquet` grouped by `agent` and verified manually before Stage 6 runs. Entries with ambiguous human-vs-agent accounts (for example, a user account that is listed under multiple agents) will be flagged.
 - If the replay volume in Stage 3 turns out to materially exceed the 5-day budget, a stratified sample (by `agent` × top-N `language`) will be drawn at the PR level before Stage 3; the exact cutoff would be chosen to preserve statistical power for the per-stratum comparisons.
 - The final merge audit (one-off check that PR→base merges are almost always conflict-free) will be produced either as a separate Stage 3-audit pass or folded into Stage 3 with a flag, depending on incremental cost.
+- **Scope-dependent sampling for Pass B.** Full AIDev has roughly 40x more PRs than AIDev-pop; the replay cost (§7) grows with the number of PRs that actually contain internal merges, which is unknown until after Pass A. A pragmatic plan is: (i) run Pass A end-to-end for full AIDev (network-bound, tractable over days); (ii) measure the distribution of "PRs with at least one 2-parent commit" per repository from the chronology output; (iii) if the total replay workload exceeds budget, draw a stratified sample per `agent × top-N language` at the PR level before Pass B. The exact cutoff would be chosen to preserve statistical power for the per-stratum comparisons.
+- **Note on earlier design.** An earlier revision of this plan pinned the scope to AIDev-pop because AIDev ships `pr_commits.parquet` only for the pop tier. A `--full-aidev` flag that tried to bridge the gap with a `git log --grep="pull request #N"` fallback was removed in the 2026-04-20 revision because the heuristic was circular (`Merge branch 'main' into <feature>` commits do not mention the PR number, while `Merge pull request #N` is the integration merge that must be excluded). The 2026-04-21 revision replaces that failed fallback with a proper enumeration via `refs/pull/*/head` (§5.1, Pass A).
