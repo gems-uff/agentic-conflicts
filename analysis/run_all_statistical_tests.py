@@ -61,15 +61,15 @@ STRATEGIES_CLASSIFIABLE = [s for s in STRATEGY_ORDER if s != "Imprecise"]
 
 # Ghiotto et al. (TSE 2020) published proportions for the six classifiable
 # strategies — normalised to sum to 1 over those six categories.
-# Source: Table 4 / text of Ghiotto et al. 2020.
+# Source: Table 13 / text of Ghiotto et al. 2020.
 # Adjust these values if you have more precise figures from the paper.
 GHIOTTO_PROPS = {
-    "V1": 0.425,
-    "V2": 0.145,
-    "CC": 0.066,
-    "CB": 0.074,
-    "NC": 0.218,
-    "NN": 0.072,
+    "V1": 0.5,
+    "V2": 0.25,
+    "CC": 0.03,
+    "CB": 0.09,
+    "NC": 0.13,
+    "NN": 0.0,
 }
 
 # ── Utility functions ───────────────────────────────────────────────────────
@@ -109,7 +109,7 @@ def _v_label(v: float) -> str:
 def _cliffs_delta(x: np.ndarray, y: np.ndarray) -> float:
     """Non-parametric effect size: Cliff's delta."""
     x, y = np.asarray(x, dtype=float), np.asarray(y, dtype=float)
-    dom = sum((xi > yj) - (xi < yj) for xi in x for yj in y)
+    dom = sum(int(xi > yj) - int(xi < yj) for xi in x for yj in y)
     return dom / (len(x) * len(y))
 
 
@@ -381,7 +381,7 @@ def run_rq2(chunks: pd.DataFrame, buf: StringIO) -> dict:
         "note": ("GoF test omitted: different populations (Java/human vs multi-language/AI),"
                  " within-cluster dependence, and n~60k power inflation all invalidate it."
                  " Use absolute differences and Wilson CIs for substantive interpretation."),
-        "ghiotto_source": "Ghiotto et al. TSE 2020, Table 4 (proportions normalised over 6 classifiable strategies)",
+        "ghiotto_source": "Ghiotto et al. TSE 2020, Table 13 (proportions normalised over 6 classifiable strategies)",
         "comparison": comparison_rows,
     }
 
@@ -705,7 +705,7 @@ def run_rq3(chunks: pd.DataFrame, merges: pd.DataFrame, buf: StringIO) -> dict:
             if imp_label is None:
                 sub = ah[ah["strategy"] != "Imprecise"]
             else:
-                             sub = ah.copy()
+                sub = ah.copy()
                 sub["strategy"] = sub["strategy"].cat.add_categories([imp_label]) \
                     if imp_label not in sub["strategy"].cat.categories else sub["strategy"]
                 sub.loc[sub["strategy"] == "Imprecise", "strategy"] = imp_label

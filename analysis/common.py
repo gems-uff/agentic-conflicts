@@ -690,7 +690,7 @@ def strategy_frame_for_plot(
     else:
         counted = chunks
     if exclude_unknown:
-        counted = chunks[chunks['language_top']!='Unknown']
+        counted = counted[counted['language_top']!='Unknown']
     
     counts = counted.groupby(group_col).size()
     if sort_by_count:

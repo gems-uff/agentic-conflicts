@@ -378,6 +378,62 @@ def main() -> None:
               f"  V1: human={d['human_v1_pct']*100:5.2f}%  agent={d['agent_v1_pct']*100:5.2f}%"
               f"  delta={delta:+6.2f}pp")
 
+
+    # ============================================================
+    # Agent-assisted bucket: strategy distribution and host-agent breakdown
+    # ============================================================
+    print("\n" + "=" * 60)
+    print("AGENT-ASSISTED BUCKET")
+    print("=" * 60)
+    
+    # Whatever resolver_type isn't "agent" or "human" (likely "agent_assisted")
+    assisted = chunks[~chunks["resolver_type"].isin(["agent", "human"])].copy()
+    classifiable_strats = ["V1", "V2", "CC", "CB", "NC", "NN"]
+    
+    n_total = len(assisted)
+    n_class = int(assisted["strategy"].isin(classifiable_strats).sum())
+    
+    print(f"resolver_type values in this bucket: "
+          f"{sorted(assisted['resolver_type'].dropna().unique())}")
+    print(f"Total chunks:                {n_total}")
+    print(f"Classifiable (non-Imprecise): {n_class}")
+    print(f"Imprecise share:             "
+          f"{(n_total - n_class) / n_total * 100:.2f}%" if n_total else "n/a")
+    
+    # Strategy distribution over classifiable chunks
+    clf = assisted[assisted["strategy"].isin(classifiable_strats)]
+    counts = clf["strategy"].value_counts().reindex(classifiable_strats, fill_value=0)
+    pcts = (counts / max(len(clf), 1) * 100).round(2)
+    
+    print("\nStrategy distribution (classifiable, percent of n_class):")
+    for s in classifiable_strats:
+        print(f"  {s:>2}: n={int(counts[s]):>5d}  pct={pcts[s]:>6.2f}%")
+    
+    # Per host agent (which agent's PRs were these assisted merges on)
+    print("\nPer host agent (classifiable):")
+    for ag, sub in clf.groupby("agent"):
+        if pd.isna(ag):
+            continue
+        sub_counts = sub["strategy"].value_counts().reindex(classifiable_strats, fill_value=0)
+        sub_pcts = (sub_counts / len(sub) * 100).round(1)
+        dist = " ".join(f"{s}={sub_pcts[s]:.1f}" for s in classifiable_strats)
+        print(f"  {ag:<14}  n={len(sub):>4d}  {dist}")
+    
+    # Sanity check: aggregate + humans + assisted should reconstruct total classifiable
+    n_agent = int((chunks["resolver_type"] == "agent")
+                  & chunks["strategy"].isin(classifiable_strats)).sum() \
+        if False else \
+        int(chunks[(chunks["resolver_type"] == "agent")
+                   & chunks["strategy"].isin(classifiable_strats)].shape[0])
+    n_human = int(chunks[(chunks["resolver_type"] == "human")
+                         & chunks["strategy"].isin(classifiable_strats)].shape[0])
+    print(f"\nReconciliation (classifiable):")
+    print(f"  agent (autonomous) : {n_agent}")
+    print(f"  agent-assisted     : {n_class}")
+    print(f"  human              : {n_human}")
+    print(f"  TOTAL              : {n_agent + n_class + n_human}")
+    print(f"  expected (Tab. 1)  : 75752")
+
     print("\nEnvie de volta o arquivo:", OUT_PATH)
 
 

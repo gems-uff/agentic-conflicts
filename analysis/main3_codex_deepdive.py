@@ -251,7 +251,7 @@ G = {}
 for agent, sub in self_resolved.groupby("agent"):
     if pd.isna(agent):
         continue
-    by_merge = sub.groupby("merge_sha").agg(
+    by_merge = by_merge = sub.groupby(["repo_full_name", "merge_sha"]).agg(
         n_chunks=("chunk_index", "count"),
         v1_pct=("strategy", lambda s: float((s == "V1").mean())),
         mean_v1_loc=("v1_loc", "mean"),
@@ -430,9 +430,8 @@ def _safe_mode(s: pd.Series) -> str:
 
 if len(codex) > 0:
     codex_merges = (
-        codex.groupby("merge_sha")
+        codex.groupby(["repo_full_name", "merge_sha"])
         .agg(
-            repo_full_name=("repo_full_name", "first"),
             n_chunks=("chunk_index", "count"),
             v1_pct=("strategy", lambda s: float((s == "V1").mean())),
             mean_v1_loc=("v1_loc", "mean"),
@@ -448,6 +447,36 @@ if len(codex) > 0:
     results["K_codex_merge_table"] = codex_merges.to_dict(orient="records")
 else:
     results["K_codex_merge_table"] = []
+
+# ============================================================
+# K2. Repo concentration per self-resolving agent
+# ============================================================
+print(">> [K2] repo concentration per agent ...", flush=True)
+K2 = {}
+for agent, sub in self_resolved.groupby("agent"):
+    if pd.isna(agent):
+        continue
+    # By chunk
+    chunks_by_repo = sub["repo_full_name"].value_counts()
+    # By merge (one row per (repo, merge_sha))
+    merges_by_repo = (
+    sub.drop_duplicates(subset=["repo_full_name", "merge_sha"])["repo_full_name"].value_counts()
+    )
+    n_chunks = int(chunks_by_repo.sum())
+    n_merges = int(merges_by_repo.sum())
+    K2[str(agent)] = {
+        "n_chunks": n_chunks,
+        "n_merges": n_merges,
+        "n_unique_repos": int(len(merges_by_repo)),
+        "top1_repo": str(merges_by_repo.index[0]) if len(merges_by_repo) else "",
+        "top1_share_chunks": float(chunks_by_repo.iloc[0] / n_chunks) if n_chunks else 0.0,
+        "top1_share_merges": float(merges_by_repo.iloc[0] / n_merges) if n_merges else 0.0,
+        "top3_share_merges": float(merges_by_repo.iloc[:3].sum() / n_merges) if n_merges else 0.0,
+        "top5_repos_by_merges": {
+            str(r): int(c) for r, c in merges_by_repo.head(5).items()
+        },
+    }
+results["K2_repo_concentration_per_agent"] = K2
 
 # ============================================================
 # L. Humans resolving by host agent (e o conflito-agent-original?)
