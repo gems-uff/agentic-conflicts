@@ -143,6 +143,8 @@ def load_tables(data_dir: str = None, deduplicate: bool = True) -> AnalysisTable
 
 def build_chunk_frame(tables: AnalysisTables) -> pd.DataFrame:
     """Chunk-level analysis frame with strategy and context."""
+    from .file_category import categorize_filepath
+
     chunks = tables.classified_chunks
     if chunks.empty:
         return chunks
@@ -151,6 +153,10 @@ def build_chunk_frame(tables: AnalysisTables) -> pd.DataFrame:
     # Canonicalize strategy labels
     if "strategy" in chunks.columns:
         chunks["strategy_raw"] = chunks["strategy"]
+
+    # Add file category
+    if "file_path" in chunks.columns:
+        chunks["file_category"] = chunks["file_path"].apply(categorize_filepath)
 
     # Join with PR context
     pctx = _pr_context(tables.universe)

@@ -27,7 +27,9 @@ import pandas as pd
 from analysis.common import load_tables
 from analysis.dataset_characterization import analyze_dataset
 from analysis.rq1_resolver import analyze_rq1
+from analysis.rq1_detailed import analyze_rq1_detailed
 from analysis.rq2_strategies import analyze_rq2
+from analysis.rq2_detailed import analyze_rq2_detailed
 from analysis.plotting import generate_all_figures
 from src.analysis_utils import (
     process_single_repository,
@@ -335,9 +337,11 @@ def main():
 
             logging.info("\n[STAGE 4] RQ1 Analysis: Who Resolves?")
             analyze_rq1(tables, output_dir=str(results_dir))
+            analyze_rq1_detailed(tables, output_dir=str(results_dir))
 
             logging.info("\n[STAGE 5] RQ2 Analysis: How Do They Resolve?")
             analyze_rq2(tables, output_dir=str(results_dir))
+            analyze_rq2_detailed(tables, output_dir=str(results_dir))
 
             logging.info("\n[STAGE 6] Figure Generation")
             generate_all_figures(tables, output_dir=str(results_dir))
