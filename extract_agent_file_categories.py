@@ -97,39 +97,39 @@ def main():
         resolved = pd.read_parquet(resolved_file)
         logger.info(f"✓ Loaded {len(resolved):,} resolved chunks")
 
-        # Load resolver labels
-        labels_file = data_dir / 'resolver_labels.parquet'
-        if not labels_file.exists():
-            logger.error(f"resolver_labels.parquet not found in {data_dir}")
+        # Load PR universe to get agent info
+        universe_file = data_dir / 'aidev_pop_universe.parquet'
+        if not universe_file.exists():
+            logger.error(f"aidev_pop_universe.parquet not found in {data_dir}")
             sys.exit(1)
 
-        labels = pd.read_parquet(labels_file)
-        logger.info(f"✓ Loaded resolver labels")
+        universe = pd.read_parquet(universe_file)
+        logger.info(f"✓ Loaded universe data")
 
     except Exception as e:
         logger.error(f"ERROR loading parquet files: {e}")
         sys.exit(1)
 
-    # Merge resolved chunks with resolver labels
+    # Merge resolved chunks with universe to get agent info
     try:
-        # Merge on common keys (likely merge_sha and chunk_index or similar)
-        merged = resolved.merge(labels, how='left')
+        # Merge on pr_id to get agent information
+        merged = resolved.merge(universe[['pr_id', 'bot_author']], on='pr_id', how='left')
         logger.info(f"✓ Merged data: {len(merged):,} chunks")
     except Exception as e:
         logger.error(f"ERROR merging data: {e}")
         logger.info("Columns in resolved_chunks:", resolved.columns.tolist())
-        logger.info("Columns in resolver_labels:", labels.columns.tolist())
+        logger.info("Columns in universe:", universe.columns.tolist())
         sys.exit(1)
 
     # Filter to agent-resolved chunks only
-    logger.info(f"Resolver types in data: {merged['resolver'].unique() if 'resolver' in merged.columns else 'N/A'}")
+    logger.info(f"Resolver types in data: {merged['resolver_type'].unique() if 'resolver_type' in merged.columns else 'N/A'}")
 
-    if 'resolver' not in merged.columns:
-        logger.error("ERROR: 'resolver' column not found in merged data")
+    if 'resolver_type' not in merged.columns:
+        logger.error("ERROR: 'resolver_type' column not found in merged data")
         logger.info(f"Available columns: {merged.columns.tolist()}")
         sys.exit(1)
 
-    agent_resolved = merged[merged['resolver'] == 'agent'].copy()
+    agent_resolved = merged[merged['resolver_type'] == 'agent'].copy()
     logger.info(f"✓ Filtered to {len(agent_resolved):,} agent-resolved chunks")
 
     if len(agent_resolved) == 0:
@@ -137,10 +137,13 @@ def main():
         sys.exit(1)
 
     # Get agent name (PR author agent)
-    if 'agent' not in agent_resolved.columns:
-        logger.error("ERROR: 'agent' column not found")
+    if 'bot_author' not in agent_resolved.columns:
+        logger.error("ERROR: 'bot_author' column not found")
         logger.info(f"Available columns: {agent_resolved.columns.tolist()}")
         sys.exit(1)
+
+    # Rename bot_author to agent for consistency
+    agent_resolved = agent_resolved.rename(columns={'bot_author': 'agent'})
 
     # Get file path and categorize
     if 'file_path' not in agent_resolved.columns:
