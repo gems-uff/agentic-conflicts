@@ -110,40 +110,50 @@ def main():
         logger.error(f"ERROR loading parquet files: {e}")
         sys.exit(1)
 
-    # Merge resolved chunks with universe to get agent info
-    try:
-        # Merge on pr_id to get agent information
-        merged = resolved.merge(universe[['pr_id', 'bot_author']], on='pr_id', how='left')
-        logger.info(f"✓ Merged data: {len(merged):,} chunks")
-    except Exception as e:
-        logger.error(f"ERROR merging data: {e}")
-        logger.info("Columns in resolved_chunks:", resolved.columns.tolist())
-        logger.info("Columns in universe:", universe.columns.tolist())
-        sys.exit(1)
-
     # Filter to agent-resolved chunks only
-    logger.info(f"Resolver types in data: {merged['resolver_type'].unique() if 'resolver_type' in merged.columns else 'N/A'}")
+    logger.info(f"Resolver types in data: {resolved['resolver_type'].unique()}")
 
-    if 'resolver_type' not in merged.columns:
-        logger.error("ERROR: 'resolver_type' column not found in merged data")
-        logger.info(f"Available columns: {merged.columns.tolist()}")
+    if 'resolver_type' not in resolved.columns:
+        logger.error("ERROR: 'resolver_type' column not found in resolved data")
+        logger.info(f"Available columns: {resolved.columns.tolist()}")
         sys.exit(1)
 
-    agent_resolved = merged[merged['resolver_type'] == 'agent'].copy()
+    agent_resolved = resolved[resolved['resolver_type'] == 'agent'].copy()
     logger.info(f"✓ Filtered to {len(agent_resolved):,} agent-resolved chunks")
 
     if len(agent_resolved) == 0:
         logger.error("ERROR: No agent-resolved chunks found!")
         sys.exit(1)
 
-    # Get agent name (PR author agent)
-    if 'bot_author' not in agent_resolved.columns:
-        logger.error("ERROR: 'bot_author' column not found")
-        logger.info(f"Available columns: {agent_resolved.columns.tolist()}")
+    # Merge with universe to get agent name
+    try:
+        # Try merging on pr_id first
+        merge_key = None
+        if 'pr_id' in agent_resolved.columns and 'id' in universe.columns:
+            merged = agent_resolved.merge(universe[['id', 'agent']], left_on='pr_id', right_on='id', how='left')
+            merge_key = 'pr_id -> id'
+        elif 'pr_id' in agent_resolved.columns and 'pr_id' in universe.columns:
+            merged = agent_resolved.merge(universe[['pr_id', 'agent']], on='pr_id', how='left')
+            merge_key = 'pr_id'
+        else:
+            logger.error("ERROR: Could not find matching key for merge")
+            logger.info(f"Columns in resolved_chunks: {agent_resolved.columns.tolist()}")
+            logger.info(f"Columns in universe: {universe.columns.tolist()}")
+            sys.exit(1)
+
+        logger.info(f"✓ Merged data: {len(merged):,} chunks (key: {merge_key})")
+        agent_resolved = merged
+    except Exception as e:
+        logger.error(f"ERROR merging data: {e}")
+        logger.info(f"Columns in resolved_chunks: {agent_resolved.columns.tolist()}")
+        logger.info(f"Columns in universe: {universe.columns.tolist()}")
         sys.exit(1)
 
-    # Rename bot_author to agent for consistency
-    agent_resolved = agent_resolved.rename(columns={'bot_author': 'agent'})
+    # Verify agent column exists
+    if 'agent' not in agent_resolved.columns:
+        logger.error("ERROR: 'agent' column not found after merge")
+        logger.info(f"Available columns: {agent_resolved.columns.tolist()}")
+        sys.exit(1)
 
     # Get file path and categorize
     if 'file_path' not in agent_resolved.columns:
