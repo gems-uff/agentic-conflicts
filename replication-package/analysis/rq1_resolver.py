@@ -3,7 +3,7 @@
 import logging
 from pathlib import Path
 import pandas as pd
-from .common import AnalysisTables
+from .common import AnalysisTables, build_merge_frame
 
 
 def _export_results(results: dict, output_dir: str):
@@ -49,27 +49,30 @@ def analyze_rq1(tables: AnalysisTables, output_dir: str = './results') -> dict:
     logging.info("=" * 50)
 
     results = {}
-    resolver_labels = tables.resolver_labels
-    if resolver_labels is None or resolver_labels.empty:
-        logging.warning("WARNING: No resolver labels available for RQ1 analysis")
+    merges = build_merge_frame(tables)
+    if merges is None or merges.empty:
+        logging.warning("WARNING: No internal merges available for RQ1 analysis")
         logging.info("=" * 50)
         # Export empty results
         _export_results(results, output_dir)
         return results
 
-    total = len(resolver_labels)
+    if 'n_chunks' in merges.columns:
+        merges = merges[merges['n_chunks'] > 0]
+
+    total = len(merges)
     results['total_merges'] = total
 
-    if 'resolver_type' in resolver_labels.columns:
+    if 'resolver_type' in merges.columns:
         logging.info(f"\nResolver Attribution:")
-        resolver_dist = resolver_labels['resolver_type'].value_counts()
+        resolver_dist = merges['resolver_type'].value_counts()
         for resolver_type, count in resolver_dist.items():
             pct = count / total * 100
             logging.info(f"  {resolver_type}: {count:,} ({pct:.1f}%)")
             results[f'resolver_{resolver_type}'] = count
             results[f'resolver_{resolver_type}_pct'] = pct
     else:
-        logging.warning("WARNING: resolver_type column not found in resolver_labels")
+        logging.warning("WARNING: resolver_type column not found in internal_merges")
 
     logging.info("=" * 50)
 
@@ -81,9 +84,10 @@ def analyze_rq1(tables: AnalysisTables, output_dir: str = './results') -> dict:
 
 if __name__ == '__main__':
     import sys
+    from .common import load_tables
     if len(sys.argv) > 1:
         data_dir = sys.argv[1]
     else:
         data_dir = './data'
-    tables = AnalysisTables(data_dir)
+    tables = load_tables(data_dir)
     analyze_rq1(tables, output_dir=f'{data_dir}/results')

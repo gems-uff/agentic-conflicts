@@ -3,7 +3,7 @@
 import logging
 from pathlib import Path
 import pandas as pd
-from .common import AnalysisTables
+from .common import AnalysisTables, build_chunk_frame, build_merge_frame
 
 
 def _export_results(results: dict, output_dir: str, prefix: str = "dataset_overview"):
@@ -60,12 +60,12 @@ def analyze_dataset(tables: AnalysisTables, output_dir: str = './results') -> di
     results['unique_prs'] = pr_count
     logging.info(f"AI PRs: {pr_count:,}")
 
-    internal_merges = tables.internal_merges
+    internal_merges = build_merge_frame(tables)
     num_merges = len(internal_merges) if internal_merges is not None else 0
     results['internal_merges'] = num_merges
     logging.info(f"Internal Merge Commits: {num_merges:,}")
 
-    classified = tables.classified_chunks
+    classified = build_chunk_frame(tables)
     num_conflicts = len(classified) if classified is not None else 0
     results['conflict_chunks'] = num_conflicts
     logging.info(f"Conflict Chunks: {num_conflicts:,}")

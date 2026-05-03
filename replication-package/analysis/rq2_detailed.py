@@ -14,7 +14,7 @@ from pathlib import Path
 from typing import Dict, List, Tuple
 import pandas as pd
 import numpy as np
-from .common import AnalysisTables, build_chunk_frame, STRATEGY_ORDER
+from .common import AnalysisTables, build_chunk_frame, build_merge_frame, STRATEGY_ORDER
 from .statistical_utils import (
     chi2_test_with_cramers,
     cramers_v_bias_corrected,
@@ -34,10 +34,14 @@ def compute_strategy_per_agent(
     Returns:
         DataFrame with columns: agent, strategy, count, proportion, percentage
     """
-    if chunks.empty or 'agent' not in chunks.columns or 'strategy' not in chunks.columns:
+    if chunks.empty or 'agent' not in chunks.columns:
         return pd.DataFrame()
 
-    chunks = chunks.dropna(subset=['agent', 'strategy'])
+    strategy_col = 'strategy_raw' if 'strategy_raw' in chunks.columns else 'strategy'
+    if strategy_col not in chunks.columns:
+        return pd.DataFrame()
+
+    chunks = chunks.dropna(subset=['agent', strategy_col])
 
     # Crosstab
     crosstab = pd.crosstab(chunks['agent'], chunks['strategy'], margins=False)
@@ -78,10 +82,14 @@ def compute_pairwise_contrasts(
     Returns:
         DataFrame with pairwise contrasts
     """
-    if chunks.empty or 'agent' not in chunks.columns or 'strategy' not in chunks.columns:
+    if chunks.empty or 'agent' not in chunks.columns:
         return pd.DataFrame()
 
-    chunks = chunks.dropna(subset=['agent', 'strategy'])
+    strategy_col = 'strategy_raw' if 'strategy_raw' in chunks.columns else 'strategy'
+    if strategy_col not in chunks.columns:
+        return pd.DataFrame()
+
+    chunks = chunks.dropna(subset=['agent', strategy_col])
     agents = chunks['agent'].unique()
 
     if len(agents) < 2:
@@ -207,15 +215,19 @@ def analyze_postponed(
     Returns:
         DataFrame with Postponed counts and rates per agent
     """
-    if chunks.empty or 'agent' not in chunks.columns or 'strategy' not in chunks.columns:
+    if chunks.empty or 'agent' not in chunks.columns:
         return pd.DataFrame()
 
-    chunks = chunks.dropna(subset=['agent', 'strategy'])
+    strategy_col = 'strategy_raw' if 'strategy_raw' in chunks.columns else 'strategy'
+    if strategy_col not in chunks.columns:
+        return pd.DataFrame()
+
+    chunks = chunks.dropna(subset=['agent', strategy_col])
 
     results = []
     for agent, agent_chunks in chunks.groupby('agent'):
         total = len(agent_chunks)
-        postponed = (agent_chunks['strategy'] == 'Postponed').sum()
+        postponed = (agent_chunks[strategy_col] == 'Postponed').sum()
         rate = postponed / total if total > 0 else 0
 
         results.append({
@@ -285,32 +297,40 @@ def analyze_rq2_detailed(
     logging.info("RQ2 Detailed Analysis: How Do They Resolve?")
 
     chunks = build_chunk_frame(tables)
-    merges = tables.internal_merges
+    merges = build_merge_frame(tables)
+    agent_chunks = (
+        chunks[chunks['resolver_type'] == 'agent'].copy()
+        if 'resolver_type' in chunks.columns else chunks
+    )
+    agent_merges = (
+        merges[(merges['resolver_type'] == 'agent') & (merges['n_chunks'] > 0)].copy()
+        if {'resolver_type', 'n_chunks'}.issubset(merges.columns) else merges
+    )
 
     # 1. Per-agent strategy distribution
     logging.info("  Computing per-agent strategy distribution...")
-    strategy_df = compute_strategy_per_agent(chunks)
+    strategy_df = compute_strategy_per_agent(agent_chunks)
     if not strategy_df.empty:
         strategy_df.to_csv(output_dir / 'rq2_strategy_per_agent.csv', index=False)
         logging.info(f"    Exported: rq2_strategy_per_agent.csv ({len(strategy_df)} rows)")
 
     # 2. Pairwise contrasts
     logging.info("  Computing pairwise agent contrasts...")
-    pairs_df = compute_pairwise_contrasts(chunks)
+    pairs_df = compute_pairwise_contrasts(agent_chunks)
     if not pairs_df.empty:
         pairs_df.to_csv(output_dir / 'rq2_pairwise_contrasts.csv', index=False)
         logging.info(f"    Exported: rq2_pairwise_contrasts.csv ({len(pairs_df)} pairs)")
 
     # 3. Repository concentration
     logging.info("  Computing repository concentration...")
-    repo_conc = compute_repository_concentration(merges)
+    repo_conc = compute_repository_concentration(agent_merges)
     if not repo_conc.empty:
         repo_conc.to_csv(output_dir / 'rq2_repository_concentration.csv', index=False)
         logging.info(f"    Exported: rq2_repository_concentration.csv ({len(repo_conc)} agents)")
 
     # 4. File category analysis
     logging.info("  Analyzing file category stratification...")
-    file_cat_df = analyze_file_categories(chunks)
+    file_cat_df = analyze_file_categories(agent_chunks)
     if not file_cat_df.empty:
         file_cat_df.to_csv(output_dir / 'rq2_file_category_analysis.csv', index=False)
         logging.info(f"    Exported: rq2_file_category_analysis.csv ({len(file_cat_df)} rows)")
@@ -324,7 +344,7 @@ def analyze_rq2_detailed(
 
     # 6. Sensitivity analysis
     logging.info("  Running sensitivity analysis (Imprecise reassignment)...")
-    sensitivity_results = analyze_sensitivity_imprecise(chunks)
+    sensitivity_results = analyze_sensitivity_imprecise(agent_chunks)
     if sensitivity_results:
         if 'upper_bound' in sensitivity_results:
             sensitivity_results['upper_bound'].to_csv(

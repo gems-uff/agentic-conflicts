@@ -3,7 +3,7 @@
 import logging
 from pathlib import Path
 import pandas as pd
-from .common import AnalysisTables, STRATEGY_ORDER
+from .common import AnalysisTables, STRATEGY_ORDER, build_chunk_frame
 
 
 def _export_results(results: dict, output_dir: str):
@@ -51,7 +51,7 @@ def analyze_rq2(tables: AnalysisTables, output_dir: str = './results') -> dict:
     logging.info("=" * 50)
 
     results = {}
-    classified = tables.classified_chunks
+    classified = build_chunk_frame(tables)
     if classified is None or classified.empty:
         logging.warning("WARNING: No classified chunks available for RQ2 analysis")
         logging.info("=" * 50)
@@ -88,9 +88,10 @@ def analyze_rq2(tables: AnalysisTables, output_dir: str = './results') -> dict:
 
 if __name__ == '__main__':
     import sys
+    from .common import load_tables
     if len(sys.argv) > 1:
         data_dir = sys.argv[1]
     else:
         data_dir = './data'
-    tables = AnalysisTables(data_dir)
+    tables = load_tables(data_dir)
     analyze_rq2(tables, output_dir=f'{data_dir}/results')

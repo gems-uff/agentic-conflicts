@@ -31,6 +31,7 @@ from analysis.rq1_detailed import analyze_rq1_detailed
 from analysis.rq2_strategies import analyze_rq2
 from analysis.rq2_detailed import analyze_rq2_detailed
 from analysis.plotting import generate_all_figures
+from analysis import reproduce_paper_statistics
 from src.analysis_utils import (
     process_single_repository,
     aggregate_jsonl_to_parquet,
@@ -78,6 +79,7 @@ def log_disk_usage(data_dir: Path):
 
 def build_universe(
     aidev_dir: Path,
+    data_dir: Path,
     use_pilot: bool = False,
     pilot_count: int = 0,
 ) -> pd.DataFrame:
@@ -134,7 +136,8 @@ def build_universe(
         universe_df = universe_df[universe_df['full_name'].isin(unique_repos)]
         logging.info(f"Pilot mode: restricted to {len(unique_repos)} repositories")
 
-    universe_df.to_parquet(Path('data') / 'universe.parquet')
+    data_dir.mkdir(parents=True, exist_ok=True)
+    universe_df.to_parquet(data_dir / 'universe.parquet')
     logging.info(
         f"Stage 0 complete. Universe: {len(universe_df):,} (PR, SHA) pairs "
         f"across {universe_df['full_name'].nunique()} repos"
@@ -212,9 +215,34 @@ def extract_pr_chronology(
 
     # Aggregate to parquet
     logging.info("Aggregating PR chronology to parquet...")
-    aggregate_pr_commits_to_parquet(data_dir)
+    commits_df = aggregate_pr_commits_to_parquet(data_dir)
 
     logging.info(f"Stage 0.5 complete ({processed} repositories with PR commits)")
+    return commits_df
+
+
+def attach_pr_chronology(universe_df: pd.DataFrame, commits_df: pd.DataFrame, data_dir: Path) -> pd.DataFrame:
+    """Replace placeholder SHA rows with extracted PR chronology."""
+    if commits_df is None or commits_df.empty:
+        logging.warning("No PR chronology extracted; keeping existing universe SHA rows")
+        return universe_df
+
+    context_cols = [c for c in universe_df.columns if c != "sha"]
+    context = universe_df[context_cols].drop_duplicates(subset=["pr_id"])
+    chronology_cols = [c for c in ("pr_id", "sha", "author_date", "commit_index", "commit_count") if c in commits_df.columns]
+    updated = commits_df[chronology_cols].merge(context, on="pr_id", how="left")
+
+    # Keep the same core column order as build_universe, then append chronology
+    # metadata for auditability.
+    preferred = [c for c in universe_df.columns if c in updated.columns]
+    extras = [c for c in updated.columns if c not in preferred]
+    updated = updated[preferred + extras]
+    updated.to_parquet(data_dir / "universe.parquet")
+    logging.info(
+        f"Universe updated from extracted chronology: {len(updated):,} (PR, SHA) pairs "
+        f"across {updated['full_name'].nunique()} repos"
+    )
+    return updated
 
 
 def process_repositories(
@@ -348,6 +376,9 @@ def main():
             logging.info("\n[STAGE 4] Figure Generation")
             generate_all_figures(tables, output_dir=str(results_dir))
 
+            logging.info("\n[STAGE 5] Reproducing Paper Statistics (with sanity checks)")
+            reproduce_paper_statistics.main(str(data_dir))
+
             logging.info("\n" + "=" * 70)
             logging.info("✓ Analysis complete!")
             logging.info(f"  Results saved to: {results_dir}")
@@ -384,6 +415,7 @@ def main():
         try:
             universe_df = build_universe(
                 aidev_dir,
+                data_dir,
                 use_pilot=(args.pilot is not None),
                 pilot_count=args.pilot or 0,
             )
@@ -391,7 +423,8 @@ def main():
             scratch_dir = data_dir / 'scratch'
 
             logging.info("\nStage 0.5: Extracting PR Chronology...")
-            extract_pr_chronology(universe_df, scratch_dir, data_dir, workers=args.workers)
+            commits_df = extract_pr_chronology(universe_df, scratch_dir, data_dir, workers=args.workers)
+            universe_df = attach_pr_chronology(universe_df, commits_df, data_dir)
 
             process_repositories(universe_df, scratch_dir, data_dir, workers=args.workers)
 
@@ -417,6 +450,9 @@ def main():
 
             logging.info("\n[STAGE 6] Figure Generation")
             generate_all_figures(tables, output_dir=str(results_dir))
+
+            logging.info("\n[STAGE 7] Reproducing Paper Statistics (with sanity checks)")
+            reproduce_paper_statistics.main(str(data_dir))
 
             logging.info("\n" + "=" * 70)
             logging.info("Pipeline complete!")

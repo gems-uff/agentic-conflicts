@@ -108,15 +108,14 @@ def compute_resolver_by_agent(tables: AnalysisTables) -> Tuple[pd.DataFrame, Dic
         - DataFrame with resolver counts per agent
         - Dict with chi-squared test results
     """
-    if (
-        tables.internal_merges.empty
-        or tables.resolver_labels.empty
-        or tables.universe.empty
-    ):
+    if tables.internal_merges.empty or tables.universe.empty:
         return pd.DataFrame(), {}
 
-    # Get resolver information
-    resolvers = tables.resolver_labels.copy()
+    # RQ1 is reported at conflicting-merge level. Use the canonical merge
+    # frame so duplicated physical merges are collapsed and n_chunks is known.
+    resolvers = build_merge_frame(tables)
+    if 'n_chunks' in resolvers.columns:
+        resolvers = resolvers[resolvers['n_chunks'] > 0]
     if 'agent' not in resolvers.columns:
         # Join with universe to get agent
         prs = (

@@ -8,7 +8,8 @@ import logging
 from typing import Tuple, List, Dict
 import numpy as np
 import pandas as pd
-from scipy.stats import chi2_contingency, proportion_confint
+from scipy.stats import chi2_contingency
+from statsmodels.stats.proportion import proportion_confint
 
 
 def wilson_ci(

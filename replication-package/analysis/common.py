@@ -14,7 +14,26 @@ except ImportError:
     plt = None
     sns = None
 
-STRATEGY_ORDER = ["V1", "V2", "CC", "CB", "NC", "NN", "Imprecise", "Postponed"]  # Updated to include Postponed (unresolved conflicts)
+STRATEGY_ORDER = ["V1", "V2", "CC", "CB", "NC", "NN", "Imprecise"]
+
+_RAW_TO_CANONICAL = {
+    "V1": "V1",
+    "V2": "V2",
+    "ConcatV1V2": "CC",
+    "ConcatV2V1": "CC",
+    "Combination": "CB",
+    "New code": "NC",
+    "None": "NN",
+    "CC": "CC",
+    "CB": "CB",
+    "NC": "NC",
+    "NN": "NN",
+    "Imprecise": "Imprecise",
+    # Postponed chunks are localized unresolved-marker commits. They are
+    # counted separately through strategy_raw, but folded into Imprecise for
+    # the analytical buckets reported in the paper.
+    "Postponed": "Imprecise",
+}
 
 STRATEGY_PALETTE = {
     "V1": "#0072B2",
@@ -24,7 +43,6 @@ STRATEGY_PALETTE = {
     "NC": "#E69F00",
     "NN": "#56B4E9",
     "Imprecise": "#BFBFBF",
-    "Postponed": "#BFBFBF",
 }
 
 RESOLVER_ORDER = ["agent", "human"]
@@ -99,6 +117,17 @@ def _pr_context(universe: pd.DataFrame) -> pd.DataFrame:
     return ctx
 
 
+def _merge_context(internal_merges: pd.DataFrame) -> pd.DataFrame:
+    """One row per physical merge carrying resolver attribution."""
+    if internal_merges.empty:
+        return internal_merges
+    cols = [c for c in (
+        "pr_id", "merge_sha", "repo_full_name", "author",
+        "committer", "resolver_type",
+    ) if c in internal_merges.columns]
+    return _dedup_on(internal_merges[cols], _MERGE_KEY)
+
+
 def _apply_language_topn(df: pd.DataFrame, n: int = TOP_N_LANGUAGES) -> pd.DataFrame:
     """Collapse the language long tail into 'Other'."""
     if "language" not in df.columns:
@@ -107,6 +136,17 @@ def _apply_language_topn(df: pd.DataFrame, n: int = TOP_N_LANGUAGES) -> pd.DataF
     lang = df["language"].fillna("Unknown").replace("", "Unknown")
     top = lang.value_counts().head(n).index.tolist()
     df["language_top"] = lang.where(lang.isin(top), other="Other")
+    return df
+
+
+def _canonicalize_strategy(df: pd.DataFrame) -> pd.DataFrame:
+    """Fold raw strategy labels into the paper's seven reported buckets."""
+    if "strategy" not in df.columns:
+        return df
+    df = df.copy()
+    df["strategy_raw"] = df["strategy"]
+    df["strategy"] = df["strategy"].map(_RAW_TO_CANONICAL).fillna("Imprecise")
+    df["strategy"] = pd.Categorical(df["strategy"], categories=STRATEGY_ORDER, ordered=True)
     return df
 
 
@@ -149,10 +189,20 @@ def build_chunk_frame(tables: AnalysisTables) -> pd.DataFrame:
     if chunks.empty:
         return chunks
 
-    chunks = chunks.copy()
-    # Canonicalize strategy labels
-    if "strategy" in chunks.columns:
-        chunks["strategy_raw"] = chunks["strategy"]
+    chunks = _canonicalize_strategy(chunks)
+
+    # Join resolver attribution on the physical merge. This is required for
+    # RQ2, where per-agent strategy distributions include only agent-resolved
+    # chunks and humans are the reference distribution.
+    mctx = _merge_context(tables.internal_merges)
+    if not mctx.empty:
+        join_cols = [c for c in ("repo_full_name", "merge_sha") if c in chunks.columns and c in mctx.columns]
+        if join_cols and "resolver_type" in mctx.columns:
+            chunks = chunks.merge(
+                mctx[join_cols + ["resolver_type"]],
+                on=join_cols,
+                how="left",
+            )
 
     # Add file category
     if "file_path" in chunks.columns:

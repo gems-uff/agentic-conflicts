@@ -77,8 +77,13 @@ def extract_pr_commits(
             })
             return repo_full_name, chronology_data, errors
 
-        # Process each PR
-        for _, row in repo_df.iterrows():
+        # Process each PR once. When the input universe already contains
+        # commit-level rows (for example from an existing pr_commits.parquet),
+        # repo_df has multiple rows per PR; re-fetching the same PR chronology
+        # for every commit would be correct after downstream deduplication but
+        # painfully slow on a full collection.
+        pr_rows = repo_df.drop_duplicates(subset=["pr_id"])
+        for _, row in pr_rows.iterrows():
             pr_id = row['pr_id']
             pr_number = row['number']
 
