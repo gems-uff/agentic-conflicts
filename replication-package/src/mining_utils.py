@@ -141,7 +141,7 @@ def clone_repo_bare(repo_url: str, repos_dir: Path) -> Optional[Path]:
         else:
             logging.info(f"Cloning {repo_url} into {repo_path}...")
             subprocess.run(
-                ["git", "clone", "--bare", repo_url, str(repo_path)],
+                ["git", "clone", "--bare", "--filter=blob:none", repo_url, str(repo_path)],
                 check=True,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,

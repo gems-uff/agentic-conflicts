@@ -14,7 +14,7 @@ except ImportError:
     plt = None
     sns = None
 
-STRATEGY_ORDER = ["V1", "V2", "CC", "CB", "NC", "NN", "Imprecise", "Postponed"]
+STRATEGY_ORDER = ["V1", "V2", "CC", "CB", "NC", "NN", "Imprecise", "Postponed"]  # Updated to include Postponed (unresolved conflicts)
 
 STRATEGY_PALETTE = {
     "V1": "#0072B2",

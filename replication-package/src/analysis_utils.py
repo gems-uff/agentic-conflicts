@@ -391,6 +391,75 @@ def aggregate_jsonl_to_parquet(data_dir: Path):
         logging.info(f"Converted {jsonl_name} -> {parquet_name} ({len(df)} rows)")
 
 
+def create_final_merge_audit(data_dir: Path) -> pd.DataFrame:
+    """Create audit of PR→base integration merges that produced conflicts.
+
+    These are the final merge commits created by GitHub when a PR is merged
+    via "Create a merge commit". They match the pattern "^Merge pull request #\d+".
+
+    This audit counts how many of these integration merges actually contained
+    conflicts (lower bound: should be nearly zero due to GitHub's merge check).
+
+    Args:
+        data_dir: Path to data directory containing parquets
+
+    Returns:
+        DataFrame with integration merge audit results
+    """
+    data_dir = Path(data_dir)
+
+    # Load the extraction errors that contain integration merge records
+    errors_path = data_dir / "extraction_errors.parquet"
+    if not errors_path.exists():
+        logging.warning("extraction_errors.parquet not found, skipping final_merge_audit")
+        return pd.DataFrame()
+
+    errors_df = pd.read_parquet(errors_path)
+
+    if errors_df.empty:
+        logging.info("No extraction errors recorded, final_merge_audit is empty")
+        return pd.DataFrame()
+
+    # Filter for PR integration merges
+    integration_merges = errors_df[
+        errors_df['error_type'] == 'pr_integration_merge'
+    ].copy()
+
+    if integration_merges.empty:
+        logging.info("No PR integration merges detected")
+        return pd.DataFrame()
+
+    # Check which integration merges had conflicts
+    # by checking if they appear in conflict_chunks
+    chunks_path = data_dir / "conflict_chunks.parquet"
+    if chunks_path.exists():
+        chunks_df = pd.read_parquet(chunks_path)
+        conflicting_merges = set(chunks_df['merge_sha'].unique())
+
+        integration_merges['had_conflict'] = integration_merges['merge_sha'].isin(
+            conflicting_merges
+        )
+    else:
+        integration_merges['had_conflict'] = False
+
+    # Summary stats
+    total_integration = len(integration_merges)
+    with_conflict = integration_merges['had_conflict'].sum()
+    conflict_rate = with_conflict / total_integration if total_integration > 0 else 0
+
+    logging.info(
+        f"Final merge audit: {total_integration} PR→base integration merges, "
+        f"{with_conflict} ({conflict_rate*100:.2f}%) had conflicts"
+    )
+
+    # Save to parquet
+    audit_path = data_dir / "final_merge_audit.parquet"
+    integration_merges.to_parquet(audit_path)
+    logging.info(f"Saved final_merge_audit.parquet ({len(integration_merges)} rows)")
+
+    return integration_merges
+
+
 def load_results(data_dir: str) -> Dict[str, pd.DataFrame]:
     """Load all parquet result files from data directory."""
     results = {}

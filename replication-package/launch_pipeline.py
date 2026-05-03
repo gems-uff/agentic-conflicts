@@ -36,6 +36,12 @@ from src.analysis_utils import (
     aggregate_jsonl_to_parquet,
     append_jsonl,
     cleanup_repo_scratch,
+    create_final_merge_audit,
+)
+from src.pr_chronology import (
+    extract_pr_commits,
+    append_jsonl as append_jsonl_pr,
+    aggregate_pr_commits_to_parquet,
 )
 
 
@@ -150,6 +156,65 @@ def mark_repo_processed(data_dir: Path, repo_name: str):
     tracker = data_dir / "processed_repos.txt"
     with open(tracker, 'a', encoding='utf-8') as f:
         f.write(f"{repo_name}\n")
+
+
+def extract_pr_chronology(
+    universe_df: pd.DataFrame,
+    scratch_dir: Path,
+    data_dir: Path,
+    workers: int = 1,
+):
+    """Extract PR commit chronology using Git refs (Stage 0.5).
+
+    For each PR, extract all commits between fork point and PR tip.
+    Generates pr_commits.parquet used by subsequent analysis stages.
+    """
+    logging.info(f"Stage 0.5: Extracting PR chronology (workers={workers})...")
+
+    scratch_dir.mkdir(parents=True, exist_ok=True)
+    data_dir.mkdir(parents=True, exist_ok=True)
+
+    # Build list of repositories to process
+    repo_groups = []
+    for repo_name, repo_data in universe_df.groupby('full_name'):
+        if not repo_data.empty:
+            repo_groups.append((repo_name, repo_data))
+
+    total_repos = len(repo_groups)
+    logging.info(f"Extracting chronology for {total_repos} repositories...")
+
+    # Bind scratch_dir to the function
+    extract_func = functools.partial(extract_pr_commits, scratch_dir=scratch_dir)
+
+    processed = 0
+    if workers == 1:
+        for i, repo_info in enumerate(repo_groups):
+            repo_name, chronology, errs = extract_func(repo_info)
+            logging.info(f"[{i+1}/{total_repos}] {repo_name}")
+
+            if chronology:
+                append_jsonl_pr("pr_commits.jsonl", chronology, data_dir)
+                processed += 1
+            if errs:
+                append_jsonl_pr("pr_chronology_errors.jsonl", errs, data_dir)
+    else:
+        with multiprocessing.Pool(workers) as pool:
+            for i, (repo_name, chronology, errs) in enumerate(
+                pool.imap_unordered(extract_func, repo_groups)
+            ):
+                logging.info(f"[{i+1}/{total_repos}] {repo_name}")
+
+                if chronology:
+                    append_jsonl_pr("pr_commits.jsonl", chronology, data_dir)
+                    processed += 1
+                if errs:
+                    append_jsonl_pr("pr_chronology_errors.jsonl", errs, data_dir)
+
+    # Aggregate to parquet
+    logging.info("Aggregating PR chronology to parquet...")
+    aggregate_pr_commits_to_parquet(data_dir)
+
+    logging.info(f"Stage 0.5 complete ({processed} repositories with PR commits)")
 
 
 def process_repositories(
@@ -324,10 +389,17 @@ def main():
             )
 
             scratch_dir = data_dir / 'scratch'
+
+            logging.info("\nStage 0.5: Extracting PR Chronology...")
+            extract_pr_chronology(universe_df, scratch_dir, data_dir, workers=args.workers)
+
             process_repositories(universe_df, scratch_dir, data_dir, workers=args.workers)
 
             logging.info("\nStage 2: Aggregating JSONL to Parquet...")
             aggregate_jsonl_to_parquet(data_dir)
+
+            logging.info("\nStage 2b: Creating final merge audit...")
+            create_final_merge_audit(data_dir)
 
             create_resolver_labels(data_dir)
 
