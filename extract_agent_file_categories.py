@@ -98,9 +98,9 @@ def main():
         logger.info(f"✓ Loaded {len(resolved):,} resolved chunks")
 
         # Load PR universe to get agent info
-        universe_file = data_dir / 'aidev_pop_universe.parquet'
+        universe_file = data_dir / 'universe.parquet'
         if not universe_file.exists():
-            logger.error(f"aidev_pop_universe.parquet not found in {data_dir}")
+            logger.error(f"universe.parquet not found in {data_dir}")
             sys.exit(1)
 
         universe = pd.read_parquet(universe_file)
