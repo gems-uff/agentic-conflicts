@@ -9,20 +9,16 @@ echo "=========================================="
 echo ""
 
 # Step 1: Extract data
-echo "Step 1: Extracting file-category data from classified chunks..."
-python3 extract_file_category_data.py --data-dir ./data/nature_of_agent_conflicts --output agent_filetype_chunks.csv
+echo "Step 1: Extracting file-category data from agent-resolved chunks..."
+python3 extract_agent_file_categories.py --data-dir ./data/nature_of_agent_conflicts --output agent_filetype_chunks.csv
 
 if [ $? -ne 0 ]; then
     echo "ERROR: Data extraction failed"
     echo ""
-    echo "Possible reasons:"
-    echo "  1. Data files not found in ./data/nature_of_agent_conflicts"
-    echo "  2. replication-package analysis modules not available"
-    echo ""
-    echo "Alternative: Manually create agent_filetype_chunks.csv with:"
-    echo "  resolver,file_category,chunk_count"
-    echo "  OpenAI Codex,config,6590"
-    echo "  ..."
+    echo "Make sure you have:"
+    echo "  - pandas installed: pip3 install pandas pyarrow"
+    echo "  - Data files in ./data/nature_of_agent_conflicts/"
+    echo "    (resolved_chunks.parquet, resolver_labels.parquet)"
     exit 1
 fi
 
