@@ -22,7 +22,7 @@ import pandas as pd
 # Try to import from replication-package
 try:
     sys.path.insert(0, str(Path(__file__).parent / 'replication-package'))
-    from analysis.common import AnalysisTables, build_chunk_frame
+    from analysis.common import load_tables, build_chunk_frame
 except ImportError as e:
     print(f"ERROR: Could not import replication-package analysis modules")
     print(f"Details: {e}")
@@ -55,10 +55,11 @@ def main():
 
     # Load analysis tables
     try:
-        tables = AnalysisTables(data_dir=str(data_dir))
+        tables = load_tables(data_dir=str(data_dir))
         logger.info("✓ Loaded analysis tables")
     except Exception as e:
         logger.error(f"ERROR loading analysis tables: {e}")
+        logger.error(f"Traceback: {type(e).__name__}")
         sys.exit(1)
 
     # Build chunk frame with file categories
