@@ -228,24 +228,24 @@ def run_rq1(chunks: pd.DataFrame, merges: pd.DataFrame, buf: StringIO) -> dict:
     results["kruskal_wallis_chunks_per_merge"] = kw_chunks
 
     # 3. Post-hoc Dunn test
-    _subsection("3. Post-hoc Dunn test (Bonferroni) for chunks per merge", buf)
+    _subsection("3. Post-hoc Dunn test (Holm) for chunks per merge", buf)
     dunn_results: dict[str, Any] = {}
     try:
         import scikit_posthocs as sp
         if "agent" in merges.columns and "n_chunks" in merges.columns:
             conflicting = merges[merges["n_chunks"] > 0].dropna(subset=["agent"])
             dunn_p = sp.posthoc_dunn(conflicting, val_col="n_chunks",
-                                     group_col="agent", p_adjust="bonferroni")
+                                     group_col="agent", p_adjust="holm")
             agents_d = dunn_p.index.tolist()
             pairs = {}
             for a1, a2 in combinations(agents_d, 2):
                 p_val = float(dunn_p.loc[a1, a2])
-                pairs[f"{a1} vs {a2}"] = {"p_bonferroni": round(p_val, 4),
+                pairs[f"{a1} vs {a2}"] = {"p_holm": round(p_val, 4),
                                            "significant": _sig(p_val)}
             dunn_results["pairs"] = pairs
-            buf.write("  (Bonferroni-corrected pairwise p-values)\n")
+            buf.write("  (Holm-corrected pairwise p-values)\n")
             for pair_key, info in pairs.items():
-                buf.write(f"  {pair_key:<40} p={info['p_bonferroni']:.4f}  {info['significant']}\n")
+                buf.write(f"  {pair_key:<40} p={info['p_holm']:.4f}  {info['significant']}\n")
     except ImportError:
         buf.write("  [SKIP] scikit-posthocs not installed. "
                   "Run: pip install scikit-posthocs\n")

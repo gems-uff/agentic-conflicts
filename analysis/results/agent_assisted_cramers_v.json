@@ -1,0 +1,42 @@
+{
+  "metadata": {
+    "n_human": 65356,
+    "n_agent": 8969,
+    "n_assisted": 975,
+    "strategies_used": [
+      "V1",
+      "V2",
+      "CC",
+      "CB",
+      "NC"
+    ],
+    "method": "Bias-corrected Cram\u00e9r's V (Bergsma 2013)"
+  },
+  "agent_assisted_distribution": {
+    "V1": {
+      "n": 356,
+      "pct": 36.51282051282052
+    },
+    "V2": {
+      "n": 369,
+      "pct": 37.84615384615385
+    },
+    "CC": {
+      "n": 62,
+      "pct": 6.3589743589743595
+    },
+    "CB": {
+      "n": 77,
+      "pct": 7.897435897435898
+    },
+    "NC": {
+      "n": 111,
+      "pct": 11.384615384615385
+    }
+  },
+  "cramers_v": {
+    "agent_vs_human": 0.22549649900308025,
+    "assisted_vs_human": 0.03176432908178247,
+    "agent_vs_assisted": 0.30206169683826034
+  }
+}

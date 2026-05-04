@@ -1,6 +1,6 @@
 {
   "_meta": {
-    "n_chunks_total": 75752,
+    "n_chunks_total": 121599,
     "n_merges_total": 50700,
     "resolver_levels": [
       "agent",
@@ -25,37 +25,37 @@
   },
   "G_per_merge_anomaly_profile": {
     "Claude_Code": {
-      "n_merges": 11,
-      "n_chunks": 108,
+      "n_merges": 12,
+      "n_chunks": 181,
       "merge_quantiles": {
         "n_chunks": {
-          "p50": 3.0,
-          "p75": 8.5,
-          "p90": 14.0,
-          "p99": 56.30000000000002
+          "p50": 3.5,
+          "p75": 12.5,
+          "p90": 38.900000000000006,
+          "p99": 80.94000000000003
         },
         "v1_pct": {
-          "p50": 0.5573770491803278,
-          "p75": 0.801948051948052,
-          "p90": 1.0,
+          "p50": 0.2926724137931035,
+          "p75": 0.5178571428571428,
+          "p90": 0.9571428571428573,
           "p99": 1.0
         },
         "mean_v1_loc": {
-          "p50": 3.0,
-          "p75": 10.751366120218579,
-          "p90": 20.0,
-          "p99": 23.0
+          "p50": 3.05,
+          "p75": 9.674418604651162,
+          "p90": 19.16976744186047,
+          "p99": 22.96666666666667
         },
         "mean_v2_loc": {
-          "p50": 4.0,
-          "p75": 11.0,
-          "p90": 17.065573770491802,
-          "p99": 19.25655737704918
+          "p50": 3.35,
+          "p75": 13.223837209302326,
+          "p90": 16.68953488372093,
+          "p99": 19.225
         },
         "frac_one_line": {
-          "p50": 0.0,
-          "p75": 0.25757575757575757,
-          "p90": 1.0,
+          "p50": 0.0125,
+          "p75": 0.12375415282392026,
+          "p90": 0.9285714285714288,
           "p99": 1.0
         },
         "frac_lock": {
@@ -72,53 +72,53 @@
         }
       },
       "merge_means": {
-        "n_chunks": 9.818181818181818,
-        "v1_pct": 0.4843581654311908,
-        "mean_v1_loc": 7.0411771536957835,
-        "mean_v2_loc": 6.673808556073831,
-        "frac_one_line": 0.23610170256966087,
+        "n_chunks": 15.083333333333334,
+        "v1_pct": 0.3376768530186734,
+        "mean_v1_loc": 6.714447690329808,
+        "mean_v2_loc": 6.836927674036737,
+        "frac_one_line": 0.20412060373467747,
         "frac_lock": 0.0,
         "frac_generated": 0.0
       }
     },
     "Copilot": {
-      "n_merges": 116,
-      "n_chunks": 776,
+      "n_merges": 122,
+      "n_chunks": 1548,
       "merge_quantiles": {
         "n_chunks": {
           "p50": 2.0,
-          "p75": 4.0,
-          "p90": 8.0,
-          "p99": 57.89999999999992
+          "p75": 4.75,
+          "p90": 9.0,
+          "p99": 154.63999999999987
         },
         "v1_pct": {
           "p50": 0.0,
-          "p75": 0.2708333333333333,
+          "p75": 0.25,
           "p90": 1.0,
           "p99": 1.0
         },
         "mean_v1_loc": {
-          "p50": 5.25,
-          "p75": 14.25,
-          "p90": 45.58333333333333,
-          "p99": 342.64999999999935
+          "p50": 6.583333333333334,
+          "p75": 14.75,
+          "p90": 50.000000000000036,
+          "p99": 335.70999999999907
         },
         "mean_v2_loc": {
-          "p50": 5.2,
-          "p75": 16.0625,
-          "p90": 33.5,
-          "p99": 345.4999999999993
+          "p50": 6.111111111111111,
+          "p75": 18.0,
+          "p90": 40.36,
+          "p99": 950.9179999999941
         },
         "frac_one_line": {
           "p50": 0.0,
-          "p75": 0.035869565217391305,
+          "p75": 0.06069310600444774,
           "p90": 0.4,
           "p99": 1.0
         },
         "frac_lock": {
           "p50": 0.0,
           "p75": 0.0,
-          "p90": 0.5681818181818181,
+          "p90": 0.6636363636363638,
           "p99": 1.0
         },
         "frac_generated": {
@@ -129,110 +129,110 @@
         }
       },
       "merge_means": {
-        "n_chunks": 6.689655172413793,
-        "v1_pct": 0.22233341369018306,
-        "mean_v1_loc": 31.036671305266307,
-        "mean_v2_loc": 25.971896311132493,
-        "frac_one_line": 0.11576818240551003,
-        "frac_lock": 0.10142524314350938,
+        "n_chunks": 12.688524590163935,
+        "v1_pct": 0.1975966849876405,
+        "mean_v1_loc": 32.07562218085251,
+        "mean_v2_loc": 178.10136684108355,
+        "frac_one_line": 0.1165747363134836,
+        "frac_lock": 0.11470764500152211,
         "frac_generated": 0.0
       }
     },
     "Cursor": {
-      "n_merges": 34,
-      "n_chunks": 165,
+      "n_merges": 43,
+      "n_chunks": 265,
       "merge_quantiles": {
         "n_chunks": {
           "p50": 3.0,
-          "p75": 5.5,
-          "p90": 9.7,
-          "p99": 27.680000000000007
+          "p75": 6.0,
+          "p90": 13.400000000000013,
+          "p99": 45.81999999999995
         },
         "v1_pct": {
           "p50": 0.0,
-          "p75": 0.4698275862068966,
+          "p75": 0.3333333333333333,
           "p90": 1.0,
           "p99": 1.0
         },
         "mean_v1_loc": {
-          "p50": 6.875,
-          "p75": 18.25,
-          "p90": 54.16666666666666,
-          "p99": 180.43000000000023
-        },
-        "mean_v2_loc": {
-          "p50": 3.541666666666667,
-          "p75": 12.987142857142857,
-          "p90": 44.24999999999999,
-          "p99": 116.49500000000018
-        },
-        "frac_one_line": {
-          "p50": 0.0,
-          "p75": 0.13839285714285715,
-          "p90": 0.38965517241379305,
-          "p99": 0.8900000000000006
-        },
-        "frac_lock": {
-          "p50": 0.0,
-          "p75": 0.0,
-          "p90": 0.0,
-          "p99": 0.10858237547892721
-        },
-        "frac_generated": {
-          "p50": 0.0,
-          "p75": 0.0,
-          "p90": 0.0,
-          "p99": 0.0
-        }
-      },
-      "merge_means": {
-        "n_chunks": 4.852941176470588,
-        "v1_pct": 0.2704909205061335,
-        "mean_v1_loc": 21.202749283621493,
-        "mean_v2_loc": 14.728917785505006,
-        "frac_one_line": 0.1216591809137448,
-        "frac_lock": 0.006310570205093531,
-        "frac_generated": 0.0
-      }
-    },
-    "Devin": {
-      "n_merges": 214,
-      "n_chunks": 1235,
-      "merge_quantiles": {
-        "n_chunks": {
-          "p50": 2.0,
-          "p75": 4.0,
-          "p90": 8.0,
-          "p99": 47.440000000000055
-        },
-        "v1_pct": {
-          "p50": 0.0,
-          "p75": 0.5,
-          "p90": 1.0,
-          "p99": 1.0
-        },
-        "mean_v1_loc": {
-          "p50": 6.218646864686468,
-          "p75": 15.5,
-          "p90": 27.68125000000002,
-          "p99": 146.9973469387755
-        },
-        "mean_v2_loc": {
           "p50": 6.0,
-          "p75": 13.229166666666666,
-          "p90": 33.42500000000009,
-          "p99": 203.4566666666669
+          "p75": 23.0,
+          "p90": 88.84444444444459,
+          "p99": 184.35999999999984
+        },
+        "mean_v2_loc": {
+          "p50": 3.5,
+          "p75": 18.78448275862069,
+          "p90": 50.400000000000006,
+          "p99": 186.6399999999999
         },
         "frac_one_line": {
           "p50": 0.0,
-          "p75": 0.09423076923076923,
+          "p75": 0.3055555555555556,
           "p90": 0.5,
           "p99": 1.0
         },
         "frac_lock": {
           "p50": 0.0,
           "p75": 0.0,
-          "p90": 0.2,
+          "p90": 0.0,
+          "p99": 0.20163009404388682
+        },
+        "frac_generated": {
+          "p50": 0.0,
+          "p75": 0.0,
+          "p90": 0.0,
+          "p99": 0.0
+        }
+      },
+      "merge_means": {
+        "n_chunks": 6.162790697674419,
+        "v1_pct": 0.20205159048382784,
+        "mean_v1_loc": 26.521872002184754,
+        "mean_v2_loc": 22.324675122169108,
+        "frac_one_line": 0.15983691306465964,
+        "frac_lock": 0.011073849967193993,
+        "frac_generated": 0.0
+      }
+    },
+    "Devin": {
+      "n_merges": 224,
+      "n_chunks": 2054,
+      "merge_quantiles": {
+        "n_chunks": {
+          "p50": 2.0,
+          "p75": 5.0,
+          "p90": 10.700000000000017,
+          "p99": 137.54000000000104
+        },
+        "v1_pct": {
+          "p50": 0.0,
+          "p75": 0.43506493506493504,
+          "p90": 1.0,
+          "p99": 1.0
+        },
+        "mean_v1_loc": {
+          "p50": 6.071428571428571,
+          "p75": 15.0,
+          "p90": 27.68125000000002,
+          "p99": 143.4
+        },
+        "mean_v2_loc": {
+          "p50": 5.833333333333334,
+          "p75": 13.0,
+          "p90": 31.650000000000077,
+          "p99": 155.9483333333335
+        },
+        "frac_one_line": {
+          "p50": 0.0,
+          "p75": 0.1111111111111111,
+          "p90": 0.5,
+          "p99": 1.0
+        },
+        "frac_lock": {
+          "p50": 0.0,
+          "p75": 0.0,
+          "p90": 0.18285714285714383,
           "p99": 1.0
         },
         "frac_generated": {
@@ -243,24 +243,24 @@
         }
       },
       "merge_means": {
-        "n_chunks": 5.771028037383178,
-        "v1_pct": 0.282580322156998,
-        "mean_v1_loc": 15.383640066543075,
-        "mean_v2_loc": 15.909715957221715,
-        "frac_one_line": 0.13007407769475113,
-        "frac_lock": 0.0840168140323249,
+        "n_chunks": 9.169642857142858,
+        "v1_pct": 0.24280086454842056,
+        "mean_v1_loc": 14.687823654800269,
+        "mean_v2_loc": 14.394819842595426,
+        "frac_one_line": 0.13462458355380594,
+        "frac_lock": 0.07741785995985451,
         "frac_generated": 0.0
       }
     },
     "OpenAI_Codex": {
       "n_merges": 61,
-      "n_chunks": 6695,
+      "n_chunks": 6734,
       "merge_quantiles": {
         "n_chunks": {
           "p50": 121.0,
           "p75": 121.0,
           "p90": 122.0,
-          "p99": 137.19999999999996
+          "p99": 137.59999999999997
         },
         "v1_pct": {
           "p50": 1.0,
@@ -271,14 +271,14 @@
         "mean_v1_loc": {
           "p50": 1.859504132231405,
           "p75": 1.8677685950413223,
-          "p90": 2.0259740259740258,
-          "p99": 21.399999999999984
+          "p90": 2.0580645161290323,
+          "p99": 20.145454545454534
         },
         "mean_v2_loc": {
           "p50": 1.859504132231405,
           "p75": 1.860655737704918,
           "p90": 2.0,
-          "p99": 11.899999999999995
+          "p99": 17.26363636363635
         },
         "frac_one_line": {
           "p50": 0.9173553719008265,
@@ -290,7 +290,7 @@
           "p50": 0.0,
           "p75": 0.0,
           "p90": 0.0,
-          "p99": 0.46190476190476104
+          "p99": 0.5225219941348963
         },
         "frac_generated": {
           "p50": 0.008264462809917356,
@@ -300,49 +300,49 @@
         }
       },
       "merge_means": {
-        "n_chunks": 109.75409836065573,
-        "v1_pct": 0.9671066638279753,
-        "mean_v1_loc": 3.035123786613375,
-        "mean_v2_loc": 2.4073538194673847,
-        "frac_one_line": 0.8217238414503014,
-        "frac_lock": 0.017824616185271924,
-        "frac_generated": 0.0074292059451871615
+        "n_chunks": 110.39344262295081,
+        "v1_pct": 0.9670015864621893,
+        "mean_v1_loc": 2.984234062905037,
+        "mean_v2_loc": 2.664078084097519,
+        "frac_one_line": 0.8231351746966425,
+        "frac_lock": 0.02026737878139253,
+        "frac_generated": 0.007428519165018625
       }
     }
   },
   "H_path_breakdown": {
     "by_agent_self_resolved": {
       "Claude_Code": {
-        "n_chunks": 108,
+        "n_chunks": 181,
         "category_counts": {
-          "source": 107,
+          "source": 180,
           "config": 1
         },
         "category_pct": {
-          "source": 99.074,
-          "config": 0.926
+          "source": 99.448,
+          "config": 0.552
         },
         "top_extensions": {
-          ".py": 101,
+          ".py": 174,
           ".ml": 6,
           ".json": 1
         },
         "top_basenames": {
-          "customer.py": 24,
-          "budget.py": 18,
-          "test_users_extended.py": 18,
-          "test_multi_tenant.py": 8,
-          "user_profile.py": 6,
+          "test_users_extended.py": 50,
+          "customer.py": 36,
+          "budget.py": 25,
+          "test_multi_tenant.py": 14,
+          "test_user_privacy_settings.py": 9,
+          "user_profile.py": 7,
           "parser.ml": 5,
+          "test_audit_enhanced.py": 5,
           "database.py": 4,
           "conftest.py": 4,
           "permission_inheritance.py": 3,
           "department.py": 3,
           "user_privacy.py": 2,
           "lexer.ml": 1,
-          "agent_health.py": 1,
-          "router.py": 1,
-          "__init__.py": 1
+          "expense_category.py": 1
         },
         "strategy_by_category": {
           "V1": {
@@ -364,56 +364,60 @@
           "NC": {
             "config": 0,
             "source": 4
+          },
+          "Imprecise": {
+            "config": 0,
+            "source": 73
           }
         }
       },
       "Copilot": {
-        "n_chunks": 776,
+        "n_chunks": 1548,
         "category_counts": {
-          "lock": 462,
-          "source": 250,
-          "config": 41,
-          "doc": 23
+          "lock": 1175,
+          "source": 303,
+          "config": 46,
+          "doc": 24
         },
         "category_pct": {
-          "lock": 59.536,
-          "source": 32.216,
-          "config": 5.284,
-          "doc": 2.964
+          "lock": 75.904,
+          "source": 19.574,
+          "config": 2.972,
+          "doc": 1.55
         },
         "top_extensions": {
-          ".yaml": 329,
-          ".json": 133,
-          ".ts": 62,
-          ".tsx": 46,
-          ".py": 31,
-          ".lock": 28,
-          ".cs": 23,
-          ".md": 20,
-          ".js": 20,
+          ".yaml": 707,
+          ".json": 330,
+          ".lock": 168,
+          ".ts": 69,
+          ".tsx": 56,
+          ".py": 44,
+          ".cs": 32,
+          ".md": 21,
+          ".js": 21,
+          ".yml": 15,
           ".vue": 14,
-          ".yml": 12,
+          ".kt": 6,
           ".rs": 6,
-          ".css": 5,
-          ".rb": 5,
-          ".kt": 4
+          ".rb": 6,
+          ".css": 5
         },
         "top_basenames": {
-          "pnpm-lock.yaml": 328,
-          "package-lock.json": 106,
-          "yarn.lock": 24,
+          "pnpm-lock.yaml": 706,
+          "package-lock.json": 301,
+          "yarn.lock": 164,
           "package.json": 18,
+          "page.tsx": 10,
+          "JsonSchemaGenerator.cs": 9,
           "E2E_TESTING.md": 9,
+          "bookmark-tiles.component.ts": 9,
           "TimePanel.tsx": 9,
-          "page.tsx": 7,
-          "README.md": 6,
-          "common.json": 6,
-          "tiles-container.component.spec.ts": 6,
-          "JsonSchemaGenerator.cs": 5,
-          "puppetfileParser.ts": 5,
-          "App.tsx": 5,
-          "MainComponent.vue": 5,
-          "DocumentationViewer.js": 5
+          "README.md": 7,
+          "ci.yml": 7,
+          "tiles-container.component.spec.ts": 7,
+          "App.tsx": 7,
+          "cli_handler.py": 7,
+          "common.json": 6
         },
         "strategy_by_category": {
           "V1": {
@@ -451,56 +455,62 @@
             "doc": 0,
             "lock": 7,
             "source": 1
+          },
+          "Imprecise": {
+            "config": 5,
+            "doc": 1,
+            "lock": 713,
+            "source": 53
           }
         }
       },
       "Cursor": {
-        "n_chunks": 165,
+        "n_chunks": 265,
         "category_counts": {
-          "source": 130,
-          "doc": 23,
-          "config": 8,
-          "lock": 4
+          "source": 219,
+          "doc": 29,
+          "config": 10,
+          "lock": 7
         },
         "category_pct": {
-          "source": 78.788,
-          "doc": 13.939,
-          "config": 4.848,
-          "lock": 2.424
+          "source": 82.642,
+          "doc": 10.943,
+          "config": 3.774,
+          "lock": 2.642
         },
         "top_extensions": {
-          ".ts": 30,
-          ".js": 23,
-          ".md": 22,
-          ".tsx": 16,
-          ".py": 15,
+          ".ts": 74,
+          ".py": 33,
+          ".md": 28,
+          ".js": 25,
+          ".tsx": 19,
+          ".dart": 17,
           ".go": 11,
+          ".json": 9,
+          ".html": 7,
+          ".cursorrules": 6,
+          ".jsx": 5,
           ".vue": 5,
-          ".cursorrules": 5,
-          ".json": 4,
-          ".jsx": 4,
           ".gradle": 4,
-          ".dart": 3,
           ".properties": 3,
-          ".yml": 3,
-          ".lock": 3
+          ".yml": 3
         },
         "top_basenames": {
-          "music.ts": 14,
+          "music.ts": 26,
+          "patterns.ts": 22,
+          "main.py": 19,
           "issue-resolution-instructions.md": 12,
+          "main.dart": 11,
           "main.go": 8,
+          "index.ts": 8,
+          "README.md": 7,
           "main.js": 6,
-          "index.ts": 6,
-          ".cursorrules": 5,
-          "Chat.jsx": 4,
-          "web_chat_interface.py": 4,
-          "build.gradle": 4,
-          "App.vue": 4,
-          "package.json": 3,
-          "index.js": 3,
-          "performance.js": 3,
-          "encrypt_config.py": 3,
-          "uv.lock": 3
+          ".cursorrules": 6,
+          "index.html": 5,
+          "package.json": 5,
+          "Chat.jsx": 5,
+          "match_detail_screen.dart": 5,
+          "mcp-httpstream-server.ts": 4
         },
         "strategy_by_category": {
           "V1": {
@@ -538,58 +548,64 @@
             "doc": 0,
             "lock": 0,
             "source": 1
+          },
+          "Imprecise": {
+            "config": 2,
+            "doc": 6,
+            "lock": 3,
+            "source": 89
           }
         }
       },
       "Devin": {
-        "n_chunks": 1235,
+        "n_chunks": 2054,
         "category_counts": {
-          "source": 755,
-          "lock": 393,
-          "config": 58,
-          "doc": 27,
+          "lock": 1080,
+          "source": 860,
+          "config": 75,
+          "doc": 37,
           "migration": 2
         },
         "category_pct": {
-          "source": 61.134,
-          "lock": 31.822,
-          "config": 4.696,
-          "doc": 2.186,
-          "migration": 0.162
+          "lock": 52.58,
+          "source": 41.87,
+          "config": 3.651,
+          "doc": 1.801,
+          "migration": 0.097
         },
         "top_extensions": {
-          ".json": 312,
-          ".go": 270,
-          ".ts": 149,
-          ".tsx": 109,
-          ".py": 85,
-          ".yaml": 62,
-          ".rs": 50,
-          ".lock": 41,
-          ".md": 25,
-          ".yml": 25,
-          ".js": 15,
+          ".json": 834,
+          ".go": 312,
+          ".yaml": 189,
+          ".ts": 174,
+          ".tsx": 124,
+          ".py": 95,
+          ".lock": 79,
+          ".rs": 51,
+          ".yml": 42,
+          ".md": 35,
+          ".js": 17,
+          ".c": 13,
           ".toml": 9,
           ".mdx": 9,
-          "(no-ext)": 8,
-          ".c": 8
+          "(no-ext)": 8
         },
         "top_basenames": {
-          "package-lock.json": 296,
-          "avs.pb.go": 155,
-          "pnpm-lock.yaml": 54,
-          "likeProductReviews.ts": 31,
+          "package-lock.json": 818,
+          "pnpm-lock.yaml": 181,
+          "avs.pb.go": 166,
+          "Pipfile.lock": 41,
+          "likeProductReviews.ts": 34,
+          "node.pb.go": 29,
           "yarn.lock": 27,
-          "node.pb.go": 24,
-          "main.rs": 22,
+          "main.rs": 23,
+          "deploy.yml": 20,
+          "Vulnerability_summary.md": 15,
           "package.json": 14,
-          "main.py": 12,
-          "server.ts": 12,
-          "__init__.py": 11,
-          "mod.rs": 11,
-          "index.ts": 10,
-          "mock_test.go": 10,
-          "page.tsx": 10
+          "mock_test.go": 14,
+          "index.ts": 12,
+          "page.tsx": 12,
+          "main.py": 12
         },
         "strategy_by_category": {
           "V1": {
@@ -633,28 +649,35 @@
             "lock": 1,
             "migration": 0,
             "source": 0
+          },
+          "Imprecise": {
+            "config": 17,
+            "doc": 10,
+            "lock": 687,
+            "migration": 0,
+            "source": 105
           }
         }
       },
       "OpenAI_Codex": {
-        "n_chunks": 6695,
+        "n_chunks": 6734,
         "category_counts": {
           "config": 6590,
+          "lock": 82,
           "generated": 55,
-          "lock": 43,
           "source": 6,
           "doc": 1
         },
         "category_pct": {
-          "config": 98.432,
-          "generated": 0.822,
-          "lock": 0.642,
-          "source": 0.09,
+          "config": 97.862,
+          "lock": 1.218,
+          "generated": 0.817,
+          "source": 0.089,
           "doc": 0.015
         },
         "top_extensions": {
-          ".json": 6650,
-          ".lock": 38,
+          ".json": 6688,
+          ".lock": 39,
           ".ts": 3,
           ".html": 1,
           ".md": 1,
@@ -664,8 +687,8 @@
         "top_basenames": {
           "package.json": 6590,
           "lerna.json": 55,
-          "yarn.lock": 38,
-          "package-lock.json": 5,
+          "package-lock.json": 43,
+          "yarn.lock": 39,
           "completions.html": 1,
           "plugins.ts": 1,
           "Tenants.ts": 1,
@@ -702,61 +725,68 @@
             "generated": 0,
             "lock": 1,
             "source": 1
+          },
+          "Imprecise": {
+            "config": 0,
+            "doc": 0,
+            "generated": 0,
+            "lock": 39,
+            "source": 0
           }
         }
       }
     },
     "humans": {
-      "n_chunks": 65798,
+      "n_chunks": 109575,
       "category_counts": {
-        "source": 50615,
-        "lock": 6539,
-        "config": 4340,
-        "doc": 3702,
-        "generated": 530,
-        "migration": 72
+        "source": 79530,
+        "lock": 17764,
+        "config": 6161,
+        "doc": 5340,
+        "generated": 696,
+        "migration": 84
       },
       "category_pct": {
-        "source": 76.925,
-        "lock": 9.938,
-        "config": 6.596,
-        "doc": 5.626,
-        "generated": 0.805,
-        "migration": 0.109
+        "source": 72.58,
+        "lock": 16.212,
+        "config": 5.623,
+        "doc": 4.873,
+        "generated": 0.635,
+        "migration": 0.077
       },
       "top_extensions": {
-        ".py": 9447,
-        ".json": 4646,
-        ".cpp": 4498,
-        ".c": 3360,
-        ".java": 2921,
-        ".ts": 2918,
-        ".js": 2885,
-        ".tsx": 2519,
-        ".md": 2477,
-        ".lock": 2394,
-        ".cs": 2178,
-        ".jsx": 1932,
-        ".kt": 1851,
-        ".yaml": 1779,
-        "(no-ext)": 1606
+        ".py": 17545,
+        ".cs": 12022,
+        ".json": 9987,
+        ".yaml": 5860,
+        ".cpp": 5640,
+        ".lock": 5408,
+        ".c": 4070,
+        ".md": 3942,
+        ".java": 3603,
+        ".ts": 3468,
+        ".js": 3354,
+        ".tsx": 3005,
+        ".jsx": 2262,
+        ".kt": 2059,
+        ".sh": 1950
       },
       "top_basenames": {
-        "package-lock.json": 2151,
-        "pnpm-lock.yaml": 1513,
-        "README.md": 1319,
-        "yarn.lock": 1014,
-        "component.jsx": 787,
-        "package.json": 717,
-        "mingw.c": 659,
-        "composer.lock": 570,
-        "go.sum": 512,
-        "CMakeLists.txt": 506,
-        "Makefile": 427,
-        "CHANGELOG": 338,
-        "index.ts": 333,
-        ".hgtags": 325,
-        "__init__.py": 305
+        "package-lock.json": 6319,
+        "pnpm-lock.yaml": 5551,
+        "README.md": 2272,
+        "composer.lock": 1512,
+        "yarn.lock": 1445,
+        "poetry.lock": 1281,
+        ".searchMetrics": 1183,
+        "mingw.c": 937,
+        "component.jsx": 883,
+        "package.json": 759,
+        "uv.lock": 629,
+        "Makefile": 541,
+        "CMakeLists.txt": 540,
+        "go.sum": 520,
+        "__init__.py": 438
       },
       "strategy_by_category": {
         "V1": {
@@ -806,14 +836,22 @@
           "lock": 40,
           "migration": 0,
           "source": 317
+        },
+        "Imprecise": {
+          "config": 1821,
+          "doc": 1638,
+          "generated": 166,
+          "lock": 11225,
+          "migration": 12,
+          "source": 28915
         }
       }
     }
   },
   "I_robustness_contrasts": {
     "full": {
-      "n_human_total": 65798,
-      "n_agent_total": 8979,
+      "n_human_total": 109575,
+      "n_agent_total": 10782,
       "n_human_classifiable": 65798,
       "n_agent_classifiable": 8979,
       "chi2": 3840.7668719150665,
@@ -898,8 +936,8 @@
       }
     },
     "exclude_codex_self_resolved": {
-      "n_human_total": 65798,
-      "n_agent_total": 2284,
+      "n_human_total": 109575,
+      "n_agent_total": 4048,
       "n_human_classifiable": 65798,
       "n_agent_classifiable": 2284,
       "chi2": 795.9064064860958,
@@ -984,94 +1022,94 @@
       }
     },
     "exclude_bulk_merges_gt95": {
-      "n_human_total": 51008,
-      "n_agent_total": 1579,
-      "n_human_classifiable": 51008,
-      "n_agent_classifiable": 1579,
-      "chi2": 343.2685637918821,
+      "n_human_total": 59170,
+      "n_agent_total": 1895,
+      "n_human_classifiable": 48450,
+      "n_agent_classifiable": 1432,
+      "chi2": 240.7107211176015,
       "dof": 5,
-      "p": 4.923095783595231e-72,
-      "cramers_v": 0.08079375975918272,
+      "p": 5.404982820701327e-50,
+      "cramers_v": 0.06946655918545547,
       "human_distribution": {
         "V1": {
-          "n": 24191,
-          "pct": 0.47425893977415307,
-          "ci_low": 0.4699277020499129,
-          "ci_high": 0.47859405437168506
+          "n": 23026,
+          "pct": 0.47525283797729617,
+          "ci_low": 0.47080826781968177,
+          "ci_high": 0.47970133208401267
         },
         "V2": {
-          "n": 11651,
-          "pct": 0.2284151505646173,
-          "ci_low": 0.22479248017557688,
-          "ci_high": 0.23207872447666708
+          "n": 10897,
+          "pct": 0.2249122807017544,
+          "ci_low": 0.22121639733576046,
+          "ci_high": 0.22865178241106018
         },
         "CC": {
-          "n": 4169,
-          "pct": 0.08173227728983688,
-          "ci_low": 0.0793862113257876,
-          "ci_high": 0.08414133875402366
+          "n": 4017,
+          "pct": 0.08291021671826625,
+          "ci_low": 0.080487821340266,
+          "ci_high": 0.08539874651115581
         },
         "CB": {
-          "n": 5358,
-          "pct": 0.10504234629861982,
-          "ci_low": 0.1024112216451373,
-          "ci_high": 0.10773295571168845
+          "n": 5153,
+          "pct": 0.10635706914344685,
+          "ci_low": 0.10364305691155654,
+          "ci_high": 0.10913349802026834
         },
         "NC": {
-          "n": 5248,
-          "pct": 0.1028858218318695,
-          "ci_low": 0.10027913932612863,
-          "ci_high": 0.10555231389236948
+          "n": 4997,
+          "pct": 0.10313725490196078,
+          "ci_low": 0.10046049768158873,
+          "ci_high": 0.10587693930609628
         },
         "NN": {
-          "n": 391,
-          "pct": 0.007665464240903388,
-          "ci_low": 0.006944780215596285,
-          "ci_high": 0.008460299004197506
+          "n": 360,
+          "pct": 0.007430340557275541,
+          "ci_low": 0.006703734514966718,
+          "ci_high": 0.008235049222868865
         }
       },
       "agent_distribution": {
         "V1": {
-          "n": 433,
-          "pct": 0.27422419252691577,
-          "ci_low": 0.25278754278239174,
-          "ci_high": 0.29675673025476684
+          "n": 418,
+          "pct": 0.2918994413407821,
+          "ci_low": 0.26893384887440164,
+          "ci_high": 0.31597854076399534
         },
         "V2": {
-          "n": 616,
-          "pct": 0.3901203293223559,
-          "ci_low": 0.3663556879011617,
-          "ci_high": 0.4144183131421679
+          "n": 508,
+          "pct": 0.3547486033519553,
+          "ci_low": 0.33038732336482735,
+          "ci_high": 0.37988709624855044
         },
         "CC": {
           "n": 109,
-          "pct": 0.06903103229892336,
-          "ci_low": 0.05754448972341448,
-          "ci_high": 0.08260944520445787
+          "pct": 0.07611731843575419,
+          "ci_low": 0.06348802222943438,
+          "ci_high": 0.09101473116152854
         },
         "CB": {
-          "n": 186,
-          "pct": 0.11779607346421786,
-          "ci_low": 0.10281554004334426,
-          "ci_high": 0.13463177770679674
+          "n": 182,
+          "pct": 0.1270949720670391,
+          "ci_low": 0.11083547742409341,
+          "ci_high": 0.14534981139102057
         },
         "NC": {
-          "n": 232,
-          "pct": 0.14692843571880937,
-          "ci_low": 0.13032313503851717,
-          "ci_high": 0.1652475023197324
+          "n": 212,
+          "pct": 0.14804469273743018,
+          "ci_low": 0.13059259922580876,
+          "ci_high": 0.1673800329142989
         },
         "NN": {
           "n": 3,
-          "pct": 0.0018999366687777073,
-          "ci_low": 0.0006463556596348879,
-          "ci_high": 0.005571234084335151
+          "pct": 0.002094972067039106,
+          "ci_low": 0.0007127297202489491,
+          "ci_high": 0.0061414105890699195
         }
       }
     },
     "exclude_lock_and_generated": {
-      "n_human_total": 58729,
-      "n_agent_total": 8022,
+      "n_human_total": 91115,
+      "n_agent_total": 8383,
       "n_human_classifiable": 58729,
       "n_agent_classifiable": 8022,
       "chi2": 4941.1463987354855,
@@ -1156,8 +1194,8 @@
       }
     },
     "exclude_one_line_chunks": {
-      "n_human_total": 54672,
-      "n_agent_total": 2591,
+      "n_human_total": 94540,
+      "n_agent_total": 4035,
       "n_human_classifiable": 54672,
       "n_agent_classifiable": 2591,
       "chi2": 258.1509088732246,
@@ -1242,8 +1280,8 @@
       }
     },
     "exclude_codex_and_lock_generated": {
-      "n_human_total": 58729,
-      "n_agent_total": 1425,
+      "n_human_total": 91115,
+      "n_agent_total": 1786,
       "n_human_classifiable": 58729,
       "n_agent_classifiable": 1425,
       "chi2": 268.54652898400207,
@@ -1328,94 +1366,94 @@
       }
     },
     "exclude_codex_bulk_lock_generated": {
-      "n_human_total": 46921,
-      "n_agent_total": 1228,
-      "n_human_classifiable": 46921,
-      "n_agent_classifiable": 1228,
-      "chi2": 173.39933250771668,
+      "n_human_total": 53756,
+      "n_agent_total": 1550,
+      "n_human_classifiable": 44993,
+      "n_agent_classifiable": 1212,
+      "chi2": 169.9721743010979,
       "dof": 5,
-      "p": 1.3730778763117634e-35,
-      "cramers_v": 0.06001089098364695,
+      "p": 7.396722656786811e-35,
+      "cramers_v": 0.060651902436366166,
       "human_distribution": {
         "V1": {
-          "n": 22040,
-          "pct": 0.4697257091707338,
-          "ci_low": 0.46521254869830175,
-          "ci_high": 0.4742438263968992
+          "n": 21281,
+          "pct": 0.47298468650678993,
+          "ci_low": 0.4683738990248442,
+          "ci_high": 0.47760008667757986
         },
         "V2": {
-          "n": 10344,
-          "pct": 0.2204556595127981,
-          "ci_low": 0.21672764139757977,
-          "ci_high": 0.22422944690668223
+          "n": 9787,
+          "pct": 0.21752272575734002,
+          "ci_low": 0.21373483203321872,
+          "ci_high": 0.2213588506364315
         },
         "CC": {
-          "n": 4095,
-          "pct": 0.08727435476652246,
-          "ci_low": 0.08475427594481287,
-          "ci_high": 0.0898620083959935
+          "n": 3944,
+          "pct": 0.08765808014580045,
+          "ci_low": 0.08508009075025977,
+          "ci_high": 0.09030647423881819
         },
         "CB": {
-          "n": 5144,
-          "pct": 0.10963108203149975,
-          "ci_low": 0.10683603615400905,
-          "ci_high": 0.1124900422910804
+          "n": 4944,
+          "pct": 0.10988375969595271,
+          "ci_low": 0.1070272096995782,
+          "ci_high": 0.11280691949976372
         },
         "NC": {
-          "n": 4931,
-          "pct": 0.1050915368385158,
-          "ci_low": 0.10234895286339771,
-          "ci_high": 0.10789877844707563
+          "n": 4701,
+          "pct": 0.1044829195652657,
+          "ci_low": 0.10169019423684164,
+          "ci_high": 0.10734317685940611
         },
         "NN": {
-          "n": 367,
-          "pct": 0.007821657679930096,
-          "ci_low": 0.007063871777674132,
-          "ci_high": 0.008660027033325437
+          "n": 336,
+          "pct": 0.007467828328851155,
+          "ci_low": 0.006713291109377384,
+          "ci_high": 0.008306462209068248
         }
       },
       "agent_distribution": {
         "V1": {
-          "n": 368,
-          "pct": 0.2996742671009772,
-          "ci_low": 0.27470870487213495,
-          "ci_high": 0.3258892483165674
+          "n": 367,
+          "pct": 0.3028052805280528,
+          "ci_low": 0.27759413632951846,
+          "ci_high": 0.32926250066685736
         },
         "V2": {
-          "n": 397,
-          "pct": 0.32328990228013027,
-          "ci_low": 0.2977154609244784,
-          "ci_high": 0.34996647339238496
+          "n": 389,
+          "pct": 0.320957095709571,
+          "ci_low": 0.2952756056558569,
+          "ci_high": 0.34776996015256806
         },
         "CC": {
           "n": 103,
-          "pct": 0.08387622149837133,
-          "ci_low": 0.06963972844675898,
-          "ci_high": 0.10070805236391955
+          "pct": 0.08498349834983498,
+          "ci_low": 0.07056557839225394,
+          "ci_high": 0.10202391285953302
         },
         "CB": {
-          "n": 167,
-          "pct": 0.13599348534201955,
-          "ci_low": 0.1179529591076834,
-          "ci_high": 0.15630429729617829
+          "n": 165,
+          "pct": 0.13613861386138615,
+          "ci_low": 0.11797774594910435,
+          "ci_high": 0.15659872650027548
         },
         "NC": {
-          "n": 191,
-          "pct": 0.15553745928338764,
-          "ci_low": 0.13634466483748697,
-          "ci_high": 0.17687864491381838
+          "n": 186,
+          "pct": 0.15346534653465346,
+          "ci_low": 0.13427076891291342,
+          "ci_high": 0.17484968103887685
         },
         "NN": {
           "n": 2,
-          "pct": 0.0016286644951140066,
-          "ci_low": 0.00044675223008243566,
-          "ci_high": 0.005918887410104022
+          "pct": 0.0016501650165016502,
+          "ci_low": 0.0004526514706590149,
+          "ci_high": 0.00599675750762994
         }
       }
     },
     "per_agent_vs_human::Claude_Code": {
-      "n_human_total": 65798,
-      "n_agent_total": 108,
+      "n_human_total": 109575,
+      "n_agent_total": 181,
       "n_human_classifiable": 65798,
       "n_agent_classifiable": 108,
       "chi2": 26.759810090373808,
@@ -1500,8 +1538,8 @@
       }
     },
     "per_agent_vs_human::Copilot": {
-      "n_human_total": 65798,
-      "n_agent_total": 776,
+      "n_human_total": 109575,
+      "n_agent_total": 1548,
       "n_human_classifiable": 65798,
       "n_agent_classifiable": 776,
       "chi2": 320.020792436661,
@@ -1586,8 +1624,8 @@
       }
     },
     "per_agent_vs_human::Cursor": {
-      "n_human_total": 65798,
-      "n_agent_total": 165,
+      "n_human_total": 109575,
+      "n_agent_total": 265,
       "n_human_classifiable": 65798,
       "n_agent_classifiable": 165,
       "chi2": 65.06005417358006,
@@ -1672,8 +1710,8 @@
       }
     },
     "per_agent_vs_human::Devin": {
-      "n_human_total": 65798,
-      "n_agent_total": 1235,
+      "n_human_total": 109575,
+      "n_agent_total": 2054,
       "n_human_classifiable": 65798,
       "n_agent_classifiable": 1235,
       "chi2": 588.2819902134573,
@@ -1758,8 +1796,8 @@
       }
     },
     "per_agent_vs_human::OpenAI_Codex": {
-      "n_human_total": 65798,
-      "n_agent_total": 6695,
+      "n_human_total": 109575,
+      "n_agent_total": 6734,
       "n_human_classifiable": 65798,
       "n_agent_classifiable": 6695,
       "chi2": 7278.1977711120235,
@@ -2080,13 +2118,13 @@
     {
       "repo_full_name": "BlazingSu/nocobase",
       "merge_sha": "5e06eb7104b4101545d2935b84d33eb58738d61c",
-      "n_chunks": 154,
-      "v1_pct": 0.9935064935064936,
-      "mean_v1_loc": 2.0259740259740258,
-      "mean_v2_loc": 4.8311688311688314,
-      "frac_one_line": 0.7467532467532467,
-      "frac_lock": 0.21428571428571427,
-      "frac_generated": 0.006493506493506494,
+      "n_chunks": 155,
+      "v1_pct": 0.9870967741935484,
+      "mean_v1_loc": 2.0580645161290323,
+      "mean_v2_loc": 4.832258064516129,
+      "frac_one_line": 0.7419354838709677,
+      "frac_lock": 0.21935483870967742,
+      "frac_generated": 0.0064516129032258064,
       "dominant_path": "yarn.lock",
       "dominant_category": "config"
     },
@@ -2717,12 +2755,12 @@
     {
       "repo_full_name": "sankalp-thakur/proposalfrontend",
       "merge_sha": "9dddcd9ec44dcd8fe70995be1b45d3f2dfe94ac7",
-      "n_chunks": 6,
+      "n_chunks": 44,
       "v1_pct": 0.0,
-      "mean_v1_loc": 28.0,
-      "mean_v2_loc": 6.5,
-      "frac_one_line": 0.0,
-      "frac_lock": 0.8333333333333334,
+      "mean_v1_loc": 24.863636363636363,
+      "mean_v2_loc": 22.15909090909091,
+      "frac_one_line": 0.09090909090909091,
+      "frac_lock": 0.9772727272727273,
       "frac_generated": 0.0,
       "dominant_path": "package-lock.json",
       "dominant_category": "lock"
@@ -2743,73 +2781,73 @@
   ],
   "K2_repo_concentration_per_agent": {
     "Claude_Code": {
-      "n_chunks": 108,
-      "n_merges": 11,
+      "n_chunks": 181,
+      "n_merges": 12,
       "n_unique_repos": 3,
       "top1_repo": "itdojp/ITDO_ERP2",
-      "top1_share_chunks": 0.9259259259259259,
-      "top1_share_merges": 0.8181818181818182,
+      "top1_share_chunks": 0.9558011049723757,
+      "top1_share_merges": 0.8333333333333334,
       "top3_share_merges": 1.0,
       "top5_repos_by_merges": {
-        "itdojp/ITDO_ERP2": 9,
+        "itdojp/ITDO_ERP2": 10,
         "UltimatePea/chinese-ocaml": 1,
         "takezou621/repairgpt": 1
       }
     },
     "Copilot": {
-      "n_chunks": 776,
-      "n_merges": 116,
-      "n_unique_repos": 85,
-      "top1_repo": "cascadiacollections/fluentui-compat",
-      "top1_share_chunks": 0.4162371134020619,
-      "top1_share_merges": 0.034482758620689655,
-      "top3_share_merges": 0.10344827586206896,
+      "n_chunks": 1548,
+      "n_merges": 122,
+      "n_unique_repos": 89,
+      "top1_repo": "benwbrum/fromthepage",
+      "top1_share_chunks": 0.4528423772609819,
+      "top1_share_merges": 0.03278688524590164,
+      "top3_share_merges": 0.09836065573770492,
       "top5_repos_by_merges": {
+        "benwbrum/fromthepage": 4,
         "cascadiacollections/fluentui-compat": 4,
         "celestiaorg/docs": 4,
         "cml1010101/better-impuls-viewer": 4,
-        "depoll/LANbu-Handy": 4,
-        "benwbrum/fromthepage": 3
+        "depoll/LANbu-Handy": 4
       }
     },
     "Cursor": {
-      "n_chunks": 165,
-      "n_merges": 34,
-      "n_unique_repos": 29,
-      "top1_repo": "sweetmantech/in_process",
-      "top1_share_chunks": 0.17575757575757575,
-      "top1_share_merges": 0.08823529411764706,
-      "top3_share_merges": 0.20588235294117646,
+      "n_chunks": 265,
+      "n_merges": 43,
+      "n_unique_repos": 36,
+      "top1_repo": "KooroshKarimi/bringee",
+      "top1_share_chunks": 0.2188679245283019,
+      "top1_share_merges": 0.09302325581395349,
+      "top3_share_merges": 0.20930232558139536,
       "top5_repos_by_merges": {
+        "KooroshKarimi/bringee": 4,
         "sweetmantech/in_process": 3,
-        "KooroshKarimi/bringee": 2,
         "RobotAvi/MoneyGame": 2,
         "Tokioace/N64-Nexus": 2,
-        "Jakedismo/KuzuMem-MCP": 1
+        "Devall-Digital/artificial-grass-oldham": 1
       }
     },
     "Devin": {
-      "n_chunks": 1235,
-      "n_merges": 214,
-      "n_unique_repos": 119,
-      "top1_repo": "drivly/ai",
-      "top1_share_chunks": 0.18299595141700406,
-      "top1_share_merges": 0.04672897196261682,
-      "top3_share_merges": 0.14018691588785046,
+      "n_chunks": 2054,
+      "n_merges": 224,
+      "n_unique_repos": 123,
+      "top1_repo": "jonmarkgo/juice-shop-demo",
+      "top1_share_chunks": 0.3330087633885102,
+      "top1_share_merges": 0.05357142857142857,
+      "top3_share_merges": 0.14285714285714285,
       "top5_repos_by_merges": {
+        "jonmarkgo/juice-shop-demo": 12,
         "drivly/ai": 10,
-        "jonmarkgo/juice-shop-demo": 10,
         "team-mirai-volunteer/action-board": 10,
-        "x-smasato/anyframe-rs": 9,
-        "AvaProtocol/EigenLayer-AVS": 7
+        "AvaProtocol/EigenLayer-AVS": 9,
+        "x-smasato/anyframe-rs": 9
       }
     },
     "OpenAI_Codex": {
-      "n_chunks": 6695,
+      "n_chunks": 6734,
       "n_merges": 61,
       "n_unique_repos": 6,
       "top1_repo": "BlazingSu/nocobase",
-      "top1_share_chunks": 0.9982076176250934,
+      "top1_share_chunks": 0.9925749925749926,
       "top1_share_merges": 0.9016393442622951,
       "top3_share_merges": 0.9508196721311475,
       "top5_repos_by_merges": {
@@ -2823,9 +2861,9 @@
   },
   "L_humans_resolving_by_host_agent": {
     "Claude_Code": {
-      "n_total": 665,
+      "n_total": 1056,
       "n_classifiable": 665,
-      "imprecise_share": 0.0,
+      "imprecise_share": 0.3702651515151515,
       "distribution": {
         "V1": {
           "n": 246,
@@ -2866,9 +2904,9 @@
       }
     },
     "Copilot": {
-      "n_total": 10884,
+      "n_total": 13755,
       "n_classifiable": 10884,
-      "imprecise_share": 0.0,
+      "imprecise_share": 0.20872410032715377,
       "distribution": {
         "V1": {
           "n": 6183,
@@ -2909,9 +2947,9 @@
       }
     },
     "Cursor": {
-      "n_total": 2104,
+      "n_total": 3335,
       "n_classifiable": 2104,
-      "imprecise_share": 0.0,
+      "imprecise_share": 0.36911544227886056,
       "distribution": {
         "V1": {
           "n": 796,
@@ -2952,9 +2990,9 @@
       }
     },
     "Devin": {
-      "n_total": 3528,
+      "n_total": 4278,
       "n_classifiable": 3528,
-      "imprecise_share": 0.0,
+      "imprecise_share": 0.1753155680224404,
       "distribution": {
         "V1": {
           "n": 1071,
@@ -2995,9 +3033,9 @@
       }
     },
     "OpenAI_Codex": {
-      "n_total": 48617,
+      "n_total": 87151,
       "n_classifiable": 48617,
-      "imprecise_share": 0.0,
+      "imprecise_share": 0.4421521267684823,
       "distribution": {
         "V1": {
           "n": 21409,

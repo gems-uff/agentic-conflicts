@@ -27,17 +27,17 @@ RQ1 — Structural Nature
     OpenAI_Codex          n=11,684  median=2.0  p75=4.0  p99=121.0
 
 ------------------------------------------------------------
-3. Post-hoc Dunn test (Holm) for chunks per merge
+3. Post-hoc Dunn test (Bonferroni) for chunks per merge
 ------------------------------------------------------------
-  (Holm-corrected pairwise p-values)
-  Claude_Code vs Copilot                   p=0.0008  ***
-  Claude_Code vs Cursor                    p=0.4009  ns
-  Claude_Code vs Devin                     p=0.0663  ns
+  (Bonferroni-corrected pairwise p-values)
+  Claude_Code vs Copilot                   p=0.0013  **
+  Claude_Code vs Cursor                    p=1.0000  ns
+  Claude_Code vs Devin                     p=0.1658  ns
   Claude_Code vs OpenAI_Codex              p=0.0000  ***
-  Copilot vs Cursor                        p=0.0004  ***
-  Copilot vs Devin                         p=0.1099  ns
-  Copilot vs OpenAI_Codex                  p=0.0019  **
-  Cursor vs Devin                          p=0.1099  ns
+  Copilot vs Cursor                        p=0.0006  ***
+  Copilot vs Devin                         p=0.3664  ns
+  Copilot vs OpenAI_Codex                  p=0.0039  **
+  Cursor vs Devin                          p=0.4772  ns
   Cursor vs OpenAI_Codex                   p=0.0000  ***
   Devin vs OpenAI_Codex                    p=0.0000  ***
 
