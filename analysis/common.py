@@ -45,7 +45,7 @@ import seaborn as sns
 # Resolve project root so notebooks work regardless of the active CWD
 # (Jupyter commonly launches the kernel in the notebook's own folder).
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
-DATA_DIR = PROJECT_ROOT / "data" / "nature_of_agent_conflicts"
+DATA_DIR = PROJECT_ROOT / "data" / "nature_of_agent_conflicts_paper"
 FIGURES_DIR = PROJECT_ROOT / "analysis" / "figures"
 FIGURES_DIR.mkdir(parents=True, exist_ok=True)
 

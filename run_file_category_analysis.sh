@@ -10,7 +10,7 @@ echo ""
 
 # Step 1: Extract data
 echo "Step 1: Extracting file-category data from agent-resolved chunks..."
-python3 extract_agent_file_categories.py --data-dir ./data/nature_of_agent_conflicts --output agent_filetype_chunks.csv
+python3 extract_agent_file_categories.py --data-dir ./data/nature_of_agent_conflicts_paper --output agent_filetype_chunks.csv
 
 if [ $? -ne 0 ]; then
     echo "ERROR: Data extraction failed"

@@ -2,16 +2,14 @@
 """
 Extract file-category distribution for agent-resolved chunks.
 
-This script reads the processed parquet files (resolved_chunks.parquet and
-resolver_labels.parquet) and generates a CSV with the distribution of
-agent-resolved chunks by agent and file category.
+This script:
+1. Loads resolved_chunks (has file paths and chunk info)
+2. Loads internal_merges (has merge_sha and resolver_type)
+3. Loads universe (has agent info)
+4. Joins them to get chunks resolved by agents with their file categories
 
 USAGE:
     python3 extract_agent_file_categories.py [--data-dir DATA_DIR] [--output OUTPUT_CSV]
-
-REQUIREMENTS:
-    - pandas
-    - pyarrow (for parquet support)
 """
 
 import sys
@@ -81,92 +79,82 @@ def main():
     # Check if data directory exists
     if not data_dir.exists():
         logger.error(f"Data directory not found: {data_dir}")
-        logger.error(f"Expected parquet files in: {data_dir}")
         sys.exit(1)
 
-    # Load required parquet files
     logger.info(f"Loading data from: {data_dir}")
 
     try:
-        # Load resolved chunks
-        resolved_file = data_dir / 'resolved_chunks.parquet'
-        if not resolved_file.exists():
-            logger.error(f"resolved_chunks.parquet not found in {data_dir}")
-            sys.exit(1)
-
-        resolved = pd.read_parquet(resolved_file)
+        # Load all required parquet files
+        resolved = pd.read_parquet(data_dir / 'resolved_chunks.parquet')
         logger.info(f"✓ Loaded {len(resolved):,} resolved chunks")
 
-        # Load PR universe to get agent info
-        universe_file = data_dir / 'universe.parquet'
-        if not universe_file.exists():
-            logger.error(f"universe.parquet not found in {data_dir}")
-            sys.exit(1)
+        internal_merges = pd.read_parquet(data_dir / 'internal_merges.parquet')
+        logger.info(f"✓ Loaded {len(internal_merges):,} internal merges")
 
-        universe = pd.read_parquet(universe_file)
-        logger.info(f"✓ Loaded universe data")
+        universe = pd.read_parquet(data_dir / 'universe.parquet')
+        logger.info(f"✓ Loaded {len(universe):,} universe records")
 
+    except FileNotFoundError as e:
+        logger.error(f"ERROR: Missing parquet file: {e}")
+        sys.exit(1)
     except Exception as e:
         logger.error(f"ERROR loading parquet files: {e}")
         sys.exit(1)
 
-    # Filter to agent-resolved chunks only
-    logger.info(f"Resolver types in data: {resolved['resolver_type'].unique()}")
-
-    if 'resolver_type' not in resolved.columns:
-        logger.error("ERROR: 'resolver_type' column not found in resolved data")
-        logger.info(f"Available columns: {resolved.columns.tolist()}")
+    # Step 1: Join resolved_chunks with internal_merges on merge_sha
+    try:
+        merged = resolved.merge(
+            internal_merges[['merge_sha', 'resolver_type', 'pr_id']],
+            on='merge_sha',
+            how='left'
+        )
+        logger.info(f"✓ Merged resolved_chunks with internal_merges: {len(merged):,} chunks")
+    except Exception as e:
+        logger.error(f"ERROR merging resolved_chunks with internal_merges: {e}")
         sys.exit(1)
 
-    agent_resolved = resolved[resolved['resolver_type'] == 'agent'].copy()
+    # Step 2: Filter to agent-resolved chunks only
+    if 'resolver_type' not in merged.columns:
+        logger.error("ERROR: 'resolver_type' column not found after merge")
+        logger.info(f"Available columns: {merged.columns.tolist()}")
+        sys.exit(1)
+
+    logger.info(f"Resolver types: {merged['resolver_type'].unique()}")
+
+    agent_resolved = merged[merged['resolver_type'] == 'agent'].copy()
     logger.info(f"✓ Filtered to {len(agent_resolved):,} agent-resolved chunks")
 
     if len(agent_resolved) == 0:
         logger.error("ERROR: No agent-resolved chunks found!")
         sys.exit(1)
 
-    # Merge with universe to get agent name
+    # Step 3: Join with universe to get agent name
     try:
-        # Try merging on pr_id first
-        merge_key = None
-        if 'pr_id' in agent_resolved.columns and 'id' in universe.columns:
-            merged = agent_resolved.merge(universe[['id', 'agent']], left_on='pr_id', right_on='id', how='left')
-            merge_key = 'pr_id -> id'
-        elif 'pr_id' in agent_resolved.columns and 'pr_id' in universe.columns:
-            merged = agent_resolved.merge(universe[['pr_id', 'agent']], on='pr_id', how='left')
-            merge_key = 'pr_id'
-        else:
-            logger.error("ERROR: Could not find matching key for merge")
-            logger.info(f"Columns in resolved_chunks: {agent_resolved.columns.tolist()}")
-            logger.info(f"Columns in universe: {universe.columns.tolist()}")
-            sys.exit(1)
-
-        logger.info(f"✓ Merged data: {len(merged):,} chunks (key: {merge_key})")
-        agent_resolved = merged
+        # Merge on pr_id to get agent (use pr_id_x since pr_id got renamed after first merge)
+        agent_resolved = agent_resolved.merge(
+            universe[['id', 'agent']],
+            left_on='pr_id_x',
+            right_on='id',
+            how='left'
+        )
+        logger.info(f"✓ Merged with universe to get agent info")
     except Exception as e:
-        logger.error(f"ERROR merging data: {e}")
-        logger.info(f"Columns in resolved_chunks: {agent_resolved.columns.tolist()}")
-        logger.info(f"Columns in universe: {universe.columns.tolist()}")
+        logger.error(f"ERROR merging with universe: {e}")
+        logger.info(f"Columns available: {agent_resolved.columns.tolist()}")
         sys.exit(1)
 
     # Verify agent column exists
     if 'agent' not in agent_resolved.columns:
-        logger.error("ERROR: 'agent' column not found after merge")
+        logger.error("ERROR: 'agent' column not found after merge with universe")
         logger.info(f"Available columns: {agent_resolved.columns.tolist()}")
         sys.exit(1)
 
-    # Get file path and categorize
-    if 'file_path' not in agent_resolved.columns:
-        logger.error("ERROR: 'file_path' column not found")
-        logger.info(f"Available columns: {agent_resolved.columns.tolist()}")
-        sys.exit(1)
-
+    # Step 4: Categorize files and group by agent and file_category
     agent_resolved['file_category'] = agent_resolved['file_path'].apply(categorize_filepath)
 
-    # Group by agent and file_category, count chunks
     grouped = agent_resolved.groupby(['agent', 'file_category']).size().reset_index(name='chunk_count')
 
-    # Rename 'agent' column to 'resolver' for consistency with table generation script
+    # Rename 'agent' column to 'resolver' for compatibility with table generation script
     grouped = grouped.rename(columns={'agent': 'resolver'})
 
     # Save to CSV
@@ -175,7 +163,7 @@ def main():
 
     # Print summary
     print("\n" + "="*80)
-    print("SUMMARY")
+    print("SUMMARY: File-category distribution of agent-resolved chunks")
     print("="*80)
     for agent in sorted(grouped['resolver'].unique()):
         agent_data = grouped[grouped['resolver'] == agent]
@@ -186,6 +174,9 @@ def main():
         for _, row in agent_data.sort_values('chunk_count', ascending=False).iterrows():
             pct = row['chunk_count'] / total_chunks * 100
             print(f"    {row['file_category']:12} {row['chunk_count']:6,} ({pct:5.1f}%)")
+
+    total_all = grouped['chunk_count'].sum()
+    print(f"\n  TOTAL AGENT-RESOLVED CHUNKS: {total_all:,}")
 
     print("\n" + "="*80)
     print(f"✓ Data saved to: {args.output}")

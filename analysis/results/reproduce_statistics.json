@@ -1,0 +1,350 @@
+{
+  "sanity_checks": {
+    "merges": {
+      "n_total": 50700,
+      "n_conflicting": 14960,
+      "conflict_rate": 0.2951
+    },
+    "chunks": {
+      "n_total": 121599,
+      "n_classifiable": 75752,
+      "n_imprecise": 45847,
+      "n_postponed": 7291,
+      "classifiable_rate": 0.623,
+      "imprecise_rate": 0.377
+    },
+    "resolver": {
+      "human": 14381,
+      "agent": 462,
+      "agent-assisted": 117
+    }
+  },
+  "rq1": {
+    "global_resolver": {
+      "human": 14381,
+      "agent": 462,
+      "agent-assisted": 117
+    },
+    "per_agent_self_resolution": [
+      {
+        "agent": "Claude_Code",
+        "n_total": 220,
+        "n_self_resolved": 12,
+        "rate": 0.0545,
+        "ci_lo_95": 0.0315,
+        "ci_hi_95": 0.0929
+      },
+      {
+        "agent": "Copilot",
+        "n_total": 1809,
+        "n_self_resolved": 122,
+        "rate": 0.0674,
+        "ci_lo_95": 0.0568,
+        "ci_hi_95": 0.0799
+      },
+      {
+        "agent": "Cursor",
+        "n_total": 484,
+        "n_self_resolved": 43,
+        "rate": 0.0888,
+        "ci_lo_95": 0.0666,
+        "ci_hi_95": 0.1175
+      },
+      {
+        "agent": "Devin",
+        "n_total": 763,
+        "n_self_resolved": 224,
+        "rate": 0.2936,
+        "ci_lo_95": 0.2624,
+        "ci_hi_95": 0.3269
+      },
+      {
+        "agent": "OpenAI_Codex",
+        "n_total": 11684,
+        "n_self_resolved": 61,
+        "rate": 0.0052,
+        "ci_lo_95": 0.0041,
+        "ci_hi_95": 0.0067
+      }
+    ],
+    "per_agent_assisted": [
+      {
+        "agent": "Claude_Code",
+        "n_total": 220,
+        "n_assisted": 53,
+        "rate": 0.2409,
+        "ci_lo_95": 0.1892,
+        "ci_hi_95": 0.3016
+      },
+      {
+        "agent": "Copilot",
+        "n_total": 1809,
+        "n_assisted": 3,
+        "rate": 0.0017,
+        "ci_lo_95": 0.0006,
+        "ci_hi_95": 0.0049
+      },
+      {
+        "agent": "Cursor",
+        "n_total": 484,
+        "n_assisted": 4,
+        "rate": 0.0083,
+        "ci_lo_95": 0.0032,
+        "ci_hi_95": 0.0211
+      },
+      {
+        "agent": "Devin",
+        "n_total": 763,
+        "n_assisted": 2,
+        "rate": 0.0026,
+        "ci_lo_95": 0.0007,
+        "ci_hi_95": 0.0095
+      },
+      {
+        "agent": "OpenAI_Codex",
+        "n_total": 11684,
+        "n_assisted": 55,
+        "rate": 0.0047,
+        "ci_lo_95": 0.0036,
+        "ci_hi_95": 0.0061
+      }
+    ],
+    "chi2_resolver_agent": {
+      "chi2": 3724.504,
+      "p": 0.0,
+      "dof": 8,
+      "significant": "***",
+      "min_expected_count": 1.72,
+      "pct_cells_lt5": 13.3,
+      "warning": null,
+      "cramers_v": 0.3525,
+      "cramers_v_label": "strong"
+    }
+  },
+  "rq2": {
+    "dataset": {
+      "n_total_chunks": 121599,
+      "n_classifiable": 75752,
+      "n_imprecise": 45847,
+      "imprecise_rate": 0.377
+    },
+    "wilson_ci_global": [
+      {
+        "strategy": "V1",
+        "count": 37213,
+        "proportion": 0.4912,
+        "ci_lo_95": 0.4877,
+        "ci_hi_95": 0.4948
+      },
+      {
+        "strategy": "V2",
+        "count": 18618,
+        "proportion": 0.2458,
+        "ci_lo_95": 0.2427,
+        "ci_hi_95": 0.2489
+      },
+      {
+        "strategy": "CC",
+        "count": 4678,
+        "proportion": 0.0618,
+        "ci_lo_95": 0.0601,
+        "ci_hi_95": 0.0635
+      },
+      {
+        "strategy": "CB",
+        "count": 6797,
+        "proportion": 0.0897,
+        "ci_lo_95": 0.0877,
+        "ci_hi_95": 0.0918
+      },
+      {
+        "strategy": "NC",
+        "count": 7994,
+        "proportion": 0.1055,
+        "ci_lo_95": 0.1034,
+        "ci_hi_95": 0.1077
+      },
+      {
+        "strategy": "NN",
+        "count": 452,
+        "proportion": 0.006,
+        "ci_lo_95": 0.0054,
+        "ci_hi_95": 0.0065
+      }
+    ],
+    "per_agent_strategies": [
+      {
+        "agent": "Claude_Code",
+        "n": 108,
+        "v1": 0.5741,
+        "v2": 0.3611,
+        "cc": 0.0093,
+        "cb": 0.0185,
+        "nc": 0.037,
+        "nn": 0.0,
+        "cramers_v_vs_human": 0.0182,
+        "cramers_v_label": "weak"
+      },
+      {
+        "agent": "Copilot",
+        "n": 776,
+        "v1": 0.1585,
+        "v2": 0.4111,
+        "cc": 0.0554,
+        "cb": 0.1302,
+        "nc": 0.2345,
+        "nn": 0.0103,
+        "cramers_v_vs_human": 0.0688,
+        "cramers_v_label": "weak"
+      },
+      {
+        "agent": "Cursor",
+        "n": 165,
+        "v1": 0.2182,
+        "v2": 0.5091,
+        "cc": 0.0242,
+        "cb": 0.1273,
+        "nc": 0.1152,
+        "nn": 0.0061,
+        "cramers_v_vs_human": 0.0302,
+        "cramers_v_label": "weak"
+      },
+      {
+        "agent": "Devin",
+        "n": 1235,
+        "v1": 0.1984,
+        "v2": 0.5555,
+        "cc": 0.0518,
+        "cb": 0.0785,
+        "nc": 0.115,
+        "nn": 0.0008,
+        "cramers_v_vs_human": 0.0933,
+        "cramers_v_label": "weak"
+      },
+      {
+        "agent": "OpenAI_Codex",
+        "n": 6695,
+        "v1": 0.9987,
+        "v2": 0.0007,
+        "cc": 0.0,
+        "cb": 0.0001,
+        "nc": 0.0004,
+        "nn": 0.0,
+        "cramers_v_vs_human": 0.3168,
+        "cramers_v_label": "strong"
+      }
+    ],
+    "pairwise_agent_contrasts": [
+      {
+        "pair": "Claude_Code vs Copilot",
+        "cramers_v": 0.3476,
+        "cramers_v_label": "strong",
+        "p_raw": 1.7862314149450577e-22,
+        "significant_raw": "***",
+        "p_bonferroni": 1.6076082734505518e-21,
+        "significant_bonferroni": "***",
+        "p_holm": 1.0717388489670346e-21,
+        "significant_holm": "***"
+      },
+      {
+        "pair": "Claude_Code vs Cursor",
+        "cramers_v": 0.3665,
+        "cramers_v_label": "strong",
+        "p_raw": 7.264435941017522e-08,
+        "significant_raw": "***",
+        "p_bonferroni": 6.53799234691577e-07,
+        "significant_bonferroni": "***",
+        "p_holm": 2.1793307823052567e-07,
+        "significant_holm": "***"
+      },
+      {
+        "pair": "Claude_Code vs Devin",
+        "cramers_v": 0.2403,
+        "cramers_v_label": "moderate",
+        "p_raw": 2.5386871551800655e-16,
+        "significant_raw": "***",
+        "p_bonferroni": 2.284818439662059e-15,
+        "significant_bonferroni": "***",
+        "p_holm": 1.0154748620720262e-15,
+        "significant_holm": "***"
+      },
+      {
+        "pair": "Copilot vs Cursor",
+        "cramers_v": 0.1172,
+        "cramers_v_label": "moderate",
+        "p_raw": 0.0030597496571739546,
+        "significant_raw": "**",
+        "p_bonferroni": 0.027537746914565592,
+        "significant_bonferroni": "*",
+        "p_holm": 0.006119499314347909,
+        "significant_holm": "**"
+      },
+      {
+        "pair": "Copilot vs Devin",
+        "cramers_v": 0.2043,
+        "cramers_v_label": "moderate",
+        "p_raw": 1.134174772725079e-17,
+        "significant_raw": "***",
+        "p_bonferroni": 1.0207572954525712e-16,
+        "significant_bonferroni": "***",
+        "p_holm": 5.670873863625396e-17,
+        "significant_holm": "***"
+      },
+      {
+        "pair": "Copilot vs OpenAI_Codex",
+        "cramers_v": 0.9017,
+        "cramers_v_label": "strong",
+        "p_raw": 0.0,
+        "significant_raw": "***",
+        "p_bonferroni": 0.0,
+        "significant_bonferroni": "***",
+        "p_holm": 0.0,
+        "significant_holm": "***"
+      },
+      {
+        "pair": "Cursor vs Devin",
+        "cramers_v": 0.06,
+        "cramers_v_label": "weak",
+        "p_raw": 0.07402953932840915,
+        "significant_raw": "ns",
+        "p_bonferroni": 0.6662658539556824,
+        "significant_bonferroni": "ns",
+        "p_holm": 0.07402953932840915,
+        "significant_holm": "ns"
+      },
+      {
+        "pair": "Cursor vs OpenAI_Codex",
+        "cramers_v": 0.8519,
+        "cramers_v_label": "strong",
+        "p_raw": 0.0,
+        "significant_raw": "***",
+        "p_bonferroni": 0.0,
+        "significant_bonferroni": "***",
+        "p_holm": 0.0,
+        "significant_holm": "***"
+      },
+      {
+        "pair": "Devin vs OpenAI_Codex",
+        "cramers_v": 0.8742,
+        "cramers_v_label": "strong",
+        "p_raw": 0.0,
+        "significant_raw": "***",
+        "p_bonferroni": 0.0,
+        "significant_bonferroni": "***",
+        "p_holm": 0.0,
+        "significant_holm": "***"
+      }
+    ],
+    "imprecise_rate_by_agent": {
+      "OpenAI_Codex": 0.4105,
+      "Cursor": 0.3694,
+      "Claude_Code": 0.2959,
+      "Devin": 0.2482,
+      "Copilot": 0.238
+    },
+    "postponed_by_resolver": {
+      "agent": 0.0064,
+      "human": 0.0656
+    }
+  }
+}

@@ -1,0 +1,160 @@
+STATISTICAL ANALYSIS RESULTS
+Reproducing: How AI Coding Agents Resolve Merge Conflicts
+==============================================================================
+
+==============================================================================
+SANITY CHECKS: Data Counts vs. main.tex Expectations
+==============================================================================
+
+--- Merge Counts ---
+  Total internal merges:          50,700   (main.tex: ~50,700)
+  Conflicting merges:             14,960   (main.tex: ~14,960, rate 29.5%)
+  Conflict rate:                   29.5%   (main.tex: 29.5%)
+
+--- Chunk Counts ---
+  Total chunks:                  121,599   (main.tex: 121,599)
+  Classifiable:                   75,752   (62.3%, main.tex: 62.3%)
+  Imprecise:                      45,847   (37.7%, main.tex: 37.7%)
+  Postponed (subset of Imprecise):  7,291   (6.0%, main.tex: 6.0%)
+
+--- Resolver Attribution (by merge, CONFLICTING ONLY) ---
+  human               : 14,381 ( 96.1%)
+  agent               :    462 (  3.1%)
+  agent-assisted      :    117 (  0.8%)
+
+[End of sanity checks]
+
+==============================================================================
+RQ1: WHO RESOLVES THE CONFLICTS?
+==============================================================================
+
+----------------------------------------------------------------------
+1. Global resolver distribution (by merge, CONFLICTING ONLY)
+----------------------------------------------------------------------
+  Total conflicting merges: 14,960
+
+  human               : 14,381 ( 96.1%)
+  agent               :    462 (  3.1%)
+  agent-assisted      :    117 (  0.8%)
+
+----------------------------------------------------------------------
+2. Per-agent self-resolution rates (Wilson CI)
+----------------------------------------------------------------------
+  Claude_Code             5.5%  95% CI [3.1%, 9.3%]  (12/220)
+  Copilot                 6.7%  95% CI [5.7%, 8.0%]  (122/1809)
+  Cursor                  8.9%  95% CI [6.7%, 11.8%]  (43/484)
+  Devin                  29.4%  95% CI [26.2%, 32.7%]  (224/763)
+  OpenAI_Codex            0.5%  95% CI [0.4%, 0.7%]  (61/11684)
+
+----------------------------------------------------------------------
+3. Per-agent agent-assisted rates (Wilson CI)
+----------------------------------------------------------------------
+  Claude_Code            24.1%  95% CI [18.9%, 30.2%]  (53/220)
+  Copilot                 0.2%  95% CI [0.1%, 0.5%]  (3/1809)
+  Cursor                  0.8%  95% CI [0.3%, 2.1%]  (4/484)
+  Devin                   0.3%  95% CI [0.1%, 1.0%]  (2/763)
+  OpenAI_Codex            0.5%  95% CI [0.4%, 0.6%]  (55/11684)
+
+----------------------------------------------------------------------
+4. Chi-squared test: resolver type × agent
+----------------------------------------------------------------------
+
+Contingency table:
+resolver_type  agent  agent-assisted  human
+agent                                      
+Claude_Code       12              53    155
+Copilot          122               3   1684
+Cursor            43               4    437
+Devin            224               2    537
+OpenAI_Codex      61              55  11568
+
+  χ²(8) = 3724.5, p = 0.00e+00  ***
+  Cramér's V (bias-corrected) = 0.3525  (strong)
+
+==============================================================================
+RQ2: RESOLUTION STRATEGIES
+==============================================================================
+
+----------------------------------------------------------------------
+1. Dataset overview
+----------------------------------------------------------------------
+  Total chunks:                  121,599
+  Classifiable:                   75,752  (62.3%)
+  Imprecise:                      45,847  (37.7%)
+
+----------------------------------------------------------------------
+2. Global strategy distribution (over classifiable chunks)
+----------------------------------------------------------------------
+  Strategy          Count      Pct                    95% CI
+  V1               37,213    49.1% [48.8%, 49.5%]
+  V2               18,618    24.6% [24.3%, 24.9%]
+  CC                4,678     6.2% [6.0%, 6.3%]
+  CB                6,797     9.0% [8.8%, 9.2%]
+  NC                7,994    10.6% [10.3%, 10.8%]
+  NN                  452     0.6% [0.5%, 0.7%]
+
+----------------------------------------------------------------------
+3. Per-agent strategy distributions (resolved chunks only)
+----------------------------------------------------------------------
+
+  Agent strategy distributions:
+  Agent                       n   V1      V2      CC      CB      NC      NN      V (vs human)
+  Claude_Code               108   57.4%  36.1%   0.9%   1.9%   3.7%   0.0%   0.0182 (weak)
+  Copilot                   776   15.9%  41.1%   5.5%  13.0%  23.5%   1.0%   0.0688 (weak)
+  Cursor                    165   21.8%  50.9%   2.4%  12.7%  11.5%   0.6%   0.0302 (weak)
+  Devin                   1,235   19.8%  55.5%   5.2%   7.9%  11.5%   0.1%   0.0933 (weak)
+  OpenAI_Codex            6,695   99.9%   0.1%   0.0%   0.0%   0.0%   0.0%   0.3168 (strong)
+  HUMAN (ref)            65,798   45.1%  26.0%   6.8%   9.9%  11.4%   0.7%
+
+----------------------------------------------------------------------
+4. Pairwise agent contrasts (Bonferroni & Holm corrections)
+----------------------------------------------------------------------
+
+  Raw p-values and effect sizes:
+  Agent Pair                                      V        Effect       p (raw)
+  Claude_Code vs Copilot                             0.3476        strong  1.79e-22
+  Claude_Code vs Cursor                              0.3665        strong  7.26e-08
+  Claude_Code vs Devin                               0.2403      moderate  2.54e-16
+  Claude_Code vs OpenAI_Codex                      [SKIP] expected freq issue
+  Copilot vs Cursor                              0.1172      moderate  3.06e-03
+  Copilot vs Devin                               0.2043      moderate  1.13e-17
+  Copilot vs OpenAI_Codex                        0.9017        strong  0.00e+00
+  Cursor vs Devin                               0.0600          weak  7.40e-02
+  Cursor vs OpenAI_Codex                        0.8519        strong  0.00e+00
+  Devin vs OpenAI_Codex                        0.8742        strong  0.00e+00
+
+  Corrected p-values (Bonferroni & Holm):
+  Agent Pair                                    Bonferroni             Holm
+  Claude_Code vs Copilot                          1.61e-21         1.07e-21
+                                                         ***              ***
+  Claude_Code vs Cursor                           6.54e-07         2.18e-07
+                                                         ***              ***
+  Claude_Code vs Devin                            2.28e-15         1.02e-15
+                                                         ***              ***
+  Copilot vs Cursor                               2.75e-02         6.12e-03
+                                                           *               **
+  Copilot vs Devin                                1.02e-16         5.67e-17
+                                                         ***              ***
+  Copilot vs OpenAI_Codex                         0.00e+00         0.00e+00
+                                                         ***              ***
+  Cursor vs Devin                                 6.66e-01         7.40e-02
+                                                          ns               ns
+  Cursor vs OpenAI_Codex                          0.00e+00         0.00e+00
+                                                         ***              ***
+  Devin vs OpenAI_Codex                           0.00e+00         0.00e+00
+                                                         ***              ***
+
+----------------------------------------------------------------------
+5. Imprecise rate by agent
+----------------------------------------------------------------------
+  OpenAI_Codex        :  41.0%
+  Cursor              :  36.9%
+  Claude_Code         :  29.6%
+  Devin               :  24.8%
+  Copilot             :  23.8%
+
+----------------------------------------------------------------------
+6. Postponed chunks by resolver type
+----------------------------------------------------------------------
+  agent          :     69 /     10,782 (  0.6%)
+  human          :  7,190 /    109,575 (  6.6%)

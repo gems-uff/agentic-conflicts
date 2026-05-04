@@ -89,43 +89,43 @@
     "dunn_pairwise_chunks": {
       "pairs": {
         "Claude_Code vs Copilot": {
-          "p_holm": 0.0008,
-          "significant": "***"
+          "p_bonferroni": 0.0013,
+          "significant": "**"
         },
         "Claude_Code vs Cursor": {
-          "p_holm": 0.4009,
+          "p_bonferroni": 1.0,
           "significant": "ns"
         },
         "Claude_Code vs Devin": {
-          "p_holm": 0.0663,
+          "p_bonferroni": 0.1658,
           "significant": "ns"
         },
         "Claude_Code vs OpenAI_Codex": {
-          "p_holm": 0.0,
+          "p_bonferroni": 0.0,
           "significant": "***"
         },
         "Copilot vs Cursor": {
-          "p_holm": 0.0004,
+          "p_bonferroni": 0.0006,
           "significant": "***"
         },
         "Copilot vs Devin": {
-          "p_holm": 0.1099,
+          "p_bonferroni": 0.3664,
           "significant": "ns"
         },
         "Copilot vs OpenAI_Codex": {
-          "p_holm": 0.0019,
+          "p_bonferroni": 0.0039,
           "significant": "**"
         },
         "Cursor vs Devin": {
-          "p_holm": 0.1099,
+          "p_bonferroni": 0.4772,
           "significant": "ns"
         },
         "Cursor vs OpenAI_Codex": {
-          "p_holm": 0.0,
+          "p_bonferroni": 0.0,
           "significant": "***"
         },
         "Devin vs OpenAI_Codex": {
-          "p_holm": 0.0,
+          "p_bonferroni": 0.0,
           "significant": "***"
         }
       }

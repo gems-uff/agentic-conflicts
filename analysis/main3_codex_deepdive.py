@@ -220,6 +220,9 @@ tables = load_tables()
 print(">> Building frames ...", flush=True)
 chunks = build_chunk_frame(tables)
 merges = build_merge_frame(tables)
+imprecise = ['Imprecise', 'Postponed']
+# Filter by only resolved chunks
+chunks=chunks[~chunks['strategy'].isin(imprecise)]
 
 # Filtra para chunks com resolver conhecido e merge_sha valido
 chunks = chunks[chunks["resolver_type"].notna() & chunks["merge_sha"].notna()].copy()

@@ -21,7 +21,7 @@ import pandas as pd
 
 # Try to import from replication-package
 try:
-    sys.path.insert(0, str(Path(__file__).parent / 'replication-package'))
+    # sys.path.insert(0, str(Path(__file__).parent / 'replication-package'))
     from analysis.common import load_tables, build_chunk_frame
 except ImportError as e:
     print(f"ERROR: Could not import replication-package analysis modules")
@@ -37,7 +37,7 @@ def main():
     import argparse
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--data-dir',
-                       default='./data/nature_of_agent_conflicts',
+                       default='./data/nature_of_agent_conflicts_paper',
                        help='Directory containing classified chunks parquet files')
     parser.add_argument('--output',
                        default='agent_filetype_chunks.csv',
