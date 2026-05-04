@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env python3
+#!/usr/bin/env python3
 """
 Reproduces ALL statistical analyses from main.tex with sanity checks.
 
@@ -44,7 +44,7 @@ from statsmodels.stats.proportion import proportion_confint
 
 warnings.filterwarnings("ignore", category=RuntimeWarning)
 
-from .common import (
+from common import (
     load_tables,
     build_chunk_frame,
     build_merge_frame,
@@ -653,3 +653,7 @@ if __name__ == "__main__":
         import traceback
         traceback.print_exc()
         sys.exit(1)
+
+
+
+

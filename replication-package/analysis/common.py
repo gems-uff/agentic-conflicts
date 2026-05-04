@@ -183,7 +183,7 @@ def load_tables(data_dir: str = None, deduplicate: bool = True) -> AnalysisTable
 
 def build_chunk_frame(tables: AnalysisTables) -> pd.DataFrame:
     """Chunk-level analysis frame with strategy and context."""
-    from .file_category import categorize_filepath
+    from file_category import categorize_filepath
 
     chunks = tables.classified_chunks
     if chunks.empty:

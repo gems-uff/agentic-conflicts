@@ -23,14 +23,9 @@ replication-package/
 │   ├── rq1_resolver.py              # RQ1 analysis: who resolves (agent vs. human)
 │   ├── rq2_strategies.py            # RQ2 analysis: how agents resolve (strategy distribution)
 │   └── plotting.py                   # Shared figure generation
-├── figures/
-│   └── pipelinev2.pdf               # Pipeline architecture diagram
 ├── data/
-│   └── README.md                    # Data download instructions (Zenodo/FigShare)
-└── supplementary/
-    ├── README.md                    # Overview of supplementary analyses
-    ├── by_language.md              # Language-level stratification results
-    └── by_task_type.md             # Task-type stratification results
+    └── README.md                    # Data download instructions (Zenodo/FigShare)
+
 ```
 
 ## Requirements
@@ -57,7 +52,7 @@ pip install -r requirements.txt
 
 ## Running the Pipeline
 
-### Option A: Full Pipeline (Server, 5-7 days)
+### Option A: Full Pipeline
 
 Requires the [AIDev dataset](https://huggingface.co/datasets/hao-li/AIDev) and sufficient compute resources.
 
@@ -77,7 +72,7 @@ python launch_pipeline.py \
 6. RQ2 analysis: resolution strategies (global, per-agent, heterogeneity)
 7. Generate all figures
 
-### Option B: Pilot Run (Local, 30-60 minutes)
+### Option B: Pilot Run
 
 Quick validation on a subset of repositories:
 
@@ -89,7 +84,7 @@ python launch_pipeline.py \
   --workers 4
 ```
 
-### Option C: Analysis Only (Local, 5-10 minutes)
+### Option C: Analysis Only
 
 Requires pre-downloaded parquet files from Zenodo/FigShare:
 
@@ -103,8 +98,8 @@ python launch_pipeline.py --analyze-only --data-dir ./data
 After running the pipeline, outputs will be in `./data/`:
 
 **Parquet files (data stage):**
-- `universe.parquet` — Agent PR metadata (57,582 repos)
-- `internal_merges.parquet` — All internal merge commits (14,960 conflicts)
+- `universe.parquet` — Agent PR metadata 
+- `internal_merges.parquet` — All internal merge commits 
 - `conflict_chunks.parquet` — Individual conflict chunks
 - `classified_chunks.parquet` — Chunks with assigned resolution strategies
 - `resolver_labels.parquet` — Resolver attribution (agent vs. human)
@@ -115,27 +110,6 @@ After running the pipeline, outputs will be in `./data/`:
 - `results/rq2/` — RQ2 tables: strategy distributions
 - `results_summary.json` — All headline numbers for the paper
 
-## Supplementary Material
-
-Additional analyses not shown in the main paper:
-
-- **`supplementary/by_language.md`** — Conflict patterns across programming languages
-- **`supplementary/by_task_type.md`** — Patterns by PR task type (feature, bug fix, refactor, etc.)
-
-These are generated automatically during the analysis stage.
-
-## Citation
-
-If you use this replication package, please cite:
-
-```bibtex
-@inproceedings{camposjunior2026merge,
-  title={How AI Coding Agents Resolve Merge Conflicts: An Empirical Study},
-  author={Omitted for Review},
-  booktitle={TBA},
-  year={2026}
-}
-```
 
 ## License & Attribution
 

@@ -4,13 +4,13 @@
 Single entry point for the merge conflict resolution study pipeline.
 
 Usage:
-    # Full pipeline (5-7 days on server)
+    # Full pipeline
     python launch_pipeline.py --aidev-dir /path/to/AIDev --data-dir ./data --workers 32
 
-    # Pilot run (30-60 minutes)
+    # Pilot run
     python launch_pipeline.py --aidev-dir /path/to/AIDev --data-dir ./data --pilot 10 --workers 4
 
-    # Analysis only (5-10 minutes, requires pre-downloaded data)
+    # Analysis only
     python launch_pipeline.py --analyze-only --data-dir ./data
 """
 
@@ -117,7 +117,9 @@ def build_universe(
     cols_to_keep = [c for c in cols_to_keep if c in pr_repo_task_df.columns]
 
     try:
-        commits_df = pd.read_parquet(aidev_dir / "pr_commits.parquet")
+        # commits_df = pd.read_parquet(aidev_dir / "pr_commits.parquet")
+        # pr_commits from AIDev contains only commits for AIDev-pop
+        commits_df = pd.DataFrame({'pr_id': [], 'sha': []})
     except FileNotFoundError:
         logging.warning("pr_commits.parquet not found; generating from universe...")
         commits_df = pd.DataFrame({'pr_id': [], 'sha': []})
