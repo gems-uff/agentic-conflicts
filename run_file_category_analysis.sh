@@ -10,7 +10,7 @@ echo ""
 
 # Step 1: Extract data
 echo "Step 1: Extracting file-category data from agent-resolved chunks..."
-python3 extract_agent_file_categories.py --data-dir ./data/nature_of_agent_conflicts_paper --output agent_filetype_chunks.csv
+python3 -m src.extract_agent_file_categories --data-dir ./data/nature_of_agent_conflicts_paper --output agent_filetype_chunks.csv
 
 if [ $? -ne 0 ]; then
     echo "ERROR: Data extraction failed"
@@ -25,7 +25,7 @@ fi
 echo ""
 echo "=========================================="
 echo "Step 2: Generating LaTeX table..."
-python3 generate_file_category_table.py agent_filetype_chunks.csv
+python3 -m src.generate_file_category_table agent_filetype_chunks.csv
 
 echo ""
 echo "=========================================="
