@@ -32,7 +32,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from collect import (
+from .collect import (
     clone_repo_bare,
     run_git_command,
     run_merge_file,
@@ -42,7 +42,7 @@ from collect import (
     time_limit,
     FunctionTimeoutError,
 )
-from extract_resolution_strategies import identify_resolution, remove_empty_lines
+from .extract_resolution_strategies import identify_resolution, remove_empty_lines
 
 # --- Configuration ---
 AIDEV_DIR = Path("AIDev")

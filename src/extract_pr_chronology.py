@@ -18,7 +18,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from collect import clone_repo_bare, run_git_command
+from .collect import clone_repo_bare, run_git_command
 
 AIDEV_DIR = Path("AIDev")
 DATA_DIR = Path("data/pr_chronology")

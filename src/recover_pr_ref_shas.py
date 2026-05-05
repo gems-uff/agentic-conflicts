@@ -73,8 +73,8 @@ import pandas as pd
 # extract_aidev_nature triggers its top-level directory creation and logger
 # setup, both of which are harmless.
 # ---------------------------------------------------------------------------
-from collect import clone_repo_bare, run_git_command
-from extract_aidev_nature import (
+from .collect import clone_repo_bare, run_git_command
+from .extract_aidev_nature import (
     DATA_DIR,
     SCRATCH_DIR,
     LOGS_DIR,

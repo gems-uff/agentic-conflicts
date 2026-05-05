@@ -81,25 +81,25 @@ To reproduce the data on your own:
 3. Run Pass A (chronology) once per scope:
     ```bash
     # Full AIDev catalog (~116k repos, network-bound — takes days)
-    python extract_pr_chronology.py --full-aidev
+    python -m src.extract_pr_chronology --full-aidev
 
     # Or restricted to AIDev-pop (~2,807 repos) for faster iteration
-    python extract_pr_chronology.py
+    python -m src.extract_pr_chronology
     ```
 
 4. Run Pass B (merge extraction and classification):
     ```bash
     # Smoke test on the first 5 repositories
-    python extract_aidev_nature.py --pilot 5
+    python -m src.extract_aidev_nature --pilot 5
 
     # Full run over whatever Pass A covered
-    python extract_aidev_nature.py
+    python -m src.extract_aidev_nature
 
     # Restrict to AIDev-pop even if Pass A covered full AIDev
-    python extract_aidev_nature.py --pop-only
+    python -m src.extract_aidev_nature --pop-only
 
     # Point at a chronology output elsewhere
-    python extract_aidev_nature.py --pr-commits /path/to/pr_commits.parquet
+    python -m src.extract_aidev_nature --pr-commits /path/to/pr_commits.parquet
     ```
 
 5. Run file-category analysis:
@@ -121,13 +121,13 @@ Both passes clone in parallel, so transient GitHub errors (DNS blips, 5xx respon
 
 ```bash
 # Retry both passes (3 attempts, 30s between attempts)
-python retry_clone_failures.py --pass both
+python -m src.retry_clone_failures --pass both
 
 # Only chronology, with more patience
-python retry_clone_failures.py --pass chronology --max-retries 5 --retry-delay 120
+python -m src.retry_clone_failures --pass chronology --max-retries 5 --retry-delay 120
 
 # AIDev-pop scope
-python retry_clone_failures.py --pop-only
+python -m src.retry_clone_failures --pop-only
 ```
 
 Pass B's retry depends on Pass A: if a repository failed during chronology, its PRs are absent from `pr_commits.parquet` and Pass B has nothing to process until the chronology is rescued first. `--pass both` respects that ordering.

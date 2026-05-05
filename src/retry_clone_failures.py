@@ -68,8 +68,8 @@ from pathlib import Path
 
 import pandas as pd
 
-import extract_aidev_nature as nature
-import extract_pr_chronology as chrono
+from . import extract_aidev_nature as nature
+from . import extract_pr_chronology as chrono
 
 # --- Output directories for this script's own state and logs -----------------
 
