@@ -1,0 +1,206 @@
+language,pr_count,pct_of_in_scope_prs
+Python,43624,20.6845
+TypeScript,41497,19.676
+JavaScript,26974,12.7898
+Go,18037,8.5523
+Unknown,14621,6.9326
+HTML,11844,5.6159
+Rust,7176,3.4025
+C#,6038,2.8629
+Java,5942,2.8174
+C++,5889,2.7923
+PHP,4711,2.2337
+Jupyter Notebook,2292,1.0868
+C,2154,1.0213
+Shell,1924,0.9123
+Dart,1886,0.8943
+Kotlin,1858,0.881
+CSS,1729,0.8198
+Swift,1483,0.7032
+Vue,1380,0.6543
+Ruby,960,0.4552
+Lua,764,0.3623
+MDX,690,0.3272
+Astro,577,0.2736
+R,435,0.2063
+PowerShell,398,0.1887
+Svelte,384,0.1821
+HCL,298,0.1413
+GDScript,275,0.1304
+Solidity,246,0.1166
+Blade,238,0.1128
+SCSS,222,0.1053
+Julia,214,0.1015
+Makefile,213,0.101
+Dockerfile,193,0.0915
+Crystal,176,0.0835
+Nix,168,0.0797
+TeX,139,0.0659
+Smarty,132,0.0626
+Bicep,129,0.0612
+MQL5,122,0.0578
+Assembly,115,0.0545
+Scala,109,0.0517
+OCaml,106,0.0503
+G-code,103,0.0488
+Liquid,102,0.0484
+Elixir,102,0.0484
+Twig,93,0.0441
+PLpgSQL,87,0.0413
+Haskell,85,0.0403
+Racket,85,0.0403
+Zig,80,0.0379
+EJS,76,0.036
+MATLAB,69,0.0327
+Circom,67,0.0318
+Jinja,61,0.0289
+Objective-C,58,0.0275
+ShaderLab,58,0.0275
+MoonBit,53,0.0251
+F#,52,0.0247
+Pascal,51,0.0242
+Vim Script,49,0.0232
+Fortran,47,0.0223
+Verilog,46,0.0218
+Lean,46,0.0218
+Nim,45,0.0213
+SystemVerilog,43,0.0204
+D,39,0.0185
+Roff,37,0.0175
+Perl,36,0.0171
+CMake,35,0.0166
+Rich Text Format,33,0.0156
+QML,31,0.0147
+Emacs Lisp,29,0.0138
+TSQL,27,0.0128
+Visual Basic .NET,27,0.0128
+OpenSCAD,27,0.0128
+Mustache,23,0.0109
+Groovy,22,0.0104
+Open Policy Agent,22,0.0104
+Clojure,21,0.01
+Luau,20,0.0095
+Erlang,20,0.0095
+Starlark,19,0.009
+Mathematica,17,0.0081
+VBA,16,0.0076
+SQF,16,0.0076
+Elm,16,0.0076
+Nunjucks,14,0.0066
+Hack,13,0.0062
+Game Maker Language,13,0.0062
+Processing,13,0.0062
+Just,12,0.0057
+Batchfile,12,0.0057
+ReScript,12,0.0057
+LLVM,11,0.0052
+AutoHotkey,10,0.0047
+1C Enterprise,10,0.0047
+Cuda,9,0.0043
+nesC,9,0.0043
+Apex,8,0.0038
+Markdown,8,0.0038
+Tcl,8,0.0038
+AMPL,8,0.0038
+Scheme,8,0.0038
+YAML,8,0.0038
+Handlebars,7,0.0033
+Move,7,0.0033
+Motoko,7,0.0033
+GSC,7,0.0033
+XSLT,6,0.0028
+Pug,6,0.0028
+VHDL,6,0.0028
+Logos,6,0.0028
+Common Lisp,6,0.0028
+Smalltalk,6,0.0028
+Gherkin,5,0.0024
+Cairo,5,0.0024
+WebAssembly,5,0.0024
+PLSQL,5,0.0024
+Answer Set Programming,5,0.0024
+Prolog,5,0.0024
+Max,5,0.0024
+CAP CDS,5,0.0024
+Nextflow,5,0.0024
+Mojo,5,0.0024
+CoffeeScript,4,0.0019
+Haxe,4,0.0019
+COBOL,4,0.0019
+AngelScript,4,0.0019
+ColdFusion,4,0.0019
+GLSL,4,0.0019
+AppleScript,4,0.0019
+ASP.NET,3,0.0014
+AL,3,0.0014
+ActionScript,3,0.0014
+Brightscript,3,0.0014
+SourcePawn,3,0.0014
+Vim script,3,0.0014
+DM,3,0.0014
+Visual Basic 6.0,3,0.0014
+CodeQL,3,0.0014
+Matlab,3,0.0014
+GAP,3,0.0014
+Odin,3,0.0014
+OpenEdge ABL,3,0.0014
+Lasso,3,0.0014
+TypeSpec,2,0.0009
+Less,2,0.0009
+Linker Script,2,0.0009
+ABAP,2,0.0009
+PureScript,2,0.0009
+XML,2,0.0009
+Cython,2,0.0009
+reStructuredText,2,0.0009
+PDDL,2,0.0009
+YARA,2,0.0009
+Stata,2,0.0009
+Gleam,2,0.0009
+Pony,2,0.0009
+Nushell,2,0.0009
+Smali,2,0.0009
+NASL,2,0.0009
+Rocq Prover,2,0.0009
+GAML,2,0.0009
+Mermaid,2,0.0009
+Visual Basic,2,0.0009
+Arduino,1,0.0005
+Inno Setup,1,0.0005
+Objective-J,1,0.0005
+Brainfuck,1,0.0005
+JSON,1,0.0005
+StringTemplate,1,0.0005
+VBScript,1,0.0005
+Rascal,1,0.0005
+mIRC Script,1,0.0005
+Raku,1,0.0005
+QMake,1,0.0005
+Standard ML,1,0.0005
+DIGITAL Command Language,1,0.0005
+FreeMarker,1,0.0005
+Fluent,1,0.0005
+Macaulay2,1,0.0005
+Xtend,1,0.0005
+BrighterScript,1,0.0005
+Pkl,1,0.0005
+Sass,1,0.0005
+Thrift,1,0.0005
+BibTeX Style,1,0.0005
+Vala,1,0.0005
+Jai,1,0.0005
+Jsonnet,1,0.0005
+CUE,1,0.0005
+MQL4,1,0.0005
+mdsvex,1,0.0005
+API Blueprint,1,0.0005
+Objective-C++,1,0.0005
+Agda,1,0.0005
+ASP,1,0.0005
+RPGLE,1,0.0005
+Latte,1,0.0005
+Pawn,1,0.0005
+mcfunction,1,0.0005
+Nginx,1,0.0005
+Tree-sitter Query,1,0.0005
+XC,1,0.0005
