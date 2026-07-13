@@ -2,9 +2,11 @@
 
 An empirical study of who resolves merge conflicts inside AI-authored pull requests and how each agent's resolution strategies compare to one another and to humans. The study covers five coding agents — Anthropic's **Claude Code**, OpenAI's **Codex**, GitHub's **Copilot** (agentic mode), **Cursor**, and Cognition's **Devin** — drawn from the AIDev catalogue.
 
-**Submitted to:** SBES 2026 (September 8–12, 2026, São Paulo, SP, Brazil).
+**Accepted at:** SBES 2026 — 40th Brazilian Symposium on Software Engineering (September 8–12, 2026, São Paulo, SP, Brazil).
 
-**Replication package:** see [`replication-package/`](replication-package/README.md).
+**Replication package:** see [`replication-package/`](replication-package/README.md). The curated, self-contained replication package is also published as a standalone repository at [gems-uff/agentic-conflicts](https://github.com/gems-uff/agentic-conflicts).
+
+**Data:** the intermediate parquet datasets are archived on figshare under CC BY 4.0 — [doi.org/10.6084/m9.figshare.32159415](https://doi.org/10.6084/m9.figshare.32159415).
 
 ## Study Overview
 
@@ -164,3 +166,21 @@ Chunk-level tables are de-duplicated on `(repo_full_name, merge_sha, file_path, 
 - The five agents **do not share a common resolution strategy**: pairwise Cramér's *V* ranges from near-indistinguishable (Cursor vs. Devin, *V*=0.06) to nearly disjoint (Copilot vs. Codex, *V*=0.90).
 - **Two agents are single-repository dominated**: 90.2% of Codex's and 83.3% of Claude Code's self-resolved merges originate from one repository each; per-agent profiles for these two reflect the dominant repository's workflow, not general agent behaviour.
 - Agents commit **Postponed** chunks (unresolved markers left in the file) at **0.76%** vs. **9.85%** for humans — a 13× asymmetry consistent with scripted pre-commit verification.
+
+## License
+
+- **Code** (scripts, notebooks, pipeline): [MIT License](LICENSE).
+- **Data and analysis results** (including the archive at [doi.org/10.6084/m9.figshare.32159415](https://doi.org/10.6084/m9.figshare.32159415)): [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
+
+## Citation
+
+If you use this study, its code, or its data, please cite:
+
+```bibtex
+@inproceedings{agenticconflicts2026,
+  title     = {How AI Coding Agents Resolve Merge Conflicts: An Empirical Study},
+  booktitle = {Proceedings of the 40th Brazilian Symposium on Software Engineering (SBES)},
+  year      = {2026},
+  note      = {To appear. Update with final page numbers and DOI once available.}
+}
+```
