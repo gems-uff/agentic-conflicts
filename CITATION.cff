@@ -5,10 +5,10 @@ type: software
 license: MIT
 repository-code: "https://github.com/gems-uff/agentic-conflicts"
 authors:
-  - family-names: Campos
-    given-names: Heleno
+  - family-names: "Campos Junior"
+    given-names: "Heleno de Souza"
   - family-names: Murta
-    given-names: Leonardo
+    given-names: "Leonardo Gresta Paulino"
 preferred-citation:
   type: conference-paper
   title: "How AI Coding Agents Resolve Merge Conflicts: An Empirical Study"
@@ -16,7 +16,7 @@ preferred-citation:
   collection-title: "Proceedings of the 40th Brazilian Symposium on Software Engineering (SBES)"
   # TODO: add final page numbers and DOI once available.
   authors:
-    - family-names: Campos
-      given-names: Heleno
+    - family-names: "Campos Junior"
+      given-names: "Heleno de Souza"
     - family-names: Murta
-      given-names: Leonardo
+      given-names: "Leonardo Gresta Paulino"

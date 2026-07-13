@@ -153,7 +153,7 @@ If you use this replication package or its data, please cite:
 ```bibtex
 @inproceedings{agenticconflicts2026,
   title     = {How AI Coding Agents Resolve Merge Conflicts: An Empirical Study},
-  author    = {Campos, Heleno and Murta, Leonardo},
+  author    = {Campos Junior, Heleno de Souza and Murta, Leonardo Gresta Paulino},
   booktitle = {Proceedings of the 40th Brazilian Symposium on Software Engineering (SBES)},
   year      = {2026},
   note      = {To appear. Update with final page numbers and DOI once available.}
