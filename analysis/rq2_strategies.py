@@ -1,66 +1,97 @@
+"""RQ2 Analysis: How Do Agents Resolve Conflicts?"""
+
+import logging
+from pathlib import Path
 import pandas as pd
-import matplotlib.pyplot as plt
-from analysis_utils import load_classified_chunks, save_plot, save_table
+from .common import AnalysisTables, STRATEGY_ORDER, build_chunk_frame
 
-def plot_stacked_bar(df, index_col, title, filename, directory="results/rq2"):
-    # Create crosstab
-    ct = pd.crosstab(df[index_col], df['strategy'], normalize='index') * 100
-    
-    # Sort for better visualization (e.g. by index count or alphabetically)
-    if index_col != 'strata':
-        # only keep top categories if there are too many
-        top_cats = df[index_col].value_counts().nlargest(10).index
-        ct = ct.loc[top_cats]
-        # Re-normalize just in case
-        ct = ct.div(ct.sum(axis=1), axis=0) * 100
 
-    ax = ct.plot(kind='barh', stacked=True, figsize=(10, 6), colormap='Set2')
-    plt.title(title)
-    plt.xlabel('Percentage (%)')
-    plt.ylabel(index_col.capitalize())
-    
-    # Place legend outside
-    plt.legend(title='Strategy', bbox_to_anchor=(1.05, 1), loc='upper left')
-    plt.tight_layout()
-    save_plot(plt.gcf(), filename, directory)
-    plt.close()
+def _export_results(results: dict, output_dir: str):
+    """Export RQ2 results to CSV and TXT formats."""
+    output_dir = Path(output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
 
-def generate_rq2_stats(df, suffix=""):
-    print(f"Computing global strategy frequencies{suffix}...")
-    global_freq = df['strategy'].value_counts(normalize=True).reset_index()
-    global_freq.columns = ['strategy', 'percentage']
-    global_freq['percentage'] *= 100
-    save_table(global_freq, f"strategy_frequencies_global{suffix}", "results/rq2")
+    # Export as TXT (human-readable)
+    txt_file = output_dir / "rq2_strategy_distribution.txt"
+    with open(txt_file, 'w', encoding='utf-8') as f:
+        f.write("RQ2: How Do Agents Resolve Merge Conflicts?\n")
+        f.write("=" * 50 + "\n\n")
+        f.write(f"Total Chunks: {results.get('total_chunks', 0)}\n\n")
+        f.write("Strategy Distribution:\n")
+        for strategy in STRATEGY_ORDER:
+            key = f'strategy_{strategy}'
+            count = results.get(key, 0)
+            pct = results.get(f'{key}_pct', 0)
+            if count > 0:
+                f.write(f"  {strategy}: {count} ({pct:.1f}%)\n")
 
-    for strata in ['agent', 'language', 'pr_task_type', 'resolver_type']:
-        print(f"Computing strategies by {strata}{suffix}...")
-        
-        # Crosstab to get table
-        ct = pd.crosstab(df[strata], df['strategy'], normalize='index') * 100
-        ct_flat = ct.reset_index()
-        save_table(ct_flat, f"strategy_frequencies_by_{strata}{suffix}", "results/rq2")
-        
-        # Plot stacked bar chart
-        plot_stacked_bar(df, strata, f'Resolution Strategies by {strata.capitalize()}{" (Precise Only)" if suffix else ""}', f'strategies_stacked_{strata}{suffix}')
+    logging.info(f"Exported results to {txt_file}")
 
-def main():
-    print("Loading chunks for RQ2...")
-    df = load_classified_chunks()
+    # Export as CSV
+    csv_file = output_dir / "rq2_strategy_distribution.csv"
+    rows = []
+    for strategy in STRATEGY_ORDER:
+        key = f'strategy_{strategy}'
+        count = results.get(key, 0)
+        if count > 0:
+            rows.append({
+                'strategy': strategy,
+                'count': count,
+                'percentage': results.get(f'{key}_pct', 0)
+            })
+    if rows:
+        df = pd.DataFrame(rows)
+        df.to_csv(csv_file, index=False)
+        logging.info(f"Exported summary to {csv_file}")
 
-    if df.empty:
-        print("No classified chunks found.")
-        return
 
-    # Ensure resolver_type has no NaNs
-    df['resolver_type'] = df['resolver_type'].fillna('Unknown').astype(str)
+def analyze_rq2(tables: AnalysisTables, output_dir: str = './results') -> dict:
+    """Analyze RQ2: How do agents resolve merge conflicts (strategies)?"""
+    logging.info("\nRQ2: How Do Agents Resolve Merge Conflicts?")
+    logging.info("=" * 50)
 
-    generate_rq2_stats(df, "")
+    results = {}
+    classified = build_chunk_frame(tables)
+    if classified is None or classified.empty:
+        logging.warning("WARNING: No classified chunks available for RQ2 analysis")
+        logging.info("=" * 50)
+        # Export empty results
+        _export_results(results, output_dir)
+        return results
 
-    print("Filtering out Imprecise chunks...")
-    df_precise = df[df['strategy'] != 'Imprecise']
-    generate_rq2_stats(df_precise, "_precise")
+    if 'strategy' not in classified.columns:
+        logging.warning("WARNING: strategy column not found in classified_chunks")
+        logging.info("=" * 50)
+        _export_results(results, output_dir)
+        return results
 
-    print("RQ2 analysis complete.")
+    logging.info(f"\nOverall Strategy Distribution:")
+    strategy_dist = classified['strategy'].value_counts()
+    total = len(classified)
+    results['total_chunks'] = total
 
-if __name__ == "__main__":
-    main()
+    for strategy in STRATEGY_ORDER:
+        if strategy in strategy_dist.index:
+            count = strategy_dist[strategy]
+            pct = count / total * 100
+            logging.info(f"  {strategy}: {count:,} ({pct:.1f}%)")
+            results[f'strategy_{strategy}'] = count
+            results[f'strategy_{strategy}_pct'] = pct
+
+    logging.info("=" * 50)
+
+    # Export results
+    _export_results(results, output_dir)
+
+    return results
+
+
+if __name__ == '__main__':
+    import sys
+    from .common import load_tables
+    if len(sys.argv) > 1:
+        data_dir = sys.argv[1]
+    else:
+        data_dir = './data'
+    tables = load_tables(data_dir)
+    analyze_rq2(tables, output_dir=f'{data_dir}/results')

@@ -25,9 +25,11 @@ logs
 # Project-specific ignored files
 *.pdf
 bare_repos/
-data/nature_of_agent_conflicts/scratch/
-data/
 
-# Paper (LaTeX) lives in Overleaf and is versioned in a local-only nested git
-# repo under paper/. It must never be pushed to the project remote.
-paper/
+# Downloaded/generated data — keep only the download instructions
+data/*
+!data/README.md
+
+# Analysis outputs
+results/
+figures/

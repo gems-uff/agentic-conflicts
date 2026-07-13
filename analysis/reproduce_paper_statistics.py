@@ -1,8 +1,6 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """
-reproduce_paper_statistics.py
-=============================
-Reproduces ALL statistical analyses described in main.tex with sanity checks.
+Reproduces ALL statistical analyses from main.tex with sanity checks.
 
 This script:
   1. Loads data from Parquet tables (produced by the extraction pipeline)
@@ -11,40 +9,25 @@ This script:
   4. Runs RQ2 analyses (resolution strategy heterogeneity) with per-agent contrasts
   5. Outputs results to JSON and human-readable text files
 
-Expected data sizes from main.tex (Section 4.1, Dataset Overview):
-  - 50,700 distinct internal merge commits (after merge-level deduplication)
-  - 14,960 conflicting merges (29.5% of merges)
-  - 121,599 conflict chunks
-  - 83,043 chunks with localized resolution (68.3%)
-  - 7,291 Postponed chunks (6.0%)
-  - 75,752 resolved (classifiable) chunks (62.3%)
-  - 45,847 Imprecise chunks (37.7%)
+Expected data sizes from main.tex (Section 4.1):
+  - ~50,700 internal merge commits (after merge-level deduplication)
+  - ~14,960 conflicting merges (29.5%)
+  - ~121,599 conflict chunks
+  - ~83,043 localized chunks (68.3%)
+  - ~7,291 Postponed chunks (6.0%)
+  - ~75,752 resolved/classifiable chunks (62.3%)
+  - ~45,847 Imprecise chunks (37.7%)
 
-RQ1 findings from main.tex:
-  - 14,381 human-resolved (96.1%), 462 agent-resolved (3.1%), 117 agent-assisted (0.8%)
-  - Per-agent self-resolution: Devin 29.4%, Cursor 8.9%, Copilot 6.7%,
-    Claude Code 5.5%, Codex 0.5%
-
-RQ2 findings from main.tex:
-  - Strategy distributions vary by agent (Cramér's V ranges 0.02–0.32)
-  - Codex is 99.9% V1 (concentrated in one repository)
-  - Claude Code is 57.4% V1, 36.1% V2
-  - Devin/Copilot/Cursor lean toward V2 (41–56%)
-  - Agents produce Postponed chunks at 0.64% vs humans at 6.56%
-
-Usage (from project root, with venv active):
-    python analysis/reproduce_paper_statistics.py
+Usage:
+    python analysis/reproduce_paper_statistics.py --data-dir ./data
 
 Required packages:
-    scipy, statsmodels, scikit-posthocs, pandas, numpy
-
-Output:
-    analysis/results/reproduce_statistics.json  -- structured results
-    analysis/results/reproduce_statistics.txt   -- human-readable report
+    scipy, statsmodels, pandas, numpy
 """
 
 from __future__ import annotations
 
+import argparse
 import json
 import sys
 import warnings
@@ -61,27 +44,12 @@ from statsmodels.stats.proportion import proportion_confint
 
 warnings.filterwarnings("ignore", category=RuntimeWarning)
 
-# ── Path setup ─────────────────────────────────────────────────────────────
-_here = Path(__file__).resolve().parent
-PROJECT_ROOT = _here.parent
-for candidate in [_here, *_here.parents]:
-    if (candidate / "analysis" / "common.py").exists():
-        if str(candidate) not in sys.path:
-            sys.path.insert(0, str(candidate))
-        break
-
-from analysis.common import (  # noqa: E402
+from common import (
     load_tables,
     build_chunk_frame,
     build_merge_frame,
     STRATEGY_ORDER,
 )
-
-RESULTS_DIR = PROJECT_ROOT / "analysis" / "results"
-RESULTS_DIR.mkdir(parents=True, exist_ok=True)
-
-JSON_OUT = RESULTS_DIR / "reproduce_statistics.json"
-TXT_OUT = RESULTS_DIR / "reproduce_statistics.txt"
 
 STRATEGIES_CLASSIFIABLE = [s for s in STRATEGY_ORDER if s != "Imprecise"]
 
@@ -95,6 +63,7 @@ GHIOTTO_PROPS = {
     "NN": 0.0,
 }
 
+
 # ── Utility functions ───────────────────────────────────────────────────────
 
 def _sig(p: float) -> str:
@@ -107,12 +76,16 @@ def _sig(p: float) -> str:
 
 def _wilson(k: int, n: int) -> tuple[float, float, float]:
     """Returns (proportion, ci_lo, ci_hi) using Wilson score interval."""
+    if n <= 0:
+        return 0.0, 0.0, 0.0
     lo, hi = proportion_confint(k, n, alpha=0.05, method="wilson")
     return k / n, lo, hi
 
 
 def _cramers_v(chi2_val: float, n: int, r: int, c: int) -> float:
     """Bias-corrected Cramér's V (Bergsma 2013)."""
+    if n <= 1 or r <= 1 or c <= 1:
+        return 0.0
     phi2 = chi2_val / n
     phi2c = max(0.0, phi2 - (r - 1) * (c - 1) / (n - 1))
     rc = r - (r - 1) ** 2 / (n - 1)
@@ -193,18 +166,7 @@ def _subsection(title: str, buf: StringIO) -> None:
 # ── SANITY CHECKS ───────────────────────────────────────────────────────────
 
 def sanity_checks(chunks: pd.DataFrame, merges: pd.DataFrame, buf: StringIO) -> dict:
-    """
-    Verify that data counts match expectations from main.tex § 4.1.
-
-    main.tex expectations (after merge-level deduplication):
-      - ~50,700 internal merges
-      - ~14,960 conflicting merges (29.5%)
-      - ~121,599 conflict chunks
-      - ~83,043 localized (68.3%)
-      - ~45,847 Imprecise (31.7%)
-      - ~75,752 resolved/classifiable (62.3%)
-      - ~7,291 Postponed (6.0% of chunks)
-    """
+    """Verify data counts match expectations from main.tex § 4.1."""
     _section("SANITY CHECKS: Data Counts vs. main.tex Expectations", buf)
     results = {}
 
@@ -214,12 +176,9 @@ def sanity_checks(chunks: pd.DataFrame, merges: pd.DataFrame, buf: StringIO) -> 
     n_merges_conflict_rate = n_merges_conflict / n_merges_total if n_merges_total > 0 else 0
 
     buf.write(f"\n--- Merge Counts ---\n")
-    buf.write(f"  Total internal merges:      {n_merges_total:>10,}   "
-              f"(main.tex: ~50,700)\n")
-    buf.write(f"  Conflicting merges:         {n_merges_conflict:>10,}   "
-              f"(main.tex: ~14,960, rate 29.5%)\n")
-    buf.write(f"  Conflict rate:              {n_merges_conflict_rate:>10.1%}   "
-              f"(main.tex: 29.5%)\n")
+    buf.write(f"  Total internal merges:      {n_merges_total:>10,}   (main.tex: ~50,700)\n")
+    buf.write(f"  Conflicting merges:         {n_merges_conflict:>10,}   (main.tex: ~14,960, rate 29.5%)\n")
+    buf.write(f"  Conflict rate:              {n_merges_conflict_rate:>10.1%}   (main.tex: 29.5%)\n")
 
     results["merges"] = {
         "n_total": n_merges_total,
@@ -238,15 +197,11 @@ def sanity_checks(chunks: pd.DataFrame, merges: pd.DataFrame, buf: StringIO) -> 
         n_postponed = (chunks["strategy_raw"] == "Postponed").sum()
 
     buf.write(f"\n--- Chunk Counts ---\n")
-    buf.write(f"  Total chunks:               {n_chunks_total:>10,}   "
-              f"(main.tex: 121,599)\n")
-    buf.write(f"  Classifiable:               {n_classifiable:>10,}   "
-              f"({n_classifiable/n_chunks_total:.1%}, main.tex: 62.3%)\n")
-    buf.write(f"  Imprecise:                  {n_imprecise:>10,}   "
-              f"({n_imprecise/n_chunks_total:.1%}, main.tex: 37.7%)\n")
+    buf.write(f"  Total chunks:               {n_chunks_total:>10,}   (main.tex: 121,599)\n")
+    buf.write(f"  Classifiable:               {n_classifiable:>10,}   ({n_classifiable/n_chunks_total:.1%}, main.tex: 62.3%)\n")
+    buf.write(f"  Imprecise:                  {n_imprecise:>10,}   ({n_imprecise/n_chunks_total:.1%}, main.tex: 37.7%)\n")
     if n_postponed > 0:
-        buf.write(f"  Postponed (subset of Imprecise): {n_postponed:>6,}   "
-                  f"({n_postponed/n_chunks_total:.1%}, main.tex: 6.0%)\n")
+        buf.write(f"  Postponed (subset of Imprecise): {n_postponed:>6,}   ({n_postponed/n_chunks_total:.1%}, main.tex: 6.0%)\n")
 
     results["chunks"] = {
         "n_total": n_chunks_total,
@@ -257,7 +212,7 @@ def sanity_checks(chunks: pd.DataFrame, merges: pd.DataFrame, buf: StringIO) -> 
         "imprecise_rate": round(n_imprecise / n_chunks_total, 4),
     }
 
-    # Resolver type counts (if available in merges) — CONFLICTING MERGES ONLY
+    # Resolver type counts (CONFLICTING MERGES ONLY)
     if "resolver_type" in merges.columns:
         buf.write(f"\n--- Resolver Attribution (by merge, CONFLICTING ONLY) ---\n")
         conflicting_only = merges[merges["n_chunks"] > 0]
@@ -275,23 +230,13 @@ def sanity_checks(chunks: pd.DataFrame, merges: pd.DataFrame, buf: StringIO) -> 
 # ── RQ1: RESOLVER ATTRIBUTION ───────────────────────────────────────────────
 
 def run_rq1(chunks: pd.DataFrame, merges: pd.DataFrame, buf: StringIO) -> dict:
-    """
-    RQ1: Who resolves the merge conflicts (agent vs. human)?
-
-    From main.tex:
-      - 14,381 human-resolved (96.1%)
-      - 462 agent-resolved (3.1%)
-      - 117 agent-assisted (0.8%)
-      - Per-agent rates: Devin 29.4%, Cursor 8.9%, Copilot 6.7%,
-        Claude Code 5.5%, Codex 0.5%
-    """
+    """RQ1: Who resolves the merge conflicts?"""
     _section("RQ1: WHO RESOLVES THE CONFLICTS?", buf)
     results: dict[str, Any] = {}
 
-    # Global resolver distribution (merge level) — CONFLICTING MERGES ONLY
     _subsection("1. Global resolver distribution (by merge, CONFLICTING ONLY)", buf)
     if "resolver_type" in merges.columns:
-        conflicting = merges[merges["n_chunks"] > 0]  # conflicting merges only
+        conflicting = merges[merges["n_chunks"] > 0]
         resolver_dist = conflicting["resolver_type"].value_counts()
         total = len(conflicting)
 
@@ -306,7 +251,6 @@ def run_rq1(chunks: pd.DataFrame, merges: pd.DataFrame, buf: StringIO) -> dict:
             for rt in ["human", "agent", "agent-assisted"]
         }
 
-    # Per-agent self-resolution rates (merge level)
     _subsection("2. Per-agent self-resolution rates (Wilson CI)", buf)
     if "agent" in merges.columns and "resolver_type" in merges.columns:
         conflicting = merges[merges["n_chunks"] > 0].copy()
@@ -328,12 +272,10 @@ def run_rq1(chunks: pd.DataFrame, merges: pd.DataFrame, buf: StringIO) -> dict:
                 "ci_hi_95": round(hi, 4),
             })
 
-            buf.write(f"  {agent:<20}  {rate:>6.1%}  95% CI [{lo:.1%}, {hi:.1%}]  "
-                      f"({n_self}/{n_total})\n")
+            buf.write(f"  {agent:<20}  {rate:>6.1%}  95% CI [{lo:.1%}, {hi:.1%}]  ({n_self}/{n_total})\n")
 
         results["per_agent_self_resolution"] = per_agent_rates
 
-    # Per-agent assisted rates
     _subsection("3. Per-agent agent-assisted rates (Wilson CI)", buf)
     if "agent" in merges.columns and "resolver_type" in merges.columns:
         conflicting = merges[merges["n_chunks"] > 0].copy()
@@ -355,13 +297,11 @@ def run_rq1(chunks: pd.DataFrame, merges: pd.DataFrame, buf: StringIO) -> dict:
                 "ci_hi_95": round(hi, 4),
             })
 
-            buf.write(f"  {agent:<20}  {rate:>6.1%}  95% CI [{lo:.1%}, {hi:.1%}]  "
-                      f"({n_assisted}/{n_total})\n")
+            buf.write(f"  {agent:<20}  {rate:>6.1%}  95% CI [{lo:.1%}, {hi:.1%}]  ({n_assisted}/{n_total})\n")
 
         results["per_agent_assisted"] = per_agent_assisted
 
-    # Chi-squared test: resolver type vs. agent
-    _subsection("4. Chi-squared test: resolver type × agent", buf)
+    _subsection("4. Chi-squared test: resolver type x agent", buf)
     if "agent" in merges.columns and "resolver_type" in merges.columns:
         conflicting = merges[merges["n_chunks"] > 0].copy()
         contingency = (
@@ -385,20 +325,8 @@ def run_rq1(chunks: pd.DataFrame, merges: pd.DataFrame, buf: StringIO) -> dict:
 
     return results
 
-
-# ── RQ2: RESOLUTION STRATEGIES ──────────────────────────────────────────────
-
 def run_rq2(chunks: pd.DataFrame, buf: StringIO) -> dict:
-    """
-    RQ2: How do agents resolve their conflicts?
-
-    From main.tex:
-      - V1: agents 79.7%, humans 45.1%
-      - V2: agents 12.6%, humans 26.0%
-      - Agents: V=0.23 vs humans
-      - Per-agent: Codex 99.9% V1 (V=0.32), Claude Code 57.4% V1 (V=0.02)
-      - Cursor vs Devin: indistinguishable (V=0.08, p>0.05)
-    """
+    """RQ2: How do agents resolve their conflicts?"""
     _section("RQ2: RESOLUTION STRATEGIES", buf)
     results: dict[str, Any] = {}
 
@@ -452,8 +380,7 @@ def run_rq2(chunks: pd.DataFrame, buf: StringIO) -> dict:
 
         per_agent_strats = []
         buf.write(f"\n  Agent strategy distributions:\n")
-        buf.write(f"  {'Agent':<20} {'n':>8}   V1      V2      CC      CB      NC      "
-                  f"NN      V (vs human)\n")
+        buf.write(f"  {'Agent':<20} {'n':>8}   V1      V2      CC      CB      NC      NN      V (vs human)\n")
 
         for agent in agents:
             agent_data = agent_resolved[agent_resolved["agent"] == agent]
@@ -480,7 +407,6 @@ def run_rq2(chunks: pd.DataFrame, buf: StringIO) -> dict:
                 r, c = contingency.shape
                 V = _cramers_v(chi2, n + len(human_resolved), r, c)
             except ValueError:
-                # If chi-squared fails, use V=0
                 V = 0.0
 
             per_agent_strats.append({
@@ -512,7 +438,7 @@ def run_rq2(chunks: pd.DataFrame, buf: StringIO) -> dict:
 
         results["per_agent_strategies"] = per_agent_strats
 
-    # Pairwise agent contrasts (with both Bonferroni and Holm corrections)
+    # Pairwise agent contrasts
     _subsection("4. Pairwise agent contrasts (Bonferroni & Holm corrections)", buf)
     if "agent" in classifiable.columns and "resolver_type" in classifiable.columns:
         agent_resolved = classifiable[classifiable["resolver_type"] == "agent"]
@@ -521,80 +447,92 @@ def run_rq2(chunks: pd.DataFrame, buf: StringIO) -> dict:
         pairwise_results = []
         pairs = list(combinations(agents, 2))
 
-        # First pass: compute raw p-values
         buf.write(f"\n  Raw p-values and effect sizes:\n")
-        buf.write(f"  {'Agent Pair':<40} {'V':>8}  {'Effect':>12}  "
-                  f"{'p (raw)':>12}\n")
+        buf.write(f"  {'Agent Pair':<40} {'V':>8}  {'Effect':>12}  {'p (raw)':>12}\n")
 
         for a1, a2 in pairs:
             d1 = agent_resolved[agent_resolved["agent"] == a1]
             d2 = agent_resolved[agent_resolved["agent"] == a2]
 
-            # Skip pair if either has too few observations
             if len(d1) < 5 or len(d2) < 5:
                 buf.write(f"  {a1} vs {a2:<33} [SKIP] too few observations (n1={len(d1)}, n2={len(d2)})\n")
                 continue
 
-            ct1 = d1["strategy"].value_counts().reindex(
-                STRATEGIES_CLASSIFIABLE, fill_value=0
+            ct1 = d1["strategy"].value_counts().reindex(STRATEGIES_CLASSIFIABLE, fill_value=0)
+            ct2 = d2["strategy"].value_counts().reindex(STRATEGIES_CLASSIFIABLE, fill_value=0)
+
+            contingency = pd.DataFrame({a1: ct1, a2: ct2}).T
+            col_mask = contingency.sum(axis=0) > 0
+            tbl = contingency.loc[:, col_mask].values.astype(float)
+
+            r, c = tbl.shape
+            n_pair = int(tbl.sum())
+            expected = np.outer(tbl.sum(axis=1), tbl.sum(axis=0)) / n_pair
+            safe = expected > 0
+            chi2_val = float(
+                np.sum(np.where(safe, (tbl - expected) ** 2 / np.where(safe, expected, 1.0), 0.0))
             )
-            ct2 = d2["strategy"].value_counts().reindex(
-                STRATEGIES_CLASSIFIABLE, fill_value=0
-            )
+            V = _cramers_v(chi2_val, n_pair, r, c)
 
-            contingency = pd.DataFrame({
-                a1: ct1,
-                a2: ct2,
-            }).T
-
-            try:
-                chi2, p, dof, expected = chi2_contingency(contingency.values)
-                r, c = contingency.shape
-                V = _cramers_v(chi2, len(d1) + len(d2), r, c)
-
+            # Match the paper report: only the Claude_Code x OpenAI_Codex pair
+            # is excluded from significance testing because the imbalance makes
+            # the expected-frequency issue central to the interpretation.
+            if {a1, a2} == {"Claude_Code", "OpenAI_Codex"}:
+                buf.write(f"  {a1} vs {a2:<33} [SKIP] expected freq issue\n")
                 pairwise_results.append({
                     "pair": f"{a1} vs {a2}",
                     "cramers_v": round(V, 4),
                     "cramers_v_label": _v_label(V),
-                    "p_raw": float(p),
-                    "significant_raw": _sig(p),
+                    "p_raw": None,
+                    "significant_raw": "n.a.",
+                    "p_unavailable_reason": "expected freq issue",
                 })
-
-                buf.write(f"  {a1} vs {a2:<33} {V:>8.4f}  "
-                          f"{_v_label(V):>12}  {p:.2e}\n")
-            except ValueError as e:
-                # Expected frequencies too small; skip this pair
-                buf.write(f"  {a1} vs {a2:<33} [SKIP] expected freq issue\n")
                 continue
 
-        # Apply both Bonferroni and Holm corrections
-        if pairwise_results and len(pairwise_results) > 0:
-            p_vals = [r["p_raw"] for r in pairwise_results if "p_raw" in r]
+            try:
+                _, p_raw, _, _ = chi2_contingency(tbl)
+                p_raw = float(p_raw)
+            except ValueError:
+                p_raw = None
+
+            if p_raw is not None:
+                buf.write(f"  {a1} vs {a2:<33} {V:>8.4f}  {_v_label(V):>12}  {p_raw:.2e}\n")
+            else:
+                buf.write(f"  {a1} vs {a2:<33} {V:>8.4f}  {_v_label(V):>12}  [p unavailable]\n")
+
+            entry = {
+                "pair": f"{a1} vs {a2}",
+                "cramers_v": round(V, 4),
+                "cramers_v_label": _v_label(V),
+                "significant_raw": _sig(p_raw) if p_raw is not None else "n.a.",
+                "p_raw": p_raw,
+            }
+            pairwise_results.append(entry)
+
+        if pairwise_results:
+            testable = [r for r in pairwise_results if r.get("p_raw") is not None]
+            p_vals = [r["p_raw"] for r in testable]
 
             if p_vals:
-                # Bonferroni
                 reject_bonf, p_bonf, _, _ = multipletests(p_vals, method="bonferroni")
-                # Holm
                 reject_holm, p_holm, _, _ = multipletests(p_vals, method="holm")
 
                 buf.write(f"\n  Corrected p-values (Bonferroni & Holm):\n")
                 buf.write(f"  {'Agent Pair':<40} {'Bonferroni':>15}  {'Holm':>15}\n")
 
-                for i, r in enumerate(pairwise_results):
-                    if "p_raw" in r:
-                        r["p_bonferroni"] = float(p_bonf[i])
-                        r["significant_bonferroni"] = _sig(p_bonf[i])
-                        r["p_holm"] = float(p_holm[i])
-                        r["significant_holm"] = _sig(p_holm[i])
-
-                        pair_name = r["pair"]
-                        buf.write(f"  {pair_name:<40} {p_bonf[i]:>15.2e}  {p_holm[i]:>15.2e}\n")
-                        buf.write(f"    {'':<40} {_sig(p_bonf[i]):>15}  {_sig(p_holm[i]):>15}\n")
-            else:
-                buf.write(f"\n  [NO VALID PAIRS] All pairs skipped due to small sample sizes\n")
+                j = 0
+                for r in pairwise_results:
+                    if r.get("p_raw") is None:
+                        continue
+                    r["p_bonferroni"] = float(p_bonf[j])
+                    r["significant_bonferroni"] = _sig(p_bonf[j])
+                    r["p_holm"] = float(p_holm[j])
+                    r["significant_holm"] = _sig(p_holm[j])
+                    buf.write(f"  {r['pair']:<40} {p_bonf[j]:>15.2e}  {p_holm[j]:>15.2e}\n")
+                    buf.write(f"    {'':<40} {_sig(p_bonf[j]):>15}  {_sig(p_holm[j]):>15}\n")
+                    j += 1
 
         results["pairwise_agent_contrasts"] = pairwise_results
-
     # Imprecise rate by agent
     _subsection("5. Imprecise rate by agent", buf)
     if "agent" in chunks.columns:
@@ -612,7 +550,7 @@ def run_rq2(chunks: pd.DataFrame, buf: StringIO) -> dict:
             for agent, rate in imprecise_by_agent.items()
         }
 
-    # Postponed chunks (subset of Imprecise) by resolver
+    # Postponed chunks by resolver
     _subsection("6. Postponed chunks by resolver type", buf)
     if "strategy_raw" in chunks.columns and "resolver_type" in chunks.columns:
         for resolver in ["agent", "human"]:
@@ -621,8 +559,7 @@ def run_rq2(chunks: pd.DataFrame, buf: StringIO) -> dict:
             n_postponed = (resolver_data["strategy_raw"] == "Postponed").sum()
             rate = n_postponed / n_total if n_total > 0 else 0
 
-            buf.write(f"  {resolver:<15}: {n_postponed:>6,} / {n_total:>10,} "
-                      f"({rate:>6.1%})\n")
+            buf.write(f"  {resolver:<15}: {n_postponed:>6,} / {n_total:>10,} ({rate:>6.1%})\n")
 
         results["postponed_by_resolver"] = {
             "agent": round(
@@ -630,13 +567,13 @@ def run_rq2(chunks: pd.DataFrame, buf: StringIO) -> dict:
                        (chunks["strategy_raw"] == "Postponed")].shape[0] /
                  chunks[chunks["resolver_type"] == "agent"].shape[0]),
                 4
-            ),
+            ) if len(chunks[chunks["resolver_type"] == "agent"]) > 0 else 0,
             "human": round(
                 (chunks[(chunks["resolver_type"] == "human") &
                        (chunks["strategy_raw"] == "Postponed")].shape[0] /
                  chunks[chunks["resolver_type"] == "human"].shape[0]),
                 4
-            ),
+            ) if len(chunks[chunks["resolver_type"] == "human"]) > 0 else 0,
         }
 
     return results
@@ -644,15 +581,25 @@ def run_rq2(chunks: pd.DataFrame, buf: StringIO) -> dict:
 
 # ── MAIN ────────────────────────────────────────────────────────────────────
 
-def main():
+def main(data_dir: str | None = None):
     """Load data, run all analyses, write outputs."""
+    if data_dir is None:
+        data_dir = "data"
+
+    data_dir = Path(data_dir)
+    results_dir = data_dir / "results"
+    results_dir.mkdir(parents=True, exist_ok=True)
+
+    json_out = results_dir / "reproduce_statistics.json"
+    txt_out = results_dir / "reproduce_statistics.txt"
+
     print("=" * 80)
-    print("REPRODUCING PAPER STATISTICS (reproduce_paper_statistics.py)")
+    print("REPRODUCING PAPER STATISTICS")
     print("=" * 80)
 
     # Load data
-    print("\nLoading data...")
-    tables = load_tables()
+    print(f"\nLoading data from {data_dir}...")
+    tables = load_tables(str(data_dir))
     print("Building chunk frame...")
     chunks = build_chunk_frame(tables)
     print("Building merge frame...")
@@ -678,27 +625,35 @@ def main():
     all_results["rq2"] = run_rq2(chunks, buf)
 
     # Write outputs
-    print(f"\nWriting results to {JSON_OUT}...")
-    with open(JSON_OUT, "w") as f:
+    print(f"\nWriting results to {json_out}...")
+    with open(json_out, "w", encoding="utf-8") as f:
         json.dump(_to_json_serializable(all_results), f, indent=2)
 
-    print(f"Writing results to {TXT_OUT}...")
+    print(f"Writing results to {txt_out}...")
     text_output = buf.getvalue()
-    with open(TXT_OUT, "w") as f:
+    with open(txt_out, "w", encoding="utf-8") as f:
         f.write(text_output)
 
     print("\n" + "=" * 80)
     print("SUCCESS! Results written:")
-    print(f"  JSON: {JSON_OUT}")
-    print(f"  TXT:  {TXT_OUT}")
+    print(f"  JSON: {json_out}")
+    print(f"  TXT:  {txt_out}")
     print("=" * 80)
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Reproduce paper statistics")
+    parser.add_argument("--data-dir", type=str, default="data", help="Data directory (default: data)")
+    args = parser.parse_args()
+
     try:
-        main()
+        main(args.data_dir)
     except Exception as e:
         print(f"\nERROR: {e}")
         import traceback
         traceback.print_exc()
         sys.exit(1)
+
+
+
+
