@@ -9,16 +9,25 @@ on figshare under the Creative Commons Attribution 4.0 (CC BY 4.0) license:
 
 ## Download and extract
 
+The archive expands into a top-level `data/` folder, so extracting it from the
+repository root places the files directly under this directory.
+
 ```bash
-# From the repository root, download the archive into this data/ directory
-curl -L -o data/dataset.zip https://ndownloader.figshare.com/files/64217220
+# From the repository root
+curl -L -o dataset.zip https://ndownloader.figshare.com/files/64217220
 
-# Verify integrity (optional)
-#   expected MD5: 9471803480abf70523b7376ac0d1f4d9
+# Verify integrity (optional) — expected MD5: 9471803480abf70523b7376ac0d1f4d9
 
-# Extract the parquet files directly into data/
-unzip data/dataset.zip -d data/
-rm data/dataset.zip
+unzip dataset.zip     # extracts into ./data/
+rm dataset.zip
+```
+
+The analysis stage only reads the `*.parquet` tables. The archive also ships the
+much larger `*.jsonl` intermediates (~11 GB uncompressed); if you only want to
+run `--analyze-only`, you can extract just the parquet files:
+
+```bash
+unzip dataset.zip 'data/*.parquet'   # ~1.4 GB
 ```
 
 After extraction, `data/` should contain the parquet tables consumed by the

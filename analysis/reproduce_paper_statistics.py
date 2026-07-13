@@ -44,12 +44,23 @@ from statsmodels.stats.proportion import proportion_confint
 
 warnings.filterwarnings("ignore", category=RuntimeWarning)
 
-from common import (
-    load_tables,
-    build_chunk_frame,
-    build_merge_frame,
-    STRATEGY_ORDER,
-)
+try:
+    # Preferred: imported as part of the ``analysis`` package (e.g. via
+    # ``launch_pipeline.py``).
+    from .common import (
+        load_tables,
+        build_chunk_frame,
+        build_merge_frame,
+        STRATEGY_ORDER,
+    )
+except ImportError:
+    # Fallback: run as a standalone script from within ``analysis/``.
+    from common import (
+        load_tables,
+        build_chunk_frame,
+        build_merge_frame,
+        STRATEGY_ORDER,
+    )
 
 STRATEGIES_CLASSIFIABLE = [s for s in STRATEGY_ORDER if s != "Imprecise"]
 
