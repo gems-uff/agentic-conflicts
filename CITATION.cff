@@ -1,0 +1,22 @@
+cff-version: 1.2.0
+message: "If you use this software or data, please cite the paper below."
+title: "How AI Coding Agents Resolve Merge Conflicts: An Empirical Study (Replication Package)"
+type: software
+license: MIT
+repository-code: "https://github.com/gems-uff/agentic-conflicts"
+authors:
+  - family-names: Campos
+    given-names: Heleno
+  - family-names: Murta
+    given-names: Leonardo
+preferred-citation:
+  type: conference-paper
+  title: "How AI Coding Agents Resolve Merge Conflicts: An Empirical Study"
+  year: 2026
+  collection-title: "Proceedings of the 40th Brazilian Symposium on Software Engineering (SBES)"
+  # TODO: add final page numbers and DOI once available.
+  authors:
+    - family-names: Campos
+      given-names: Heleno
+    - family-names: Murta
+      given-names: Leonardo
