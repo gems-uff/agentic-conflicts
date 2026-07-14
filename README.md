@@ -134,12 +134,8 @@ All data derives from **public** pull requests and repositories in the AIDev cat
 
 ## Availability & Archival
 
-- **Source code:** archived on Zenodo with a version DOI.
-  <!-- TODO: add the Zenodo DOI minted from a tagged GitHub release (see note below). -->
-  Development repository: <https://github.com/gems-uff/agentic-conflicts>.
+- **Source code:** archived on Zenodo (v1.0.0) — DOI [10.5281/zenodo.21358355](https://doi.org/10.5281/zenodo.21358355). Development repository: <https://github.com/gems-uff/agentic-conflicts>.
 - **Data:** archived on figshare under CC BY 4.0 — DOI [10.6084/m9.figshare.32159415](https://doi.org/10.6084/m9.figshare.32159415).
-
-> **Creating the code DOI (one-time):** enable the GitHub–Zenodo integration for the repository, then publish a GitHub *release*; Zenodo mints a DOI for that specific version. Cite that **version** DOI (not the general GitHub URL) in the paper's *Artifact Availability* section.
 
 ## License
 

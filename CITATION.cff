@@ -2,6 +2,8 @@ cff-version: 1.2.0
 message: "If you use this software or data, please cite the paper below."
 title: "How AI Coding Agents Resolve Merge Conflicts: An Empirical Study (Replication Package)"
 type: software
+version: "1.0.0"
+doi: 10.5281/zenodo.21358355
 license: MIT
 repository-code: "https://github.com/gems-uff/agentic-conflicts"
 authors:
@@ -9,6 +11,13 @@ authors:
     given-names: "Heleno de Souza"
   - family-names: Murta
     given-names: "Leonardo Gresta Paulino"
+identifiers:
+  - type: doi
+    value: 10.5281/zenodo.21358355
+    description: "Archived source code (v1.0.0) on Zenodo"
+  - type: doi
+    value: 10.6084/m9.figshare.32159415
+    description: "Dataset on figshare (CC BY 4.0)"
 preferred-citation:
   type: conference-paper
   title: "How AI Coding Agents Resolve Merge Conflicts: An Empirical Study"
